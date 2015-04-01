@@ -1,0 +1,5 @@
+g++ -c readImageToMat.cpp
+nvcc $1 readImageToMat.o  -lopencv_core -lopencv_highgui -lopencv_imgproc -lrt -lcublas -lboost_thread -lboost_system -lboost_timer -ljpeg -arch sm_20 -O2
+if [ $? -eq 0 ]; then
+   time a.out
+fi
