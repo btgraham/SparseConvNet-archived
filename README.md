@@ -8,7 +8,7 @@ Implement CNNs on the:
 2D) square or triangular lattices
 3D) cubic or tetrahedral lattices
 4D) hypercubic or hypertetrahedral lattices
-![lattice](https://github.com/btgraham/SparseConvNet/blob/master/figures/shrec.png)
+![lattice](/figures/shrec.png)
 
 Sparsity may be useful in 2d [(i.e. for online handwritting recognition: Spatially-sparse convolutional neural networks)](http://arxiv.org/abs/1409.6070) and even more useful in 3+ dimensions [Sparse 3D convolutional neural networks](http://arxiv.org/abs/1505.02890).
 
