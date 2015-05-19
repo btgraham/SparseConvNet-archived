@@ -31,7 +31,7 @@ SpatiallySparseDataset SHREC2015TrainSet(int renderSize,  int kFold, int fold) {
     for (int exemp=0;exemp<nExemplars;exemp++) {
       int num;
       cla >> num;
-      std::string filename=std::string("Data/SHREC15/SHREC15NonRigidTestDB/T")+boost::lexical_cast<std::string>(num)+std::string(".off");
+      std::string filename=std::string("Data/SHREC15/SHREC15NonRigidTestDB/T")+std::to_string(num)+std::string(".off");
       if (exemp%kFold!=fold)
         dataset.pictures.push_back(new OffSurfaceModelPicture(filename, renderSize, cl));
     }
@@ -58,7 +58,7 @@ SpatiallySparseDataset SHREC2015TestSet(int renderSize,  int kFold, int fold) {
     for (int exemp=0;exemp<nExemplars;exemp++) {
       int num;
       cla >> num;
-      std::string filename=std::string("Data/SHREC15/SHREC15NonRigidTestDB/T")+boost::lexical_cast<std::string>(num)+std::string(".off");
+      std::string filename=std::string("Data/SHREC15/SHREC15NonRigidTestDB/T")+std::to_string(num)+std::string(".off");
       if (exemp%kFold==fold)
         dataset.pictures.push_back(new OffSurfaceModelPicture(filename, renderSize, cl));
     }
