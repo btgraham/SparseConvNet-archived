@@ -9,11 +9,7 @@ Implement CNNs on the:
 3D) cubic or tetrahedral lattices
 4D) hypercubic or hypertetrahedral lattices
 
-Sparsity may be useful in 2d (i.e. for online handwritting
-recognition: Spatially-sparse convolutional neural networks,
-http://arxiv.org/abs/1409.6070) and even more useful in 3+ dimensions
-(Sparse 3D convolutional neural networks,
-http://arxiv.org/abs/1505.02890).
+Sparsity may be useful in 2d [(i.e. for online handwritting recognition: Spatially-sparse convolutional neural networks)](http://arxiv.org/abs/1409.6070) and even more useful in 3+ dimensions [Sparse 3D convolutional neural networks](http://arxiv.org/abs/1505.02890).
 
 If you use this software please:
 1. Tell me what you are using it for (b.graham@warwick.ac.uk).
