@@ -10,7 +10,7 @@ SparseConvNet is a convolutional neural network for processing sparse data on a 
 (and of course the hyper-cubic and hyper-tetrahedral 4D lattices as well).
 ![lattice](/figures/lattices.png)
 
-Data is sparse if most sites take the value zero. For example, if a loop of string has a knot in it, and you trace the shape of the string in a 3D lattice, most sites will not form part of the knot (left). Applying a 2x2x2 convolution (middle), and a pooling operation (right), the set of non-zero sites stays fairly low:
+Data is sparse if most sites take the value zero. For example, if a loop of string has a knot in it, and you trace the shape of the string in a 3D lattice, most sites will not form part of the knot (left). Applying a 2x2x2 convolution (middle), and a pooling operation (right), the set of non-zero sites stays fairly small:
 ![lattice](/figures/trefoil.png)
 
 This can be used to analyse 3D models, or space-time paths.
