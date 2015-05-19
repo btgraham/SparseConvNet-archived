@@ -2,15 +2,15 @@
 ## A Spatially-sparse convolutional network
 ### Benjamin Graham, University of Warwick, 2013-2015, GPLv3
 
-SparseConvNet is a convolutional neural network for processing of sparse data on a variety of lattices dimensional data, i.e.
+SparseConvNet is a convolutional neural network for processing sparse data on a variety of lattices, i.e.
 (i) the square lattice,
 (ii) the triagular lattice,
 (iii) the cubic lattice,
-(iv) the tetrahedral lattice,
-and of course the hyper-cubic and hyper-tetrahedral 4D lattices as well.
+(iv) the tetrahedral lattice
+(and of course the hyper-cubic and hyper-tetrahedral 4D lattices as well).
 ![lattice](/figures/lattices.png)
 
-Data is sparse if most sites take the value zero. For example, if a piece of string has a knot in it, you can trace the shape of a knot in a lattice, but most sites will not form part of the knot. Applying convolution, sparsity will also hold in the large initial layers:
+Data is sparse if most sites take the value zero. For example, if a loop of string has a knot in it, and you trace the shape of the string in a 3D lattice, most sites will not form part of the knot. Applying convolution, sparsity will also hold in the large initial layers:
 ![lattice](/figures/trefoil.png)
 
 This can be used to analyse 3D models, or space-time paths.
@@ -24,7 +24,7 @@ Top row: four exemplars of snakes. Bottom row: an ant, an elephant, a robot and 
 1. Put the [CIFAR-10 data files](http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz) in the Data/CIFAR10/ folder
 2. Execute "make cifar10 && cifar10"
 
-##Dependencies:
+## Dependencies:
 1. An Nvidia CUDA sm_20 capable graphics card
 2. The [CUDA SDK](https://developer.nvidia.com/cuda-downloads)
 3. [Google sparsehash library](https://code.google.com/p/sparsehash/downloads/list)
