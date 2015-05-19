@@ -274,11 +274,11 @@ void SparseConvNetCUDA::processIndexLearnerBatch(SpatiallySparseBatch& batch, fl
   for (int i=0;i<n-1;i++)   //Stop 1 early (unless it is a training batch)
     layers[i]->forwards(batch,batch.interfaces[i],batch.interfaces[i+1]);
   if (f.is_open()) {
-    assert(batch.interfaces.back().nFeatures==batch.interfaces.back().featuresPresent.size());
+    assert(batch.interfaces[n-1].nFeatures==batch.interfaces[n-1].featuresPresent.size());
     for (int i=0;i<batch.batchSize;i++) {
       f << batch.sampleNumbers[i] << " " << batch.labels.hVector()[i];
-      for (int j=0;j<batch.interfaces.back().nFeatures;j++)
-        f << " " << batch.interfaces.back().sub->features.hVector()[batch.interfaces.back().nFeatures+j];
+      for (int j=0;j<batch.interfaces[n-1].nFeatures;j++)
+        f << " " << batch.interfaces[n-1].sub->features.hVector()[batch.interfaces[n-1].nFeatures+j];
       f << std::endl;
     }
   }
@@ -292,6 +292,8 @@ void SparseConvNetCUDA::processIndexLearnerBatch(SpatiallySparseBatch& batch, fl
 }
 float SparseConvNetCUDA::processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate) {
   float errorRate=0, nll=0;
+  auto start=std::chrono::system_clock::now();
+  multiplyAddCount=0;
   std::ofstream f;
   BatchProducer bp(*this,dataset,inputSpatialSize,batchSize);
   if (dataset.type!=TRAINBATCH) {
@@ -303,26 +305,34 @@ float SparseConvNetCUDA::processIndexLearnerDataset(SpatiallySparseDataset &data
     errorRate+=batch->mistakes*1.0/dataset.pictures.size();
     nll+=batch->negativeLogLikelihood*1.0/dataset.pictures.size();
   }
+  auto end=std::chrono::system_clock::now();
+  auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
   if (dataset.type==TRAINBATCH)
     std::cout << dataset.name
-              << " Mistakes: "
+              << " Mistakes:"
               << 100*errorRate
-              << "% NLL "
+              << "% NLL:"
               << nll
-              <<std::endl;
+              << " MegaMultiplyAdds/sample:"
+              << roundf(multiplyAddCount/dataset.pictures.size()/1000000)
+              << " time:"
+              << diff/1000000000L
+              << "s GigaMultiplyAdds/s:"
+              << roundf(multiplyAddCount/diff)
+              << " rate:" << roundf(dataset.pictures.size()*1000000000.0f/diff) << "/s"
+              << std::endl;
   return errorRate;
 }
-/****rewrite so as not to change size of batch.interfaces!!! ***/
-void SparseConvNetCUDA::processBatchDumpTopLevelFeaturess(SpatiallySparseBatch& batch, std::ofstream& f) {
-  batch.interfaces.pop_back();
+void SparseConvNetCUDA::processBatchDumpTopLevelFeaturess(SpatiallySparseBatch& batch, std::ofstream& f) { //editted: test
+  int n=layers.size();
   for (int i=0;i<layers.size()-1;i++) {
     layers[i]->forwards(batch,batch.interfaces[i],batch.interfaces[i+1]);
   }
-  assert(batch.interfaces.back().nFeatures==batch.interfaces.back().featuresPresent.size());
+  assert(batch.interfaces[n-1].nFeatures==batch.interfaces[n-1].featuresPresent.size());
   for (int i=0;i<batch.batchSize;i++) {
     f << batch.sampleNumbers[i] << " " << batch.labels.hVector()[i];
-    for (int j=0;j<batch.interfaces.back().nFeatures;j++)
-      f << " " << batch.interfaces.back().sub->features.hVector()[i*batch.interfaces.back().nFeatures+j];
+    for (int j=0;j<batch.interfaces[n-1].nFeatures;j++)
+      f << " " << batch.interfaces[n-1].sub->features.hVector()[i*batch.interfaces[n-1].nFeatures+j];
     f << std::endl;
   }
 }
@@ -344,7 +354,7 @@ void SparseConvNetCUDA::calculateInputRegularizingConstants(SpatiallySparseDatas
   inputNormalizingConstants.resize(0); //Make sure input features rescaling is turned off.
   std::cout << "Using " << std::min(10000,(int)dataset.pictures.size()) << " out of " << dataset.pictures.size() << " training samples to calculate regularizing constants." << std::endl;
   dataset.pictures.resize(10000);
-  dataset.type=TESTBATCH;
+  dataset.type=TESTBATCH; //pretend it is a test batch to turn off dropout and training data augmentation
   BatchProducer bp(*this,dataset,inputSpatialSize,100);
   std::vector<float> c(nInputFeatures,0);
   while(SpatiallySparseBatch* batch=bp.nextBatch()) {
