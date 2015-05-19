@@ -46,5 +46,5 @@ the Free Software Foundation, either version 3 of the License, or
 SparseConvNet is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-(GNU General Public License)[http://www.gnu.org/licenses/] for more details.
+[GNU General Public License](http://www.gnu.org/licenses/) for more details.
 **************************************************************************
