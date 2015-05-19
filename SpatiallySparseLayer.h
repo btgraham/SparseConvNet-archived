@@ -1,14 +1,27 @@
+#pragma once
+#include <iostream>
+#include "SpatiallySparseBatchInterface.h"
+#include "SpatiallySparseBatch.h"
+
 class SpatiallySparseLayer {
 public:
+  SpatiallySparseBatchSubInterface sub;
   virtual void preprocess
-  (SpatiallySparseBatchInterface &input, SpatiallySparseBatchInterface &output) = 0;
+  (SpatiallySparseBatch &batch,
+   SpatiallySparseBatchInterface &input,
+   SpatiallySparseBatchInterface &output) = 0;
   virtual void forwards
-  (SpatiallySparseBatchInterface &input, SpatiallySparseBatchInterface &output) = 0;
+  (SpatiallySparseBatch &batch,
+   SpatiallySparseBatchInterface &input,
+   SpatiallySparseBatchInterface &output) = 0;
   virtual void scaleWeights
-  (SpatiallySparseBatchInterface &input, SpatiallySparseBatchInterface &output) {};
+  (SpatiallySparseBatchInterface &input, SpatiallySparseBatchInterface &output);
   virtual void backwards
-  (SpatiallySparseBatchInterface &input, SpatiallySparseBatchInterface &output, float learningRate) = 0;
-  virtual void loadWeightsFromStream(ifstream &f) {};
-  virtual void putWeightsToStream(ofstream &f)  {};
+  (SpatiallySparseBatch &batch,
+   SpatiallySparseBatchInterface &input,
+   SpatiallySparseBatchInterface &output,
+   float learningRate) = 0;
+  virtual void loadWeightsFromStream(std::ifstream &f);
+  virtual void putWeightsToStream(std::ofstream &f);
   virtual int calculateInputSpatialSize(int outputSpatialSize) = 0;
 };

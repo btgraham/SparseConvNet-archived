@@ -1,2 +1,15 @@
-a.out
 *.o
+cifar10
+cifar100
+cifar10triangular
+cvap_rha
+imagenet2012fmp.cpp
+imagenet2012triangular
+casia
+casia3d
+shrec2015
+shrec2015_
+mnist
+kagglePlankton
+kagglePlankton2
+kagglePlanktonQuick

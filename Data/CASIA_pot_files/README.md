@@ -1,0 +1,1 @@
+Obtain POT files from http://www.nlpr.ia.ac.cn/databases/handwriting/home.html and put them in a directory Data/CASIA_pot_files/

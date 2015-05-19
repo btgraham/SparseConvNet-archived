@@ -1,17 +1,20 @@
 #pragma once
+#include <random>
+#include <mutex>
 
-boost::mutex RNGseedGeneratorMutex;
-boost::mt19937 RNGseedGenerator;
+#ifdef RNG_CPP
+std::mutex RNGseedGeneratorMutex;
+std::mt19937 RNGseedGenerator;
+#else
+extern std::mutex RNGseedGeneratorMutex;
+extern std::mt19937 RNGseedGenerator;
+#endif
 
 class RNG {
-  boost::normal_distribution<> nd;
-  boost::uniform_int<> uni_dist;
-  boost::uniform_01<> uni_01;
+  std::normal_distribution<> stdNormal;
+  std::uniform_real_distribution<> uniform01;
 public:
-  boost::mt19937 gen;
-  boost::variate_generator<boost::mt19937&,boost::normal_distribution<> > stdNormal;
-  boost::variate_generator<boost::mt19937&, boost::uniform_int<> > randomNumber;
-  boost::variate_generator<boost::mt19937&, boost::uniform_01<> > random01;
+  std::mt19937 gen;
 
   RNG();
   int randint(int n);

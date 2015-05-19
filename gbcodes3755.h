@@ -1,3 +1,4 @@
+#pragma once
 //CASIA: To read  a POT file, use gbcodesPOT: A1B0 on disk is read to hex integer 0xb0a1
 //                                            Use for printing in hex as well.
 //       To write a CRO file, use gbcodesCRO: 0xa1b0 is written to file as B0A1
@@ -1443,6 +1444,6 @@ int gblookup[]={
 
 
 void printUnicodeCharacter(int c) {
-  int i=find(gblookup,gblookup+6763,gbcodesPOT[c])-gblookup;
-  if (i<6763) cout << gbunicode[3*i]<<gbunicode[3*i+1]<<gbunicode[3*i+2];
+  int i=std::find(gblookup,gblookup+6763,gbcodesPOT[c])-gblookup;
+  if (i<6763) std::cout << gbunicode[3*i]<<gbunicode[3*i+1]<<gbunicode[3*i+2];
 }

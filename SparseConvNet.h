@@ -1,4 +1,4 @@
-//Ben Graham, University of Warwick, 2015 b.graham@warwick.ac.uk
+//Ben Graham, University of Warwick, 2015, b.graham@warwick.ac.uk
 //SparseConvNet is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
@@ -9,65 +9,50 @@
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 
-//You should have received a copy of the GNU General Public License
-//along with SparseConvNet.  If not, see <http://www.gnu.org/licenses/>.
-
-// All hidden layers should have size that is a multiple of KERNELBLOCKSIZE == 32
-#include <algorithm>
-#include <assert.h>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <deque>
-#include <queue>
-#include <fstream>
-#include <iostream>
-#include <iterator>
+#pragma once
+#include "SpatiallySparseDataset.h"
+#include <memory>
 #include <string>
-#include <sys/time.h>
-#include <unistd.h>
-#include <vector>
-#include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/random.hpp>
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/uniform_01.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/thread.hpp>
-#include <boost/timer/timer.hpp>
-#include "cuda.h"
-#include <cublas_v2.h>
-using namespace std;
-using namespace boost::assign;
+#include <fstream>
 
-//1 to include bias terms, 0 to exclude them
-#define BIAS 1
+class SparseConvNetCUDA;
 
-#include "Rng.h"
-#include "utilities.h"
-#include "vectorCUDA.h"
-#include "Batches.h"
-#include "SpatiallySparseLayer.h"
-#include "ColorShiftLayer.h"
-#include "SigmoidLayer.h"
-#include "MaxPoolingLayer.h"
-#include "AveragePoolingLayer.h"
-#include "NetworkInNetworkLayer.h"
-#include "ConvolutionalLayer.h"
-#include "XConvLayer.h"
-#include "X4ConvLayer.h"
-#include "YConvLayer.h"
-#include "SoftmaxClassifier.h"
-#include "IndexLearnerLayer.h"
-#include "SpatialDataset.h"
-#include "BatchProducer.h"
-#include "SpatiallySparseCNN.h"
-#include "NetworkArchitectures.h"
+class SparseConvNet {
+private:
+  std::unique_ptr<SparseConvNetCUDA> cnn;
+public:
+  SparseConvNet(int dimension, int nInputFeatures, int nClasses, int pciBusID=-1, int nTop=1);
+  ~SparseConvNet();
+  void addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn=RELU, float dropout=0.0f);
+  void addLeNetLayerPOFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn=RELU, float dropout=0.0f);
+  void addLeNetLayerROFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn=RELU, float dropout=0.0f);
+  void addTerminalPoolingLayer(int poolSize);
+  void addSoftmaxLayer();
+  void addIndexLearnerLayer();
+  float processDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0);
+  void processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize=100, int nReps=12, std::string predictionsFilename="",std::string header="");
+  float processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0.0);
+  void processDatasetDumpTopLevelFeatures(SpatiallySparseDataset &dataset, int batchSize, int reps=1);
+  void loadWeights(std::string baseName, int epoch, int firstNlayers=1000000);
+  void saveWeights(std::string baseName, int epoch);
+  void calculateInputRegularizingConstants(SpatiallySparseDataset dataset);
+};
 
-#include "Rng.cpp"
-#include "vectorCUDA.cpp"
-#include "BatchProducer.cpp"
-#include "SpatiallySparseCNN.cpp"
+class SparseConvTriangLeNet {
+private:
+  std::auto_ptr<SparseConvNetCUDA> cnn;
+public:
+  SparseConvTriangLeNet(int dimension, int nInputFeatures, int nClasses, int pciBusID=-1, int nTop=1);
+  ~SparseConvTriangLeNet();
+  void addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn=RELU, float dropout=0.0f);
+  void addTerminalPoolingLayer(int poolSize);
+  void addSoftmaxLayer();
+  void addIndexLearnerLayer();
+  float processDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0);
+  void processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize=100, int nReps=12, std::string predictionsFilename="",std::string header="");
+  float processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0.0);
+  void processDatasetDumpTopLevelFeatures(SpatiallySparseDataset &dataset, int batchSize, int reps=1);
+  void loadWeights(std::string baseName, int epoch, int firstNlayers=1000000);
+  void saveWeights(std::string baseName, int epoch);
+  void calculateInputRegularizingConstants(SpatiallySparseDataset dataset);
+};

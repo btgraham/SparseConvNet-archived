@@ -1,10 +1,11 @@
+#pragma once
+
 //Sparse Basis calculated by Ben Graham and Jeremy Reizenstein using libalgebra - http://sourceforge.net/projects/coropa/files/?source=navbar
 //
 
 #include<iostream>
 #include<vector>
 #include<cassert>
-using namespace std;
 
 int powi[6][20]={
   {  1,0, 0,  0,  0,   0,    0,    0,     0,      0,      0,      0,       0,       0,        0,         0,         0,          0,          0,           0},
@@ -68,8 +69,8 @@ void oneStepSignature(float* sig, float* delta, int d, int depth) {
 }
 
 void signature(float* path, int length, int d, int depth, float* sig) {
-  vector<float> delta(depth);
-  vector<float> sigIncrement(sigdim(d,depth));
+  std::vector<float> delta(depth);
+  std::vector<float> sigIncrement(sigdim(d,depth));
   sig[0]=1;
   for (int i=1;i<sigdim(d,depth);++i)
     sig[i]=0;
@@ -87,7 +88,7 @@ void zeroLayer(float* tensor, int d, int depth) {
     tensor[i]=0;
 }
 void tensorLog(float* tensor, float* logTensor, int d, int depth) {
-  vector<float> pwr(sigdim(d,depth));
+  std::vector<float> pwr(sigdim(d,depth));
   logTensor[0]=0;
   for (int i=1;i<sigdim(d,depth);++i) {
     logTensor[i]=tensor[i];
@@ -362,8 +363,8 @@ int sparseBasisD6[] = {
 
 
 void logSignature(float* path, int length, int d, int depth, float*     sig) {
-  vector<float> fullSig(sigdim(d,depth));
-  vector<float> fullLogSig(sigdim(d,depth));
+  std::vector<float> fullSig(sigdim(d,depth));
+  std::vector<float> fullLogSig(sigdim(d,depth));
   signature(path, length, d, depth, &fullSig[0]);
   tensorLog(&fullSig[0],&fullLogSig[0],d,depth);
 
