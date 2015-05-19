@@ -1,6 +1,6 @@
 # SparseConvNet
 ## A Spatially-sparse convolutional network
-### Benjamin Graham, University of Warwick, 2013-2015, GPLv3
+### [Benjamin Graham](http://www2.warwick.ac.uk/fac/sci/statistics/staff/academic-research/graham/), University of Warwick](http://www2.warwick.ac.uk/fac/sci/statistics/), 2013-2015, GPLv3
 
 SparseConvNet is a convolutional neural network for processing sparse data on a variety of lattices, i.e.
 (i) the square lattice,
