@@ -19,11 +19,11 @@ Here are some examples from a [3D object dataset](http://www.itl.nist.gov/iad/vu
 ![lattice](/figures/shrec.png)
 Top row: four exemplars of snakes. Bottom row: an ant, an elephant, a robot and a tortoise.
 
-## To test the CNN:
+### To test the CNN:
 1. Put the [CIFAR-10 data files](http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz) in the Data/CIFAR10/ folder
 2. Execute "make cifar10 && cifar10"
 
-## Dependencies:
+### Dependencies:
 1. An Nvidia CUDA sm_20 capable graphics card
 2. The [CUDA SDK](https://developer.nvidia.com/cuda-downloads)
 3. [Google sparsehash library](https://code.google.com/p/sparsehash/downloads/list)
@@ -37,7 +37,7 @@ wget https://sparsehash.googlecode.com/files/sparsehash_2.0.2-1_amd64.deb
 
 sudo dpkg -i sparsehash_2.0.2-1_amd64.deb
 
-## References
+### References
 1. [Spatially-sparse convolutional neural networks](http://arxiv.org/abs/1409.6070)
 2. [Sparse 3D convolutional neural networks](http://arxiv.org/abs/1505.02890)
 
