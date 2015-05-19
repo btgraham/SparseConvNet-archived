@@ -14,9 +14,9 @@ and of course the hyper-cubic and hyper-tetrahedral 4D lattices as well.
 Data is sparse if most sites take the value zero. For example, if a piece of string has a knot in it, you can trace the shape of a knot in a lattice, but most sites will not form part of the knot. Applying convolution, sparsity will also hold in the large initial layers:
 ![lattice](/figures/trefoil.png)
 
-This can be used to analyse 3D models, or space time paths.
-The insides can be hollow, so the data is sparse.
-Examples from a (3D object dataset)[and of course the hyper-cubic and hyper-tetrahedral 4D lattices as well.].
+This can be used to analyse 3D models, or space-time paths.
+Here are some examples from a [3D object dataset](http://www.itl.nist.gov/iad/vug/sharp/contest/2014/Generic3D/index.html) The insides are hollow, so the data is fairly sparse.
+
 ![lattice](/figures/shrec.png)
 Top row: four exemplars of snakes. Bottom row: an ant, an elephant, a robot and a tortoise.
 
