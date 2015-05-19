@@ -4,14 +4,14 @@ Benjamin Graham, University of Warwick, 2013-2015, GPLv3
 --------------------------------------------------------
 
 SparseConvNet is a convolutional neural network for processing of sparse data on a variety of lattices dimensional data, i.e.
-(i) the square lattice
-(ii) The triagular lattice
-(iii) The cubic lattice
-(iv) The tetrahedral lattice
+(i) the square lattice,
+(ii) the triagular lattice,
+(iii) the cubic lattice,
+(iv) the tetrahedral lattice,
 ![lattice](/figures/lattices.png)
-and similarly in 4D.
+and of course the hyper-cubic and hyper-tetrahedral 4D lattices as well.
 
-Data is sparse if most sites take the value zero. For example if you trace the shape of a knot, most of space is not visited by the string. Applying convolution, sparsity also hold in the large initial layers:
+Data is sparse if most sites take the value zero. For example, if a piece of string has a knot in it, you can trace the shape of a knot in a lattice, but most sites will not form part of the knot. Applying convolution, sparsity will also hold in the large initial layers:
 ![lattice](/figures/trefoil.png)
 
 In 3D, this can be used to analyse 3d models. The insides can be hollow, so the data is sparse.
