@@ -1,5 +1,5 @@
 # SparseConvNet
-## A Spatially-sparse convolutional network
+## A spatially-sparse convolutional neural network
 ### [Ben Graham](http://www2.warwick.ac.uk/fac/sci/statistics/staff/academic-research/graham/), [University of Warwick](http://www2.warwick.ac.uk/fac/sci/statistics/), 2013-2015, GPLv3
 
 SparseConvNet is a convolutional neural network for processing sparse data on a variety of lattices, i.e.
@@ -14,7 +14,7 @@ Data is sparse if most sites take the value zero. For example, if a loop of stri
 ![lattice](/figures/trefoil.png)
 
 This can be used to analyse 3D models, or space-time paths.
-Here are some examples from a [3D object dataset](http://www.itl.nist.gov/iad/vug/sharp/contest/2014/Generic3D/index.html) The insides are hollow, so the data is fairly sparse.
+Here are some examples from a [3D object dataset](http://www.itl.nist.gov/iad/vug/sharp/contest/2014/Generic3D/index.html) The insides are hollow, so the data is fairly sparse. The computation complexity of processing the images is related to the [fractal dimension](http://en.wikipedia.org/wiki/Fractal_dimension) of the underlying objects.
 
 ![lattice](/figures/shrec.png)
 Top row: four exemplars of snakes. Bottom row: an ant, an elephant, a robot and a tortoise.
