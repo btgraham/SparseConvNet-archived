@@ -1,7 +1,5 @@
-SparseConvNet - Spatially-sparse convolutional networks
-=======================================================
-Benjamin Graham, University of Warwick, 2013-2015, GPLv3
---------------------------------------------------------
+# SparseConvNet - Spatially-sparse convolutional networks
+## Benjamin Graham, University of Warwick, 2013-2015, GPLv3
 
 SparseConvNet is a convolutional neural network for processing of sparse data on a variety of lattices dimensional data, i.e.
 (i) the square lattice,
@@ -21,18 +19,22 @@ Here are some examples from a [3D object dataset](http://www.itl.nist.gov/iad/vu
 Top row: four exemplars of snakes. Bottom row: an ant, an elephant, a robot and a tortoise.
 
 
-To test the CNN:
-Put the [CIFAR-10 data files](http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz) in the Data/CIFAR10/ folder then execute "make cifar10 && cifar10"
+## To test the CNN:
+1. Put the [CIFAR-10 data files](http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz) in the Data/CIFAR10/ folder
+2. Execute "make cifar10 && cifar10"
 
-Dependencies:
-An Nvidia CUDA sm_20 capable graphics card
-The CUDA SDK (https://developer.nvidia.com/cuda-downloads)
-Google sparsehash library (https://code.google.com/p/sparsehash/downloads/list)
-Armadillo library (http://arma.sourceforge.net/)
+##Dependencies:
+1. An Nvidia CUDA sm_20 capable graphics card
+2. The [CUDA SDK](https://developer.nvidia.com/cuda-downloads)
+3. [Google sparsehash library](https://code.google.com/p/sparsehash/downloads/list)
+4. [The Armadillo library](http://arma.sourceforge.net/)
 
 i.e.
+
 sudo apt-get install libarmadillo-dev
+
 wget https://sparsehash.googlecode.com/files/sparsehash_2.0.2-1_amd64.deb
+
 sudo dpkg -i sparsehash_2.0.2-1_amd64.deb
 
 **************************************************************************
