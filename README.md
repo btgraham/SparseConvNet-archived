@@ -3,9 +3,14 @@ SparseConvNet - Spatially-sparse convolutional networks
 Benjamin Graham, University of Warwick, 2013-2015, GPLv3
 --------------------------------------------------------
 
-SparseConvNet is a convolutional neural network for processing of sparse data on a variety of lattices dimensional data.
-![lattice](/figures/lattices.png)
+SparseConvNet is a convolutional neural network for processing of sparse data on a variety of lattices dimensional data, i.e.
 
+(i) The square lattice
+(ii) The triagular lattice
+(iii) The cubic lattice
+(iv) The tetrahedral lattice
+![lattice](/figures/lattices.png)
+and similarly in 4D.
 
 Implement CNNs on the:
 2D) square or triangular lattices
