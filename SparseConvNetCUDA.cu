@@ -278,7 +278,7 @@ void SparseConvNetCUDA::processIndexLearnerBatch(SpatiallySparseBatch& batch, fl
     for (int i=0;i<batch.batchSize;i++) {
       f << batch.sampleNumbers[i] << " " << batch.labels.hVector()[i];
       for (int j=0;j<batch.interfaces[n-1].nFeatures;j++)
-        f << " " << batch.interfaces[n-1].sub->features.hVector()[batch.interfaces[n-1].nFeatures+j];
+        f << " " << batch.interfaces[n-1].sub->features.hVector()[i*batch.interfaces[n-1].nFeatures+j];
       f << std::endl;
     }
   }

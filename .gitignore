@@ -13,3 +13,4 @@ mnist
 kagglePlankton
 kagglePlankton2
 kagglePlanktonQuick
+*.features

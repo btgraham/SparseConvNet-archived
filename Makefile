@@ -53,3 +53,8 @@ kagglePlankton: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o ka
 	$(NVCC) -o kagglePlankton $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o kagglePlankton.o $(LIBS) $(NVCCFLAGS)
 kagglePlankton2: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o kagglePlankton2.o
 	$(NVCC) -o kagglePlankton2 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o kagglePlankton2.o $(LIBS) $(NVCCFLAGS)
+
+
+
+cifar10indexLearning: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10indexLearning.o
+	$(NVCC) -o cifar10indexLearning $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10indexLearning.o $(LIBS) $(NVCCFLAGS)
