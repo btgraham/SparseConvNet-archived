@@ -46,7 +46,8 @@ SpatiallySparseDataset SpatiallySparseDataset::subset(int n) {
   return subset;
 }
 void SpatiallySparseDataset::shuffle() {
-  std::random_shuffle( pictures.begin(), pictures.end() );
+  std::mt19937 gen;
+  std::shuffle(pictures.begin(), pictures.end(), gen);
 }
 void SpatiallySparseDataset::repeatSamples(int reps) {
   int s=pictures.size();

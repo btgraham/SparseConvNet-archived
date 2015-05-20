@@ -5,7 +5,7 @@
 #include <functional>
 #include <mutex>
 #include <chrono>
-#define NBATCHPRODUCERTHREADS 4
+#define NBATCHPRODUCERTHREADS 10
 
 bool batchProducerBatchesInitialized; //intially false
 std::mutex batchLock[NBATCHPRODUCERTHREADS];

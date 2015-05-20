@@ -226,7 +226,7 @@ void NetworkInNetworkLayer::backwards
                                      output.sub->dfeatures.dPtr(), W.dPtr(), input.sub->dfeatures.dPtr(),
                                      output.nSpatialSites,nFeaturesOut,nFeaturesIn,
                                      1.0, 0.0);
-      multiplyAddCount+=output.nSpatialSites*input.featuresPresent.size()*output.featuresPresent.size();
+      multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*output.featuresPresent.size();
       cudaCheckError();
     }
     dGradientDescent<<<nFeaturesIn,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
