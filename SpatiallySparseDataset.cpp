@@ -1,6 +1,7 @@
 #include "SpatiallySparseDataset.h"
 #include <algorithm>
 #include <iostream>
+#include <chrono>
 
 void SpatiallySparseDataset::summary() {
   std::cout << "Name:           " << name << std::endl;
@@ -46,7 +47,8 @@ SpatiallySparseDataset SpatiallySparseDataset::subset(int n) {
   return subset;
 }
 void SpatiallySparseDataset::shuffle() {
-  std::mt19937 gen;
+  auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  std::mt19937 gen(seed);
   std::shuffle(pictures.begin(), pictures.end(), gen);
 }
 void SpatiallySparseDataset::repeatSamples(int reps) {
