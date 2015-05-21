@@ -12,10 +12,13 @@ void terminalGridPoolingRules
  int S,
  int &nOutputSpatialSites,
  std::vector<int>& rules) {
-  assert(inputGrid.mp.size()>0); //Danger, total loss of information
   assert(inputGrid.mp.size()<=TERMINAL_POOLING_MAX_ACTIVE_SITES); //Upper bound for ease of kernel memory management
-  for (SparseGridIter iter = inputGrid.mp.begin(); iter != inputGrid.mp.end(); ++iter)
-    rules.push_back(iter->second);
+  if (inputGrid.mp.size()==0) { //Danger, total loss of information
+    rules.push_back(inputGrid.backgroundCol);
+  } else {
+    for (SparseGridIter iter = inputGrid.mp.begin(); iter != inputGrid.mp.end(); ++iter)
+      rules.push_back(iter->second);
+  }
   outputGrid.mp[0]=nOutputSpatialSites++;
   rules.resize(S*nOutputSpatialSites,-1); //pad with -1 values
 }
