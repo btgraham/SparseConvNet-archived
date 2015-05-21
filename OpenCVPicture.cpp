@@ -94,22 +94,22 @@ void OpenCVPicture::codifyInputData(SparseGrid &grid, std::vector<float> &featur
   for  (int i=0; i<mat.channels(); i++)
     features.push_back(0); //Background feature
   grid.backgroundCol=nSpatialSites++;
-  for (int x=0; x<mat.cols; x++) {
-    int X=x+xOffset+spatialSize/2;
-    for (int y=0; y<mat.rows; y++) {
-      int Y=y+yOffset+spatialSize/2;
-      if (X>=0 && X<spatialSize && Y>=0 && Y<spatialSize) {
-        bool flag=false;
-        for (int i=0; i<mat.channels(); i++)
-          if (std::abs(scaleUCharColor(mat.ptr()[i+x*mat.channels()+y*mat.channels()*mat.cols]))>0.02)
-            flag=true;
-        if (flag) {
-          int n=X*spatialSize+Y;
-          grid.mp[n]=nSpatialSites++;
-          for (int i=0; i<mat.channels(); i++) {
-            features.push_back
-              (scaleUCharColor(mat.ptr()[i+x*mat.channels()+y*mat.channels()*mat.cols]));
-          }
+  int x0=std::max(0,-xOffset-spatialSize/2);    //If x0<=x<x1 and y0<=y<y1 then the (x,y)-th pixel is in the CNN's visual field.
+  int x1=std::min(mat.cols,spatialSize-xOffset-spatialSize/2);
+  int y0=std::max(0,-yOffset-spatialSize/2);
+  int y1=std::min(mat.rows,spatialSize-yOffset-spatialSize/2);
+  for (int x=x0; x<x1; x++) {
+    for (int y=y0; y<y1; y++) {
+      bool interestingPixel=false; //Check pixel differs from the background color
+      for (int i=0; i<mat.channels(); i++)
+        if (std::abs(scaleUCharColor(mat.ptr()[i+x*mat.channels()+y*mat.channels()*mat.cols]))>0.02)
+          interestingPixel=true;
+      if (interestingPixel) {
+        int n=(x+xOffset+spatialSize/2)*spatialSize+(y+yOffset+spatialSize/2); //Determine location in the input field.
+        grid.mp[n]=nSpatialSites++;
+        for (int i=0; i<mat.channels(); i++) {
+          features.push_back
+            (scaleUCharColor(mat.ptr()[i+x*mat.channels()+y*mat.channels()*mat.cols]));
         }
       }
     }
