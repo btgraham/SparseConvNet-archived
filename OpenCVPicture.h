@@ -26,7 +26,7 @@ public:
   void jiggle(RNG &rng, int offlineJiggle);
   void jiggleFit(RNG &rng, int subsetSize);
   void loadData  (int scale_=-1);
-  void loadDataOnceIgnoreScale(int flag=-1);
+  void loadDataWithoutScaling(int flag=-1);
   void randomCrop(RNG &rng, int subsetSize);
   std::string identify();
 };
