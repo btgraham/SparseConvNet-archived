@@ -88,7 +88,7 @@ void OpenCVPicture::centerMass() {
   scale2yy=ayy-ay*ay;
   scale2=powf(scale2xx+scale2yy,0.5);
 }
-void OpenCVPicture::loadDataOnceIgnoreScale(int flag) {
+void OpenCVPicture::loadDataWithoutScaling(int flag) {
   readImage(filename,mat,flag);
   xOffset=-mat.cols/2;
   yOffset=-mat.rows/2;
