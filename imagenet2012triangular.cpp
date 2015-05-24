@@ -5,31 +5,31 @@
 
 int epoch=0;
 int cudaDevice=-1; //PCI bus ID, -1 for default GPU
-int batchSize=12;
+int batchSize=32;
 
 Picture* OpenCVPicture::distort(RNG& rng, batchType type) {
   OpenCVPicture* pic=new OpenCVPicture(*this);
   if (type==TRAINBATCH)
-    pic->loadData(224+rng.randint(64));
+    pic->loadData(224+rng.randint(448));
   else
-    pic->loadData(256);
+    pic->loadData(336);
   float
     c00=1, c01=0,  //2x2 identity matrix---starting point for calculating affine distortion matrix
     c10=0, c11=1;
-  if (type==TRAINBATCH) {
-    float r=rng.uniform(-0.1,0.1);
-    float alpha=rng.uniform(-0.3,0.3);
-    float beta=rng.uniform(-0.2,0.2)-alpha;
-    c00=(1+r)*cos(alpha); c01=(1+r)*sin(alpha);
-    c10=(1-r)*sin(alpha); c11=(1-r)*cos(beta);
-  }
+  // if (type==TRAINBATCH) {
+  //   float r=rng.uniform(-0.1,0.1);
+  //   float alpha=rng.uniform(-0.3,0.3);
+  //   float beta=rng.uniform(-0.2,0.2)-alpha;
+  //   c00=(1+r)*cos(alpha); c01=(1+r)*sin(alpha);
+  //   c10=(1-r)*sin(alpha); c11=(1-r)*cos(beta);
+  // }
   if (rng.randint(2)==0) {c00*=-1; c01*=-1;}//Horizontal flip
   matrixMul2x2inPlace(c00,         c01,
                       c10,         c11,
                       1,           0,
                       -powf(3,-0.5),powf(0.75,-0.5)); //to triangular lattice
   pic->affineTransform(c00, c01, c10, c11);
-  pic->jiggle(rng,64);
+  pic->jiggleFit(rng,224);
   return pic;
 }
 
@@ -41,18 +41,21 @@ ImagenetTriangular::ImagenetTriangular
 (int dimension, ActivationFunction fn,
  int nInputFeatures, int nClasses, int cudaDevice, int nTop)
   : SparseConvTriangLeNet(dimension,nInputFeatures, nClasses, cudaDevice, nTop) {
-  addLeNetLayerMP( 64,7,2,3,2,fn);
-  addLeNetLayerMP(256,2,1,3,2,fn);
-  addLeNetLayerMP(384,2,1,1,1,fn);
-  addLeNetLayerMP(384,2,1,1,1,fn);
-  addLeNetLayerMP(384,2,1,3,2,fn);
-  addLeNetLayerMP(512,2,1,1,1,fn);
-  addLeNetLayerMP(512,2,1,1,1,fn);
-  addLeNetLayerMP(512,2,1,3,2,fn);
-  addLeNetLayerMP(512,2,1,1,1,fn);
-  addLeNetLayerMP(512,2,1,1,1,fn);
-  addLeNetLayerMP(512,2,1,1,1,fn);
-  addTerminalPoolingLayer(16);
+  addLeNetLayerMP( 64,7,2,2,2,fn,0.0f,0,0);
+  addLeNetLayerMP(128,3,1,2,2,fn,0.0f,1,1);
+  addLeNetLayerMP(256,2,1,1,1,fn,0.0f,0,1);
+  addLeNetLayerMP(256,2,1,1,1,fn,0.0f,1,0);
+  addLeNetLayerMP(256,2,1,1,1,fn,0.0f,0,1);
+  addLeNetLayerMP(256,2,1,2,2,fn,0.0f,1,0);
+  addLeNetLayerMP(384,2,1,1,1,fn,0.0f,0,1);
+  addLeNetLayerMP(384,2,1,1,1,fn,0.0f,1,0);
+  addLeNetLayerMP(384,2,1,1,1,fn,0.0f,0,1);
+  addLeNetLayerMP(384,2,1,2,2,fn,0.0f,1,0);
+  addLeNetLayerMP(512,2,1,1,1,fn,0.0f,0,1);
+  addLeNetLayerMP(512,2,1,1,1,fn,0.0f,1,0);
+  addLeNetLayerMP(512,2,1,1,1,fn,0.0f,0,1);
+  addLeNetLayerMP(512,2,1,1,1,fn,0.0f,1,0);
+  addTerminalPoolingLayer(7);
   addLeNetLayerMP(1024,1,1,1,1,fn);
   addSoftmaxLayer();
 }
@@ -86,5 +89,4 @@ int main() {
       cnn.processDatasetRepeatTest(validationSubset, batchSize,1);
     }
   }
-  std::cout << "hw\n";
 }
