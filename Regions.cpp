@@ -246,9 +246,6 @@ void gridRules
 
 
 
-
-
-
 PoolingRegionsTriangular::PoolingRegionsTriangular(int nIn, int nOut, int dimension, int s) : nIn(nIn), nOut(nOut), dimension(dimension), s(s) {
   S=0;    //Calculate #points in the triangular filter, and order them
   ord.resize(ipow(s,dimension),-1); //iterate over the s^d cube, -1 means not in the filter
@@ -308,6 +305,11 @@ int PaddedPoolingRegionsTriangular::lb2(int i0, int i1, int i2, int i3) {return 
 int PaddedPoolingRegionsTriangular::ub2(int i0, int i1, int i2, int i3) {return std::min((i2+lPad)/poolStride,nOut-1);}
 int PaddedPoolingRegionsTriangular::lb3(int i0, int i1, int i2, int i3) {return std::max(0,((i3+lPad)-poolSize+poolStride)/poolStride);}
 int PaddedPoolingRegionsTriangular::ub3(int i0, int i1, int i2, int i3) {return std::min((i3+lPad)/poolStride,nOut-1);}
+
+
+//N.B. For convolutions, if the data is sparse, there is no reason to use padding.
+//If the data is dense, i.e. cropped views of photographs, padding can be used to improve efficiency by limiting the size of the earlier layers.
+//When using padding, the rules vector should point to -1 where a filter overlaps the boundary. The implementation below will instead point to inputGrid.backgroundCol if inputGrid.backgroundCol!=-1, i.e. if the input has a large grey area. However, this does not seem to be very important.
 
 void gridRulesTriangular
 (SparseGrid& inputGrid, //Keys 0,1,...,powf(regions.nIn,3)-1 represent grid points (plus paddding to form a square/cube); key -1 represents null/background vector
@@ -419,8 +421,4 @@ void gridRulesTriangular
     for (int i=0;i<regions.S;++i) rules.push_back(inputGrid.backgroundCol);
     outputGrid.backgroundCol=nOutputSpatialSites++;
   }
-  // else{
-  //   for (int i=0;i<regions.S;++i) rules.push_back(inputGrid.backgroundCol);
-  //   outputGrid.backgroundCol=nOutputSpatialSites++;
-  // }
 }

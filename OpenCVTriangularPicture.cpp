@@ -48,7 +48,7 @@ void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize) { //subsetSize==spatialS
         int y=Y-yOffset-subsetSize/3;
         pointsCtr++;
         if (0<=x and x<mat.cols and 0<=y and y<mat.rows)
-          interestingPointsCtr+=(mat.ptr()[(pointsCtr%3)+x*mat.channels()+y*mat.channels()*mat.cols]!=backgroundColor);
+          interestingPointsCtr+=(mat.ptr()[(pointsCtr%mat.channels())+x*mat.channels()+y*mat.channels()*mat.cols]!=backgroundColor);
       }
     }
     assert(pointsCtr>=10);
