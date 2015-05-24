@@ -3,11 +3,7 @@
 #include "Rng.h"
 #include "SparseGrid.h"
 
-
-//All pooling regions are all of equal size.
-//(i.e. We implement overlapping fractional max-pooling, but not non-overlapping fractional max-pooling)
-
-class PoolingRegions { //Which output locations does the (i,j)-th input cell feed into (inclusive bounds)
+class PoolingRegions { //Which output locations does the (i,j)-th input cell feed into (inclusive bounds)?
 public:
   int nIn;
   int nOut;
@@ -21,7 +17,7 @@ public:
   virtual int tl1(int j0, int j1=0, int j2=0, int j3=0);
   virtual int tl2(int j0, int j1=0, int j2=0, int j3=0);
   virtual int tl3(int j0, int j1=0, int j2=0, int j3=0);
-  //given an input-layer point, what is the range of points in the output layer to which can be pooled (inclusive bounds)
+  //given an input-layer point, what is the range of points in the output layer to which it can be pooled (inclusive bounds)
   virtual int lb0(int i0, int i1=0, int i2=0, int i3=0);
   virtual int ub0(int i0, int i1=0, int i2=0, int i3=0);
   virtual int lb1(int i0, int i1=0, int i2=0, int i3=0);
@@ -37,6 +33,28 @@ class RegularPoolingRegions : public PoolingRegions {
   int poolStride;
 public:
   RegularPoolingRegions(int nIn, int nOut, int dimension, int poolSize, int poolStride);
+  int tl0(int j0, int j1=0, int j2=0, int j3=0);
+  int tl1(int j0, int j1=0, int j2=0, int j3=0);
+  int tl2(int j0, int j1=0, int j2=0, int j3=0);
+  int tl3(int j0, int j1=0, int j2=0, int j3=0);
+
+  int lb0(int i0, int i1=0, int i2=0, int i3=0);
+  int ub0(int i0, int i1=0, int i2=0, int i3=0);
+  int lb1(int i0, int i1=0, int i2=0, int i3=0);
+  int ub1(int i0, int i1=0, int i2=0, int i3=0);
+  int lb2(int i0, int i1=0, int i2=0, int i3=0);
+  int ub2(int i0, int i1=0, int i2=0, int i3=0);
+  int lb3(int i0, int i1=0, int i2=0, int i3=0);
+  int ub3(int i0, int i1=0, int i2=0, int i3=0);
+};
+
+class PaddedPoolingRegions : public PoolingRegions {
+  int poolSize;
+  int poolStride;
+  int lPad;
+  int rPad;
+public:
+  PaddedPoolingRegions(int nIn, int nOut, int dimension, int poolSize, int poolStride, int lPad=0, int rPad=0);
   int tl0(int j0, int j1=0, int j2=0, int j3=0);
   int tl1(int j0, int j1=0, int j2=0, int j3=0);
   int tl2(int j0, int j1=0, int j2=0, int j3=0);
@@ -148,7 +166,7 @@ public:
   virtual int tl1(int j0, int j1=0, int j2=0, int j3=0);
   virtual int tl2(int j0, int j1=0, int j2=0, int j3=0);
   virtual int tl3(int j0, int j1=0, int j2=0, int j3=0);
-  //given an input-layer point, what is the range of points in the output layer to which can be pooled (inclusive bounds)
+  //given an input-layer point, what is the range of points in the output layer to which it can be pooled (inclusive bounds)
   virtual int lb0(int i0, int i1=0, int i2=0, int i3=0);
   virtual int ub0(int i0, int i1=0, int i2=0, int i3=0);
   virtual int lb1(int i0, int i1=0, int i2=0, int i3=0);
@@ -164,6 +182,27 @@ class RegularPoolingRegionsTriangular : public PoolingRegionsTriangular {
   int poolStride;
 public:
   RegularPoolingRegionsTriangular(int nIn, int nOut, int dimension, int poolSize, int poolStride);
+  int tl0(int j0, int j1=0, int j2=0, int j3=0);
+  int tl1(int j0, int j1=0, int j2=0, int j3=0);
+  int tl2(int j0, int j1=0, int j2=0, int j3=0);
+  int tl3(int j0, int j1=0, int j2=0, int j3=0);
+
+  int lb0(int i0, int i1=0, int i2=0, int i3=0);
+  int ub0(int i0, int i1=0, int i2=0, int i3=0);
+  int lb1(int i0, int i1=0, int i2=0, int i3=0);
+  int ub1(int i0, int i1=0, int i2=0, int i3=0);
+  int lb2(int i0, int i1=0, int i2=0, int i3=0);
+  int ub2(int i0, int i1=0, int i2=0, int i3=0);
+  int lb3(int i0, int i1=0, int i2=0, int i3=0);
+  int ub3(int i0, int i1=0, int i2=0, int i3=0);
+};
+class PaddedPoolingRegionsTriangular : public PoolingRegionsTriangular {
+  int poolSize;
+  int poolStride;
+  int lPad;
+  int rPad;
+public:
+  PaddedPoolingRegionsTriangular(int nIn, int nOut, int dimension, int poolSize, int poolStride, int lPad=0, int rPad=0);
   int tl0(int j0, int j1=0, int j2=0, int j3=0);
   int tl1(int j0, int j1=0, int j2=0, int j3=0);
   int tl2(int j0, int j1=0, int j2=0, int j3=0);

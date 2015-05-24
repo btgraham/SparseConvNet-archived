@@ -16,7 +16,7 @@ __global__ void dPropForwardToMatrixMultiplyInput
       int rq=r[q];
       int i=(c+q)*nIn;
       for (int j=threadIdx.x;j<nIn;j+=KERNELBLOCKSIZE) {
-        d_convolved[i+j]=d_features[rq+j];
+        d_convolved[i+j]=(rq>=0)?d_features[rq+j]:0;    //If padding is used, check rq!=-1
       }
     }
     __syncthreads();
@@ -43,7 +43,7 @@ __global__ void dPropBackwardFromMatrixMultiplyOutput
       int rq=r[q];
       int i=(c+q)*nIn;
       for (int j=threadIdx.x;j<nIn;j+=KERNELBLOCKSIZE) {
-        if (d_deltaConvolved[i+j]!=0)
+        if (/*d_deltaConvolved[i+j]!=0 and*/ rq>=0)
           atomicAdd(&d_deltaGrid[rq+j],d_deltaConvolved[i+j]);
       }
     }

@@ -12,10 +12,14 @@ public:
   int dimension;
   int nFeaturesIn;
   int nFeaturesOut;
+  int lPad;
+  int rPad;
   ConvolutionalTriangularLayer(int filterSize,
                                int filterStride,
                                int dimension,
-                               int nFeaturesIn);
+                               int nFeaturesIn,
+                               int lPad=0,
+                               int rPad=0);
   void preprocess
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,

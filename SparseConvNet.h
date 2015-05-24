@@ -44,7 +44,7 @@ private:
 public:
   SparseConvTriangLeNet(int dimension, int nInputFeatures, int nClasses, int pciBusID=-1, int nTop=1);
   ~SparseConvTriangLeNet();
-  void addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn=RELU, float dropout=0.0f);
+  void addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn=RELU, float dropout=0.0f, int lPad=0, int rPad=0);
   void addTerminalPoolingLayer(int poolSize);
   void addSoftmaxLayer();
   void addIndexLearnerLayer();

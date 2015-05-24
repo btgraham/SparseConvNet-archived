@@ -63,8 +63,8 @@ public:
                                        int filterStride,
                                        ActivationFunction activationFn=RELU,
                                        float dropout=0.0f,
-                                       float poolingToFollow=1.0f);
-  void addTriangularLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn=RELU, float dropout=0.0f);
+                                       float poolingToFollow=1.0f,int lPad=0, int rPad=0);
+  void addTriangularLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn=RELU, float dropout=0.0f, int lPad=0, int rPad=0);
   void addSoftmaxLayer();
   void addTerminalPoolingLayer(int poolSize, int S);
   void addIndexLearnerLayer();

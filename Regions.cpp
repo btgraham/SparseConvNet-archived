@@ -19,8 +19,8 @@ int PoolingRegions::lb3(int i0, int i1, int i2, int i3) {return 0;};
 int PoolingRegions::ub3(int i0, int i1, int i2, int i3) {return 0;};
 
 
-RegularPoolingRegions::RegularPoolingRegions(int nIn, int nOut, int dimension, int poolSize, int poolStride) :
-  PoolingRegions(nIn,nOut,dimension, poolSize), poolSize(poolSize), poolStride(poolStride) {
+RegularPoolingRegions::RegularPoolingRegions(int nIn, int nOut, int dimension, int poolSize, int poolStride)
+  : PoolingRegions(nIn,nOut,dimension, poolSize), poolSize(poolSize), poolStride(poolStride){
   assert(nIn==poolSize+(nOut-1)*poolStride);
 }
 int RegularPoolingRegions::tl0(int j0, int j1, int j2, int j3) {return j0*poolStride;}
@@ -35,6 +35,23 @@ int RegularPoolingRegions::lb2(int i0, int i1, int i2, int i3) {return std::max(
 int RegularPoolingRegions::ub2(int i0, int i1, int i2, int i3) {return std::min(i2/poolStride,nOut-1);}
 int RegularPoolingRegions::lb3(int i0, int i1, int i2, int i3) {return std::max(0,(i3-poolSize+poolStride)/poolStride);}
 int RegularPoolingRegions::ub3(int i0, int i1, int i2, int i3) {return std::min(i3/poolStride,nOut-1);}
+
+PaddedPoolingRegions::PaddedPoolingRegions(int nIn, int nOut, int dimension, int poolSize, int poolStride, int lPad, int rPad) :
+  PoolingRegions(nIn,nOut,dimension, poolSize), poolSize(poolSize), poolStride(poolStride), lPad(lPad), rPad(rPad) {
+  assert(nIn==poolSize+(nOut-1)*poolStride-lPad-rPad);
+}
+int PaddedPoolingRegions::tl0(int j0, int j1, int j2, int j3) {return j0*poolStride-lPad;}
+int PaddedPoolingRegions::tl1(int j0, int j1, int j2, int j3) {return j1*poolStride-lPad;}
+int PaddedPoolingRegions::tl2(int j0, int j1, int j2, int j3) {return j2*poolStride-lPad;}
+int PaddedPoolingRegions::tl3(int j0, int j1, int j2, int j3) {return j3*poolStride-lPad;}
+int PaddedPoolingRegions::lb0(int i0, int i1, int i2, int i3) {return std::max(0,((i0+lPad)-poolSize+poolStride)/poolStride);}
+int PaddedPoolingRegions::ub0(int i0, int i1, int i2, int i3) {return std::min((i0+lPad)/poolStride,nOut-1);}
+int PaddedPoolingRegions::lb1(int i0, int i1, int i2, int i3) {return std::max(0,((i1+lPad)-poolSize+poolStride)/poolStride);}
+int PaddedPoolingRegions::ub1(int i0, int i1, int i2, int i3) {return std::min((i1+lPad)/poolStride,nOut-1);}
+int PaddedPoolingRegions::lb2(int i0, int i1, int i2, int i3) {return std::max(0,((i2+lPad)-poolSize+poolStride)/poolStride);}
+int PaddedPoolingRegions::ub2(int i0, int i1, int i2, int i3) {return std::min((i2+lPad)/poolStride,nOut-1);}
+int PaddedPoolingRegions::lb3(int i0, int i1, int i2, int i3) {return std::max(0,((i3+lPad)-poolSize+poolStride)/poolStride);}
+int PaddedPoolingRegions::ub3(int i0, int i1, int i2, int i3) {return std::min((i3+lPad)/poolStride,nOut-1);}
 
 
 PseudorandomOverlappingFractionalMaxPoolingBlocks::PseudorandomOverlappingFractionalMaxPoolingBlocks(int nIn, int nOut, int poolSize, RNG& rng) {
@@ -275,6 +292,23 @@ int RegularPoolingRegionsTriangular::ub2(int i0, int i1, int i2, int i3) {return
 int RegularPoolingRegionsTriangular::lb3(int i0, int i1, int i2, int i3) {return std::max(0,(i3-poolSize+poolStride)/poolStride);}
 int RegularPoolingRegionsTriangular::ub3(int i0, int i1, int i2, int i3) {return std::min(i3/poolStride,nOut-1);}
 
+PaddedPoolingRegionsTriangular::PaddedPoolingRegionsTriangular(int nIn, int nOut, int dimension, int poolSize, int poolStride, int lPad, int rPad)
+  : PoolingRegionsTriangular(nIn,nOut,dimension, poolSize), poolSize(poolSize), poolStride(poolStride), lPad(lPad), rPad(rPad) {
+  assert(nIn==poolSize+(nOut-1)*poolStride-lPad-rPad);
+}
+int PaddedPoolingRegionsTriangular::tl0(int j0, int j1, int j2, int j3) {return j0*poolStride-lPad;}
+int PaddedPoolingRegionsTriangular::tl1(int j0, int j1, int j2, int j3) {return j1*poolStride-lPad;}
+int PaddedPoolingRegionsTriangular::tl2(int j0, int j1, int j2, int j3) {return j2*poolStride-lPad;}
+int PaddedPoolingRegionsTriangular::tl3(int j0, int j1, int j2, int j3) {return j3*poolStride-lPad;}
+int PaddedPoolingRegionsTriangular::lb0(int i0, int i1, int i2, int i3) {return std::max(0,((i0+lPad)-poolSize+poolStride)/poolStride);}
+int PaddedPoolingRegionsTriangular::ub0(int i0, int i1, int i2, int i3) {return std::min((i0+lPad)/poolStride,nOut-1);}
+int PaddedPoolingRegionsTriangular::lb1(int i0, int i1, int i2, int i3) {return std::max(0,((i1+lPad)-poolSize+poolStride)/poolStride);}
+int PaddedPoolingRegionsTriangular::ub1(int i0, int i1, int i2, int i3) {return std::min((i1+lPad)/poolStride,nOut-1);}
+int PaddedPoolingRegionsTriangular::lb2(int i0, int i1, int i2, int i3) {return std::max(0,((i2+lPad)-poolSize+poolStride)/poolStride);}
+int PaddedPoolingRegionsTriangular::ub2(int i0, int i1, int i2, int i3) {return std::min((i2+lPad)/poolStride,nOut-1);}
+int PaddedPoolingRegionsTriangular::lb3(int i0, int i1, int i2, int i3) {return std::max(0,((i3+lPad)-poolSize+poolStride)/poolStride);}
+int PaddedPoolingRegionsTriangular::ub3(int i0, int i1, int i2, int i3) {return std::min((i3+lPad)/poolStride,nOut-1);}
+
 void gridRulesTriangular
 (SparseGrid& inputGrid, //Keys 0,1,...,powf(regions.nIn,3)-1 represent grid points (plus paddding to form a square/cube); key -1 represents null/background vector
  SparseGrid& outputGrid, //Keys 0,1,...,powf(regions.nOut,3)-1 represent grid points (plus paddding to form a square/cube); key -1 represents null/background vector
@@ -315,6 +349,8 @@ void gridRulesTriangular
                 }
                 outputGrid.mp[key]=nOutputSpatialSites++;
               }
+              if (iter->second<0)
+                std::cout << "!" << std::flush;
               rules[ outputGrid.mp[key]*regions.S + r ] = iter->second;
             }
           }
@@ -383,4 +419,8 @@ void gridRulesTriangular
     for (int i=0;i<regions.S;++i) rules.push_back(inputGrid.backgroundCol);
     outputGrid.backgroundCol=nOutputSpatialSites++;
   }
+  // else{
+  //   for (int i=0;i<regions.S;++i) rules.push_back(inputGrid.backgroundCol);
+  //   outputGrid.backgroundCol=nOutputSpatialSites++;
+  // }
 }

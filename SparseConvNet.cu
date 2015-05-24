@@ -6,7 +6,7 @@ SparseConvNet::SparseConvNet(int dimension, int nInputFeatures, int nClasses, in
   : cnn(new SparseConvNetCUDA(dimension, nInputFeatures, nClasses, pciBusID, nTop)) {
 }
 
-SparseConvNet::~SparseConvNet(){ //Using auto_ptr for pimpl
+SparseConvNet::~SparseConvNet(){
 }
 
 void SparseConvNet::addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout){
@@ -64,11 +64,11 @@ void SparseConvNet::calculateInputRegularizingConstants(SpatiallySparseDataset d
 SparseConvTriangLeNet::SparseConvTriangLeNet(int dimension, int nInputFeatures, int nClasses, int pciBusID, int nTop)
   : cnn(new SparseConvNetCUDA(dimension, nInputFeatures, nClasses, pciBusID, nTop)) {
 }
-SparseConvTriangLeNet::~SparseConvTriangLeNet(){ //Using auto_ptr for pimpl
+SparseConvTriangLeNet::~SparseConvTriangLeNet(){
 }
 
-void SparseConvTriangLeNet::addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout){
-  cnn->addTriangularLeNetLayerMP(nFeatures, filterSize, filterStride, poolSize, poolStride, activationFn, dropout);
+void SparseConvTriangLeNet::addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout, int lPad, int rPad){
+  cnn->addTriangularLeNetLayerMP(nFeatures, filterSize, filterStride, poolSize, poolStride, activationFn, dropout, lPad, rPad);
 }
 
 void SparseConvTriangLeNet::addTerminalPoolingLayer(int poolSize) {

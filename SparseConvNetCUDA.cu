@@ -24,7 +24,7 @@ SparseConvNetCUDA::SparseConvNetCUDA (int dimension,
                                       int nClasses,
                                       int pciBusID,
                                       int nTop) :
-dimension(dimension),
+  dimension(dimension),
   nInputFeatures(nInputFeatures),
   nClasses(nClasses),
   nTop(nTop) {
@@ -84,15 +84,15 @@ void SparseConvNetCUDA::addTriangularConvolutionalLayer(int nFeatures,
                                                         int filterStride,
                                                         ActivationFunction activationFn,
                                                         float dropout,
-                                                        float poolingToFollow) {
+                                                        float poolingToFollow, int lPad, int rPad) {
   if (filterSize>1) {
-    layers.push_back(new ConvolutionalTriangularLayer(filterSize, filterStride, dimension, nOutputFeatures));
+    layers.push_back(new ConvolutionalTriangularLayer(filterSize, filterStride, dimension, nOutputFeatures, lPad, rPad));
     nOutputFeatures*=triangleSize(filterSize,dimension);
   }
   addLearntLayer(nFeatures,activationFn,dropout,powf(filterSize*1.0/filterStride/poolingToFollow,2));
 }
-void SparseConvNetCUDA::addTriangularLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout) {
-  addTriangularConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,poolSize);
+void SparseConvNetCUDA::addTriangularLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout, int lPad, int rPad) {
+  addTriangularConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,poolSize,lPad,rPad);
   if (poolSize>1) {
     layers.push_back(new MaxPoolingTriangularLayer(poolSize, poolStride,dimension));
   }
