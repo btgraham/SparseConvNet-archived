@@ -21,7 +21,7 @@ Top row: four exemplars of snakes. Bottom row: an ant, an elephant, a robot and 
 
 ### To test the CNN:
 1. Put the [CIFAR-10 data files](http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz) in the Data/CIFAR10/ folder
-2. Execute "make cifar10 && cifar10"
+2. Execute "make cifar10 && ./cifar10"
 
 ### Dependencies:
 1. An Nvidia CUDA sm_20 capable graphics card
