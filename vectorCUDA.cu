@@ -107,6 +107,13 @@ template <typename t> void vectorCUDA<t>::setZero() {
     memset(&vec[0],0,sizeof(t)*vec.size());
   }
 }
+template <typename t> void vectorCUDA<t>::setZero(cudaMemStream &memStream) {
+  if (onGPU) {
+    cudaSafeCall(cudaMemsetAsync(d_vec,  0,sizeof(t)*dsize, memStream.stream));
+  } else {
+    memset(&vec[0],0,sizeof(t)*vec.size());
+  }
+}
 template <typename t> void vectorCUDA<t>::setConstant(float a) {
   copyToCPU();
   for (int i=0;i<vec.size();i++)

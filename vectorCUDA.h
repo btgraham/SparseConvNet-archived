@@ -25,6 +25,7 @@ public:
   float meanAbs();
   void multiplicativeRescale(float multiplier);
   void setZero();
+  void setZero(cudaMemStream &memStream);
   void setConstant(float a=0);
   void setUniform(float a=0,float b=1);
   void setBernoulli(float p=0.5);

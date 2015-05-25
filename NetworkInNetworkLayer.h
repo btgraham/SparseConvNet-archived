@@ -52,8 +52,18 @@ __global__ void dShrinkMatrixForDropout
 (float* m, float* md,
  int* inFeaturesPresent, int* outFeaturesPresent,
  int nOut, int nOutDropout);
+__global__ void dShrinkVectorForDropout
+(float* m, float* md, int* outFeaturesPresent, int nOut, int nOutDropout);
+__global__ void dGradientDescent
+(float* d_delta, float* d_momentum, float* d_weights, int nOut, float learningRate);
 __global__ void dGradientDescentShrunkMatrix
 (float* d_delta, float* d_momentum, float* d_weights,
  int nOut, int nOutDropout,
  int* inFeaturesPresent, int* outFeaturesPresent,
  float learningRate);
+__global__ void dGradientDescentShrunkVector
+(float* d_delta, float* d_momentum, float* d_weights,
+ int nOut, int nOutDropout,
+ int* outFeaturesPresent,
+ float learningRate);
+void columnSum(float* matrix, float* target, int nRows, int nColumns);

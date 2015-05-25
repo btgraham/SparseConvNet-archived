@@ -53,7 +53,7 @@ void MaxPoolingTriangularLayer::backwards
  float learningRate) {
   if (input.backpropErrors) {
     input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub->dfeatures.setZero();
+    input.sub->dfeatures.setZero(*cnnMemStream);
     maxPoolBackProp
       (input.sub->dfeatures.dPtr(), output.sub->dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub->poolingChoices.dPtr());
   }

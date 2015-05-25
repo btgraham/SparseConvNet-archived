@@ -192,7 +192,7 @@ void NetworkInNetworkLayer::backwards
 
   multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*output.featuresPresent.size();
   cudaCheckError();
-  db.setZero();
+  db.setZero(*cnnMemStream);
   columnSum(output.sub->dfeatures.dPtr(), db.dPtr(), output.nSpatialSites, output.featuresPresent.size());
 
   if (nFeaturesIn+nFeaturesOut>input.featuresPresent.size()+output.featuresPresent.size()) {

@@ -9,6 +9,7 @@
 #include "SigmoidLayer.h"
 #include "NetworkInNetworkLayer.h"
 #include "ConvolutionalLayer.h"
+#include "ReallyConvolutionalLayer.h"
 #include "ConvolutionalTriangularLayer.h"
 #include "MaxPoolingLayer.h"
 #include "MaxPoolingTriangularLayer.h"
@@ -55,11 +56,16 @@ void SparseConvNetCUDA::addConvolutionalLayer(int nFeatures,
                                               int filterStride,
                                               ActivationFunction activationFn,
                                               float dropout,                             float poolingToFollow) {
-  if (filterSize>1) {
-    layers.push_back(new ConvolutionalLayer(filterSize, filterStride, dimension, nOutputFeatures));
-    nOutputFeatures*=ipow(filterSize,dimension);
+  if (layers.size()>=0) {
+    layers.push_back(new ReallyConvolutionalLayer(nOutputFeatures, nFeatures, filterSize, filterStride, dimension, activationFn, dropout, poolingToFollow));
+    nOutputFeatures=nFeatures;
+  } else {
+    if (filterSize>1) {
+      layers.push_back(new ConvolutionalLayer(filterSize, filterStride, dimension, nOutputFeatures));
+      nOutputFeatures*=ipow(filterSize,dimension);
+    }
+    addLearntLayer(nFeatures,activationFn,dropout,powf(filterSize*1.0/filterStride/poolingToFollow,2));
   }
-  addLearntLayer(nFeatures,activationFn,dropout,powf(filterSize*1.0/filterStride/poolingToFollow,2));
 }
 void SparseConvNetCUDA::addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout) {
   addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,poolSize);

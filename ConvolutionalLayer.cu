@@ -128,7 +128,7 @@ void ConvolutionalLayer::backwards
  float learningRate) {
   if (input.backpropErrors) {
     input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub->dfeatures.setZero();
+    input.sub->dfeatures.setZero(*cnnMemStream);
     propBackwardFromMatrixMultiply(input.sub->dfeatures.dPtr(),
                                    output.sub->dfeatures.dPtr(),
                                    output.rules.dPtr(),
