@@ -1,3 +1,5 @@
+//This does not really implement a convolution. It just gathers data together in prepartion for matrix muliplictation. "Proper convolution" = "ConvolutionalLayer" + "NetworkInNetworkLayer"
+
 #include "ConvolutionalLayer.h"
 #include <iostream>
 #include <vector>
