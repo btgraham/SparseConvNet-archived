@@ -56,7 +56,7 @@ void SparseConvNetCUDA::addConvolutionalLayer(int nFeatures,
                                               int filterStride,
                                               ActivationFunction activationFn,
                                               float dropout,                             float poolingToFollow) {
-  if (layers.size()>=0) {
+  if (false/*layers.size()==0*/) {
     layers.push_back(new ReallyConvolutionalLayer(nOutputFeatures, nFeatures, filterSize, filterStride, dimension, activationFn, dropout, poolingToFollow));
     nOutputFeatures=nFeatures;
   } else {

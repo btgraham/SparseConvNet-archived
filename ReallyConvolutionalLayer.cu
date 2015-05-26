@@ -48,18 +48,21 @@ __global__ void dMultiply_Input_Weights_Output
  ) {
   __shared__ float As[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
   __shared__ float Bs[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
+  //  __shared__ int r[KERNELBLOCKSIZE][KERNELBLOCKSIZE];  //Assume fs <=KERNELBLOCKSIZE
   int bx=blockIdx.x*KERNELBLOCKSIZE;
   int by=blockIdx.y*KERNELBLOCKSIZE;
   int tx=threadIdx.x;
   int ty=threadIdx.y;
   float acc = B[bx+tx];
-  int r;
+  //r[ty][tx]=(tx<fs and by+ty<outputNSpatialSites)?rules[(by+ty)*fs+tx]:-1;
+  //  __syncthreads();
   for (int k=0;k<nIn*fs;k+=KERNELBLOCKSIZE) {
     int n=min(KERNELBLOCKSIZE,nIn*fs-k);
     int f=(k+tx)/nIn;
     int ff=(k+tx)%nIn;
-    r=(tx<n and by+ty<outputNSpatialSites)?rules[(by+ty)*fs+f]:-1;
-    As[ty][tx]=(r>=0)?inFeatures[(r)*nIn+(ff)]:0;
+    int r=(tx<n and by+ty<outputNSpatialSites)?rules[(by+ty)*fs+f]:-1; /////
+    As[ty][tx]=(r>=0)?inFeatures[r*nIn+(ff)]:0; ////////
+    //As[ty][tx]=(r[ty][f]>=0)?inFeatures[r[ty][f]*nIn+(ff)]:0;
     Bs[ty][tx]=(ty<n)?W[(k+ty)*nOut+(bx+tx)]:0;
     __syncthreads();
     for (int l=0; l<n; l++)
