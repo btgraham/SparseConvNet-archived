@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-int epoch=0;
+int epoch=53;
 int cudaDevice=-1; //PCI bus ID, -1 for default GPU
 int batchSize=32;
 
@@ -83,7 +83,7 @@ int main() {
     }
     for (epoch++;;epoch++) {
       std::cout <<"epoch: " << epoch << std::endl;
-      SpatiallySparseDataset trainSubset=trainSet.subset(32000);
+      SpatiallySparseDataset trainSubset=trainSet.subset(3200);
       cnn.processDataset(trainSubset, batchSize,0.003);
       cnn.saveWeights(baseName,epoch);
       cnn.processDatasetRepeatTest(validationSubset, batchSize,1);
