@@ -22,25 +22,6 @@ Top row: four exemplars of snakes. Bottom row: an ant, an elephant, a robot and 
 ## [Wiki](https://github.com/btgraham/SparseConvNet/wiki)
 ## [Dependencies and Installation](https://github.com/btgraham/SparseConvNet/wiki/Installation)
 
-### To test the CNN:
-1. Put the [CIFAR-10 .bin data files](http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz) in the Data/CIFAR10/ folder
-2. Execute "make cifar10 && ./cifar10"
-
-### Dependencies:
-1. An Nvidia CUDA sm_20 capable graphics card and the [CUDA SDK](https://developer.nvidia.com/cuda-downloads)
-2. The [OpenCV](http://opencv.org/) library
-3. The [Armadillo](http://arma.sourceforge.net/) library
-4. Google's [Sparsehash](https://code.google.com/p/sparsehash/downloads/list) library
-
-To install dependencies 2-4 on Ubuntu:
-sudo apt-get install libarmadillo-dev libboost-dev libopencv-core-dev libopencv-highgui-dev
-wget https://sparsehash.googlecode.com/files/sparsehash_2.0.2-1_amd64.deb
-sudo dpkg -i sparsehash_2.0.2-1_amd64.deb
-
-### References
-1. [Spatially-sparse convolutional neural networks](http://arxiv.org/abs/1409.6070)
-2. [Sparse 3D convolutional neural networks](http://arxiv.org/abs/1505.02890)
-
 **************************************************************************
 SparseConvNet is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
