@@ -6,8 +6,8 @@ SparseConvNet is a convolutional neural network for processing sparse data on a 
 (i) the square lattice,
 (ii) the triangular lattice,
 (iii) the cubic lattice,
-(iv) the tetrahedral lattice, ...
-![lattice](/figures/lattices.png)
+(iv) the tetrahedral lattice, ...  
+![lattice](/figures/lattices.png)  
 ... and of course the hyper-cubic and hyper-tetrahedral 4D lattices as well.
 
 Data is sparse if most sites take the value zero. For example, if a loop of string has a knot in it, and you trace the shape of the string in a 3D lattice, most sites will not form part of the knot (left). Applying a 2x2x2 convolution (middle), and a pooling operation (right), the set of non-zero sites stays fairly small:
@@ -18,6 +18,9 @@ Here are some examples from a [3D object dataset](http://www.itl.nist.gov/iad/vu
 
 ![lattice](/figures/shrec.png)
 Top row: four exemplars of snakes. Bottom row: an ant, an elephant, a robot and a tortoise.
+
+## [Wiki](https://github.com/btgraham/SparseConvNet/wiki)
+## [Dependencies and Installation](https://github.com/btgraham/SparseConvNet/wiki/Installation)
 
 ### To test the CNN:
 1. Put the [CIFAR-10 .bin data files](http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz) in the Data/CIFAR10/ folder
