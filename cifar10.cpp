@@ -55,7 +55,7 @@ int main() {
 
   if (epoch>0)
     cnn.loadWeights(baseName,epoch);
-  for (epoch++;epoch<=2;epoch++) {
+  for (epoch++;;epoch++) {
     std::cout <<"epoch: " << epoch << " " << std::flush;
     cnn.processDataset(trainSet, batchSize,0.003*exp(-0.005 * epoch));
     if (epoch%50==0) {
