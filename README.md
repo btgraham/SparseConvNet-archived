@@ -4,7 +4,7 @@
 
 SparseConvNet is a convolutional neural network for processing sparse data on a variety of lattices, i.e.
 (i) the square lattice,
-(ii) the triagular lattice,
+(ii) the triangular lattice,
 (iii) the cubic lattice,
 (iv) the tetrahedral lattice, ...  
 ![lattice](/figures/lattices.png)  
