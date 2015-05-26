@@ -14,7 +14,7 @@ Data is sparse if most sites take the value zero. For example, if a loop of stri
 ![lattice](/figures/trefoil.png)
 
 This can be used to analyse 3D models, or space-time paths.
-Here are some examples from a [3D object dataset](http://www.itl.nist.gov/iad/vug/sharp/contest/2014/Generic3D/index.html). The insides are hollow, so the data is fairly sparse. The computation complexity of processing the models is related to the [fractal dimension](http://en.wikipedia.org/wiki/Fractal_dimension) of the underlying objects.
+Here are some examples from a [3D object dataset](http://www.itl.nist.gov/iad/vug/sharp/contest/2014/Generic3D/index.html). The insides are hollow, so the data is fairly sparse. The computational complexity of processing the models is related to the [fractal dimension](http://en.wikipedia.org/wiki/Fractal_dimension) of the underlying objects.
 
 ![lattice](/figures/shrec.png)
 Top row: four exemplars of snakes. Bottom row: an ant, an elephant, a robot and a tortoise.
