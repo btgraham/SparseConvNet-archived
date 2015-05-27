@@ -1,5 +1,4 @@
 #include "SpatiallySparseDatasetKagglePlankton.h"
-#include <glob.h>
 #include<iostream>
 #include<fstream>
 #include<string>
@@ -13,7 +12,7 @@ KagglePlanktonLabeledDataSet::KagglePlanktonLabeledDataSet
     std::ifstream f(classesListFile.c_str());
     std::string cl;
     while (f >> cl)
-      classes[cl]=classes.size();
+      classes[cl]=classes.size()-1;
   }
   nClasses=classes.size();
   for (auto &kv : classes) {
@@ -36,7 +35,7 @@ KagglePlanktonUnlabeledDataSet::KagglePlanktonUnlabeledDataSet
     std::ifstream f(classesListFile.c_str());
     std::string cl;
     while (f >> cl) {
-      classes[cl]=classes.size();
+      classes[cl]=classes.size()-1;
       header=header+","+cl;
     }
   }

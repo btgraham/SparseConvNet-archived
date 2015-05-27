@@ -22,8 +22,8 @@ void ConvolutionalTriangularLayer::preprocess
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
   assert(input.nFeatures==nFeaturesIn);
-  assert(input.spatialSize>=filterSize);
-  assert((input.spatialSize-filterSize)%filterStride==0);
+  assert(input.spatialSize+lPad+rPad>=filterSize);
+  assert((input.spatialSize+lPad+rPad-filterSize)%filterStride==0);
   output.nFeatures=nFeaturesOut;
   output.spatialSize=(input.spatialSize+lPad+rPad-filterSize)/filterStride+1;
   output.nSpatialSites=0;

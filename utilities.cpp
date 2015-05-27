@@ -31,7 +31,6 @@ int triangleSize(int linearSize,int dimension) {
   return fs;
 }
 
-
 //Assume test.size() is at least k, and k>=1.
 template<typename t> std::vector<int> vectorTopIndices(std::vector<t> &test, int k) {
   std::vector<int> indices(k);
@@ -40,7 +39,7 @@ template<typename t> std::vector<int> vectorTopIndices(std::vector<t> &test, int
   for (int i=1;i<test.size();i++) {
     int j=std::min(i,k);
     if (test[i]>q[j-1]) {
-      --j;
+      if (i>=k) --j;
       for (;j>0 and test[i]>q[j-1];--j) {
         q[j]=q[j-1];
         indices[j]=indices[j-1];
