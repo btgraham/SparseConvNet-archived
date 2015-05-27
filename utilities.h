@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
-
+#include <glob.h>
+#include <string>
 //return vector 0,1,...,n-1
 std::vector<int> range(int n);
 
@@ -14,3 +15,6 @@ int triangleSize(int linearSize,int dimension);
 
 //Assume test.size() is at least k.
 template<typename t> std::vector<int> vectorTopIndices(std::vector<t> &test, int k);
+
+
+std::vector<std::string> globVector(const std::string& pattern);

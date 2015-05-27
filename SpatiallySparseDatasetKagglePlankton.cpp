@@ -1,40 +1,51 @@
 #include "SpatiallySparseDatasetKagglePlankton.h"
+#include <glob.h>
 #include<iostream>
 #include<fstream>
 #include<string>
-SpatiallySparseDataset KagglePlanktonTrainSet() {
-  SpatiallySparseDataset dataset;
-  dataset.name="Kaggle Plankton train set";
-  dataset.type=TRAINBATCH;
-  dataset.nFeatures=1;
-  dataset.nClasses=121;
+#include "utilities.h"
 
-  std::string imageFile;
-  int cl;
-  std::ifstream file("Data/__kagglePlankton/trainingData.txt");
-  while (file >> cl >> imageFile) {
-    OpenCVPicture* pic = new OpenCVPicture(std::string("Data/__kagglePlankton/")+imageFile,-1,0,cl);
-    pic->loadDataOnceIgnoreScale();
-    pic->scale=powf(powf(pic->mat.rows,2)+powf(pic->mat.cols,2),0.5);
-    dataset.pictures.push_back(pic);
+KagglePlanktonLabeledDataSet::KagglePlanktonLabeledDataSet
+(std::string classesListFile, std::string dataDirectory, batchType type_, int backgroundCol) {
+  name=dataDirectory;
+  type=type_;
+  {
+    std::ifstream f(classesListFile.c_str());
+    std::string cl;
+    while (f >> cl)
+      classes[cl]=classes.size();
   }
-  return dataset;
+  nClasses=classes.size();
+  for (auto &kv : classes) {
+    for (auto &file : globVector(dataDirectory+kv.first+"/*.jpg")) {
+      OpenCVPicture* pic = new OpenCVPicture(file,-1,backgroundCol,kv.second);
+      pic->loadDataWithoutScaling();
+      nFeatures=pic->mat.channels();
+      pic->scale=powf(powf(pic->mat.rows,2)+powf(pic->mat.cols,2),0.5);
+      pictures.push_back(pic);
+    }
+  }
 }
-SpatiallySparseDataset KagglePlanktonTestSet() {
-  SpatiallySparseDataset dataset;
-  dataset.name="Kaggle Plankton test set";
-  dataset.type=UNLABELLEDBATCH;
-  dataset.nFeatures=1;
-  dataset.nClasses=121;
 
-  std::string imageFile;
-  int cl;
-  std::ifstream file("Data/__kagglePlankton/testData.txt");
-  while (file >> cl >> imageFile) {
-    OpenCVPicture* pic = new OpenCVPicture(std::string("Data/__kagglePlankton/test/")+imageFile,-1,0,cl*0);
-    pic->loadDataOnceIgnoreScale();
-    pic->scale=powf(powf(pic->mat.rows,2)+powf(pic->mat.cols,2),0.5);
-    dataset.pictures.push_back(pic);
+KagglePlanktonUnlabeledDataSet::KagglePlanktonUnlabeledDataSet
+(std::string classesListFile, std::string dataDirectory, int backgroundCol) {
+  name=dataDirectory;
+  header="image,";
+  type=UNLABELEDBATCH;
+  {
+    std::ifstream f(classesListFile.c_str());
+    std::string cl;
+    while (f >> cl) {
+      classes[cl]=classes.size();
+      header=header+","+cl;
+    }
   }
-  return dataset;
+  nClasses=classes.size();
+  for (auto &file : globVector(std::string(dataDirectory+"*.jpg"))) {
+    OpenCVPicture* pic = new OpenCVPicture(file,-1,backgroundCol,0);
+    pic->loadDataWithoutScaling();
+    nFeatures=pic->mat.channels();
+    pic->scale=powf(powf(pic->mat.rows,2)+powf(pic->mat.cols,2),0.5);
+    pictures.push_back(pic);
+  }
 }

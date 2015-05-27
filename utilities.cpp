@@ -1,4 +1,6 @@
 #include "utilities.h"
+#include <algorithm>
+
 
 std::vector<int> range(int n) {
   std::vector<int> ret(n);
@@ -49,3 +51,19 @@ template<typename t> std::vector<int> vectorTopIndices(std::vector<t> &test, int
   return indices;
 }
 template std::vector<int> vectorTopIndices<float>(std::vector<float> &test, int k);
+
+
+//http://stackoverflow.com/questions/612097/how-can-i-get-the-list-of-files-in-a-directory-using-c-or-c
+std::vector<std::string> globVector(const std::string& pattern){
+  glob_t glob_result;
+  glob(pattern.c_str(),GLOB_TILDE,NULL,&glob_result);
+  std::vector<std::string> files;
+  for(unsigned int i=0;i<glob_result.gl_pathc;++i){
+    files.push_back(std::string(glob_result.gl_pathv[i]));
+  }
+  globfree(&glob_result);
+  std::sort(files.begin(),files.end());
+  return files;
+}
+
+//Usage: std::vector<std::string> files = globVector("./*");

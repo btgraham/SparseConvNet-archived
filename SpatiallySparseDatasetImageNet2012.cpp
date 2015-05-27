@@ -44,7 +44,7 @@ SpatiallySparseDataset ImageNet2012ValidationSet(int scale) {
 SpatiallySparseDataset ImageNet2012TestSet(int scale) {
   SpatiallySparseDataset dataset;
   dataset.name="ImageNet2012 train set";
-  dataset.type=UNLABELLEDBATCH;
+  dataset.type=UNLABELEDBATCH;
   dataset.nFeatures=3;
   dataset.nClasses=1000;
 

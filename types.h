@@ -1,9 +1,9 @@
 #include <stdint.h>
 
 #pragma once
-enum batchType {TRAINBATCH, TESTBATCH, UNLABELLEDBATCH, RESCALEBATCH};
+enum batchType {TRAINBATCH, TESTBATCH, UNLABELEDBATCH, RESCALEBATCH};
 #ifdef TYPES_CPP
-const char *batchTypeNames[] ={ "TRAINBATCH", "TESTBATCH", "UNLABELLEDBATCH","RESCALEBATCH"};
+const char *batchTypeNames[] ={ "TRAINBATCH", "TESTBATCH", "UNLABELEDBATCH","RESCALEBATCH"};
 #else
 extern const char *batchTypeNames[];
 #endif

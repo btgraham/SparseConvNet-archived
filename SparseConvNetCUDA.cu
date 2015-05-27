@@ -163,7 +163,7 @@ float SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset, int bat
   auto start=std::chrono::system_clock::now();
   std::ofstream f,g;
   BatchProducer bp(*this,dataset,inputSpatialSize,batchSize);
-  if (dataset.type==UNLABELLEDBATCH) {
+  if (dataset.type==UNLABELEDBATCH) {
     f.open("unlabelledData.predictions");
     g.open("unlabelledData.probabilities");
   }

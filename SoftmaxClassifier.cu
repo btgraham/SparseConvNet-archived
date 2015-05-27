@@ -37,7 +37,7 @@ void SoftmaxClassifier(SpatiallySparseBatchInterface& input, SpatiallySparseBatc
   for (int i=0;i<batch.batchSize;i++)
     batch.predictions.push_back(vectorTopIndices(batch.probabilities[i],nTop));
 
-  if (batch.type!=UNLABELLEDBATCH) {
+  if (batch.type!=UNLABELEDBATCH) {
     batch.mistakes+=batch.batchSize;
     for (int i=0;i<batch.batchSize;i++) {
       batch.negativeLogLikelihood-=log(max(batch.probabilities[i][batch.labels.hVector()[i]],1.0e-15));
