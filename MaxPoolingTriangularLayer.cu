@@ -61,6 +61,6 @@ void MaxPoolingTriangularLayer::backwards
 int MaxPoolingTriangularLayer::calculateInputSpatialSize(int outputSpatialSize) {
   outSpatialSize=outputSpatialSize;
   inSpatialSize=poolSize+(outputSpatialSize-1)*poolStride;
-  std::cout << "(" << outSpatialSize <<"," <<inSpatialSize << ") ";
+  std::cout << "(" << outSpatialSize <<"MP" <<inSpatialSize << ") ";
   return inSpatialSize;
 }

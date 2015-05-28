@@ -69,7 +69,7 @@ public:
   void addTerminalPoolingLayer(int poolSize, int S);
   void addIndexLearnerLayer();
   float processDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0);
-  void processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize=100, int nReps=12, std::string predictionsFilename="",std::string header="");
+  void processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize=100, int nReps=12, std::string predictionsFilename="",std::string header="",std::string confusionMatrixFilename="");
   float processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0.0);
   void processBatchDumpTopLevelFeaturess(SpatiallySparseBatch& batch, std::ofstream& f);
   void processDatasetDumpTopLevelFeatures(SpatiallySparseDataset &dataset, int batchSize, int reps=1);

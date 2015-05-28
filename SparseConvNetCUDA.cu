@@ -190,7 +190,7 @@ float SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset, int bat
             << std::endl;
   return errorRate;
 }
-void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize, int nReps, std::string predictionsFilename,std::string header) {
+void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize, int nReps, std::string predictionsFilename,std::string header,std::string confusionMatrixFilename) {
   multiplyAddCount=0;
   auto start=std::chrono::system_clock::now();
   std::vector<std::vector<int  > > votes(dataset.pictures.size());
@@ -199,10 +199,10 @@ void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset
     votes[i].resize(dataset.nClasses);
     probs[i].resize(dataset.nClasses);
   }
-  std::ofstream f,g;
   for (int rep=1;rep<=nReps;++rep) {
     BatchProducer bp(*this,dataset,inputSpatialSize,batchSize);
     while(SpatiallySparseBatch* batch=bp.nextBatch()) {
+      std::ofstream f,g;
       processBatch(*batch,0,f,g);
       for (int i=0;i<batch->batchSize;++i) {
         int ii=batch->sampleNumbers[i];
@@ -211,7 +211,8 @@ void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset
           probs[ii][j]+=batch->probabilities[i][j];
       }
     }
-    float errors=dataset.pictures.size(),nll=0;
+    int errors=dataset.pictures.size();
+    float nll=0;
     for (int i=0;i<dataset.pictures.size();++i) {
       std::vector<int> predictions=vectorTopIndices(probs[i],nTop);
       for (int j=0;j<nTop;j++)
@@ -219,9 +220,10 @@ void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset
           errors--;
       nll-=log(max(probs[i][dataset.pictures[i]->label]/rep,1.0e-15));
     }
+
     if (!predictionsFilename.empty()) {
       std::cout << predictionsFilename << std::endl;
-      f.open(predictionsFilename.c_str());
+      std::ofstream f(predictionsFilename.c_str());
       f<<header;
       for (int i=0;i<dataset.pictures.size();++i) {
         f << dataset.pictures[i]->identify();
@@ -229,8 +231,20 @@ void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset
           f <<"," << probs[i][j]/rep;
         f <<std::endl;
       }
-      f.close();
-
+    }
+    if (!confusionMatrixFilename.empty()) {
+      std::vector<float> cm(dataset.nClasses*dataset.nClasses);
+      for (int i=0;i<dataset.pictures.size();++i)
+        for (int j=0;j<dataset.nClasses;++j)
+          cm[dataset.pictures[i]->label*dataset.nClasses+j]+= probs[i][j]/rep;
+      std::cout << confusionMatrixFilename << std::endl;
+      std::ofstream f(confusionMatrixFilename.c_str());
+      for (int i=0;i<dataset.nClasses;++i) {
+        for (int j=0;j<dataset.nClasses;++j) {
+          f << cm[i*dataset.nClasses+j] <<" ";
+        }
+        f<< std::endl;
+      }
     }
     auto end=std::chrono::system_clock::now();
     auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
