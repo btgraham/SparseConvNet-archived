@@ -34,7 +34,8 @@ public:
   void backwards(SpatiallySparseBatch &batch,
                  SpatiallySparseBatchInterface &input,
                  SpatiallySparseBatchInterface &output,
-                 float learningRate);
+                 float learningRate,
+                 float momentum);
   void loadWeightsFromStream(std::ifstream &f);
   void putWeightsToStream(std::ofstream &f) ;
   int calculateInputSpatialSize(int outputSpatialSize);

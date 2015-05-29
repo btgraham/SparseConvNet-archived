@@ -5,7 +5,7 @@
 int epoch=0;
 int cudaDevice=-1; //PCI bus ID, -1 for default GPU
 int batchSize=50;
-#define NAG_MU 0.995
+
 
 Picture* OnlineHandwritingPicture::distort(RNG& rng, batchType type) {
   OnlineHandwritingPicture* pic=new OnlineHandwritingPicture(*this);
@@ -61,7 +61,7 @@ int main() {
     cnn.loadWeights(baseName,epoch);
   for (epoch++;;epoch++) {
     std::cout <<"epoch:" << epoch << ": " << std::flush;
-    cnn.processDataset(trainSet, batchSize,0.003*exp(-0.03 * epoch));
+    cnn.processDataset(trainSet, batchSize,0.003*exp(-0.03 * epoch),0.995);
     cnn.saveWeights(baseName,epoch);
     if (epoch%10==0) {
       cnn.processDataset(testSet,  batchSize);

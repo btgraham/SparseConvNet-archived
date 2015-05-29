@@ -3,10 +3,6 @@
 #include "SpatiallySparseLayer.h"
 #include "Rng.h"
 
-#ifndef NAG_MU
-#define NAG_MU 0.99
-#endif
-
 class NetworkInNetworkLayer : public SpatiallySparseLayer {
 private:
   RNG rng;
@@ -42,7 +38,8 @@ public:
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,
    SpatiallySparseBatchInterface &output,
-   float learningRate);
+   float learningRate,
+   float momentum);
   void loadWeightsFromStream(std::ifstream &f);
   void putWeightsToStream(std::ofstream &f);
   int calculateInputSpatialSize(int outputSpatialSize);
@@ -55,15 +52,15 @@ __global__ void dShrinkMatrixForDropout
 __global__ void dShrinkVectorForDropout
 (float* m, float* md, int* outFeaturesPresent, int nOut, int nOutDropout);
 __global__ void dGradientDescent
-(float* d_delta, float* d_momentum, float* d_weights, int nOut, float learningRate);
+(float* d_delta, float* d_momentum, float* d_weights, int nOut, float learningRate, float momentum);
 __global__ void dGradientDescentShrunkMatrix
 (float* d_delta, float* d_momentum, float* d_weights,
  int nOut, int nOutDropout,
  int* inFeaturesPresent, int* outFeaturesPresent,
- float learningRate);
+ float learningRate,float momentum);
 __global__ void dGradientDescentShrunkVector
 (float* d_delta, float* d_momentum, float* d_weights,
  int nOut, int nOutDropout,
  int* outFeaturesPresent,
- float learningRate);
+ float learningRate,float momentum);
 void columnSum(float* matrix, float* target, int nRows, int nColumns);

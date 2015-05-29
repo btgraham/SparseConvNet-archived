@@ -29,9 +29,9 @@ public:
   void addTerminalPoolingLayer(int poolSize);
   void addSoftmaxLayer();
   void addIndexLearnerLayer();
-  float processDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0);
+  float processDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0, float momentum=0.99);
   void processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize=100, int nReps=12, std::string predictionsFilename="",std::string header="",std::string confusionMatrixFilename="");
-  float processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0.0);
+  float processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0.0,float momentum=0.99);
   void processDatasetDumpTopLevelFeatures(SpatiallySparseDataset &dataset, int batchSize, int reps=1);
   void loadWeights(std::string baseName, int epoch, int firstNlayers=1000000);
   void saveWeights(std::string baseName, int epoch);
@@ -48,9 +48,9 @@ public:
   void addTerminalPoolingLayer(int poolSize);
   void addSoftmaxLayer();
   void addIndexLearnerLayer();
-  float processDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0);
+  float processDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0, float momentum=0.99);
   void processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize=100, int nReps=12, std::string predictionsFilename="",std::string header="",std::string confusionMatrixFilename="");
-  float processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0.0);
+  float processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0, float momentum=0.99);
   void processDatasetDumpTopLevelFeatures(SpatiallySparseDataset &dataset, int batchSize, int reps=1);
   void loadWeights(std::string baseName, int epoch, int firstNlayers=1000000);
   void saveWeights(std::string baseName, int epoch);

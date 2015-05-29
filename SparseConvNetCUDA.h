@@ -37,8 +37,8 @@ public:
                      int nClasses,
                      int pciBusID=-1,
                      int nTop=1);
-  void processBatch(SpatiallySparseBatch& batch, float learningRate, std::ofstream& f, std::ofstream& g);
-  void processIndexLearnerBatch(SpatiallySparseBatch& batch, float learningRate, std::ofstream& f);
+  void processBatch(SpatiallySparseBatch& batch, float learningRate, float momentum, std::ofstream& f, std::ofstream& g);
+  void processIndexLearnerBatch(SpatiallySparseBatch& batch, float learningRate, float momentum, std::ofstream& f);
 
 
 
@@ -68,9 +68,9 @@ public:
   void addSoftmaxLayer();
   void addTerminalPoolingLayer(int poolSize, int S);
   void addIndexLearnerLayer();
-  float processDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0);
+  float processDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0,float momentum=0.99);
   void processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize=100, int nReps=12, std::string predictionsFilename="",std::string header="",std::string confusionMatrixFilename="");
-  float processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0.0);
+  float processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0.0, float momentum=0.99);
   void processBatchDumpTopLevelFeaturess(SpatiallySparseBatch& batch, std::ofstream& f);
   void processDatasetDumpTopLevelFeatures(SpatiallySparseDataset &dataset, int batchSize, int reps=1);
   void loadWeights(std::string baseName, int epoch, int firstNlayers=1000000);

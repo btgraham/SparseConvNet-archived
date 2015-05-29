@@ -4,7 +4,7 @@
 int epoch=0;
 int cudaDevice=-1;
 int batchSize=1;
-#define NAG_MU 0.9999
+
 
 class CNN : public SparseConvNet {
 public:
@@ -37,7 +37,7 @@ int main(int lenArgs, char *args[]) {
   for (epoch++;epoch<=100;epoch++) {
     std::cout <<"epoch:" << epoch << ":\n";
     for (int i=0;i<20;++i)
-      cnn.processDataset(trainSet, batchSize,0.003*exp(-0.05 * epoch));
+      cnn.processDataset(trainSet, batchSize,0.003*exp(-0.05 * epoch),0.9999);
     cnn.saveWeights(baseName,epoch);
     cnn.processDatasetRepeatTest(validationSet,  batchSize, 3);
   }

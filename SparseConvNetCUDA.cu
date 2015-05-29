@@ -126,7 +126,7 @@ void SparseConvNetCUDA::addIndexLearnerLayer() {
   }
   std::cout <<"Spatially sparse CNN: input size " << inputSpatialSize <<"x"<<inputSpatialSize<<std::endl;
 }
-void SparseConvNetCUDA::processBatch(SpatiallySparseBatch& batch, float learningRate, std::ofstream& f, std::ofstream& g) {
+void SparseConvNetCUDA::processBatch(SpatiallySparseBatch& batch, float learningRate, float momentum, std::ofstream& f, std::ofstream& g) {
   for (int i=0;i<layers.size();i++) {
     layers[i]->sub.reset();
     layers[i]->forwards(batch,batch.interfaces[i],batch.interfaces[i+1]);
@@ -138,7 +138,7 @@ void SparseConvNetCUDA::processBatch(SpatiallySparseBatch& batch, float learning
   SoftmaxClassifier(batch.interfaces.back(),batch,nTop);
   if (batch.type==TRAINBATCH)
     for (int i=layers.size()-1; i>=0; i--) {
-      layers[i]->backwards(batch,batch.interfaces[i],batch.interfaces[i+1],learningRate);
+      layers[i]->backwards(batch,batch.interfaces[i],batch.interfaces[i+1],learningRate,momentum);
     }
   if (f)
     for (int j=0;j<batch.predictions.size();j++) {
@@ -157,7 +157,7 @@ void SparseConvNetCUDA::processBatch(SpatiallySparseBatch& batch, float learning
       g << std::endl;
     }
 }
-float SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate) {
+float SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate, float momentum) {
   float errorRate=0, nll=0;
   multiplyAddCount=0;
   auto start=std::chrono::system_clock::now();
@@ -168,7 +168,7 @@ float SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset, int bat
     g.open("unlabelledData.probabilities");
   }
   while(SpatiallySparseBatch* batch=bp.nextBatch()) {
-    processBatch(*batch,learningRate,f,g);
+    processBatch(*batch,learningRate,momentum,f,g);
     errorRate+=batch->mistakes*1.0/dataset.pictures.size();
     nll+=batch->negativeLogLikelihood*1.0/dataset.pictures.size();
   }
@@ -203,7 +203,7 @@ void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset
     BatchProducer bp(*this,dataset,inputSpatialSize,batchSize);
     while(SpatiallySparseBatch* batch=bp.nextBatch()) {
       std::ofstream f,g;
-      processBatch(*batch,0,f,g);
+      processBatch(*batch,0,0,f,g);
       for (int i=0;i<batch->batchSize;++i) {
         int ii=batch->sampleNumbers[i];
         votes[ii][batch->predictions[i][0]]++;
@@ -237,7 +237,6 @@ void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset
       for (int i=0;i<dataset.pictures.size();++i)
         for (int j=0;j<dataset.nClasses;++j)
           cm[dataset.pictures[i]->label*dataset.nClasses+j]+= probs[i][j]/rep;
-      std::cout << confusionMatrixFilename << std::endl;
       std::ofstream f(confusionMatrixFilename.c_str());
       for (int i=0;i<dataset.nClasses;++i) {
         for (int j=0;j<dataset.nClasses;++j) {
@@ -289,7 +288,7 @@ void SparseConvNetCUDA::saveWeights(std::string baseName, int epoch)  {
     exit(EXIT_FAILURE);
   }
 }
-void SparseConvNetCUDA::processIndexLearnerBatch(SpatiallySparseBatch& batch, float learningRate, std::ofstream& f) {
+void SparseConvNetCUDA::processIndexLearnerBatch(SpatiallySparseBatch& batch, float learningRate, float momentum, std::ofstream& f) {
   int n=layers.size();
   for (int i=0;i<n-1;i++)   //Stop 1 early (unless it is a training batch)
     layers[i]->forwards(batch,batch.interfaces[i],batch.interfaces[i+1]);
@@ -307,10 +306,10 @@ void SparseConvNetCUDA::processIndexLearnerBatch(SpatiallySparseBatch& batch, fl
     layers[n-1]->forwards(batch,batch.interfaces[n-1],batch.interfaces[n]);
     IndexLearner(batch.interfaces[n],batch,nTop);
     for (int i=n-1;i>=0;i--)
-      layers[i]->backwards(batch,batch.interfaces[i],batch.interfaces[i+1],learningRate);
+      layers[i]->backwards(batch,batch.interfaces[i],batch.interfaces[i+1],learningRate,momentum);
   }
 }
-float SparseConvNetCUDA::processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate) {
+float SparseConvNetCUDA::processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate, float momentum) {
   float errorRate=0, nll=0;
   auto start=std::chrono::system_clock::now();
   multiplyAddCount=0;
@@ -321,7 +320,7 @@ float SparseConvNetCUDA::processIndexLearnerDataset(SpatiallySparseDataset &data
     f.open(filename.c_str());
   }
   while(SpatiallySparseBatch* batch=bp.nextBatch()) {
-    processIndexLearnerBatch(*batch,learningRate,f);
+    processIndexLearnerBatch(*batch,learningRate,momentum,f);
     errorRate+=batch->mistakes*1.0/dataset.pictures.size();
     nll+=batch->negativeLogLikelihood*1.0/dataset.pictures.size();
   }

@@ -10,12 +10,13 @@ __global__ void dGradientDescentShrunkMatrixNoMomentum
 (float* d_delta, float* d_weights,
  int nOut, int nOutDropout,
  int* inFeaturesPresent, int* outFeaturesPresent,
- float learningRate) {
+ float learningRate,
+ float momentum) {
   int i=blockIdx.x*nOutDropout;
   int ii=inFeaturesPresent[blockIdx.x]*nOut;
   for(int j=threadIdx.x; j<nOutDropout; j+=KERNELBLOCKSIZE) {
     int jj=outFeaturesPresent[j];
-    //NAG light
+    //no momentum, weight updated infrequently if the dataset is much larger than each minibatch
     d_weights[ii+jj]-=learningRate*d_delta[i+j];
   }
 }
@@ -65,7 +66,8 @@ void IndexLearnerLayer::backwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output,
- float learningRate) {
+ float learningRate,
+ float momentum) {
   applySigmoidBackProp(output, output, SOFTMAX);
   input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
   dw.resize(input.featuresPresent.size()*output.featuresPresent.size());
@@ -86,17 +88,8 @@ void IndexLearnerLayer::backwards
     (dw.dPtr(), W.dPtr(),
      output.nFeatures, output.featuresPresent.size(),
      input.featuresPresent.dPtr(), output.featuresPresent.dPtr(),
-     learningRate);
-  // // // // dGradientDescentShrunkMatrix<<<input.featuresPresent.size(),KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
-  // // // //   (dw.dPtr(), MW.dPtr(), W.dPtr(),
-  // // // //    output.nFeatures, output.featuresPresent.size(),
-  // // // //    input.featuresPresent.dPtr(), output.featuresPresent.dPtr(),
-  // // // //    learningRate);
-
-
-  // output.sub->features.resize(0);
-  // output.sub->dfeatures.resize(0);
-  // cudaCheckError();
+     learningRate,momentum);
+  cudaCheckError();
 }
 void IndexLearnerLayer::loadWeightsFromStream(std::ifstream &f) {
   f.read((char*)&W.hVector()[0],sizeof(float)*W.size());

@@ -23,12 +23,13 @@ __global__ void dShrinkVectorForDropout(float* m, float* md, int* outFeaturesPre
 
 
 __global__ void dGradientDescent
-(float* d_delta, float* d_momentum, float* d_weights, int nOut, float learningRate) {
+(float* d_delta, float* d_momentum, float* d_weights, int nOut, float learningRate,
+ float momentum) {
   int i=blockIdx.x*nOut;
   for(int j=i+threadIdx.x; j<i+nOut; j+=KERNELBLOCKSIZE) {
-    d_weights[j]-=d_momentum[j]*NAG_MU;
-    d_momentum[j]=NAG_MU*d_momentum[j]-learningRate*(1-NAG_MU)*d_delta[j];
-    d_weights[j]=d_weights[j]+d_momentum[j]*(1+NAG_MU);
+    d_weights[j]-=d_momentum[j]*momentum;
+    d_momentum[j]=momentum*d_momentum[j]-learningRate*(1-momentum)*d_delta[j];
+    d_weights[j]=d_weights[j]+d_momentum[j]*(1+momentum);
   }
 }
 
@@ -36,15 +37,16 @@ __global__ void dGradientDescentShrunkMatrix
 (float* d_delta, float* d_momentum, float* d_weights,
  int nOut, int nOutDropout,
  int* inFeaturesPresent, int* outFeaturesPresent,
- float learningRate) {
+ float learningRate,
+ float momentum) {
   int i=blockIdx.x*nOutDropout;
   int ii=inFeaturesPresent[blockIdx.x]*nOut;
   for(int j=threadIdx.x; j<nOutDropout; j+=KERNELBLOCKSIZE) {
     int jj=outFeaturesPresent[j];
     //NAG light
-    d_weights[ii+jj]-=d_momentum[ii+jj]*NAG_MU;
-    d_momentum[ii+jj]=NAG_MU*d_momentum[ii+jj]-learningRate*(1-NAG_MU)*d_delta[i+j];
-    d_weights[ii+jj]=d_weights[ii+jj]+d_momentum[ii+jj]*(1+NAG_MU);
+    d_weights[ii+jj]-=d_momentum[ii+jj]*momentum;
+    d_momentum[ii+jj]=momentum*d_momentum[ii+jj]-learningRate*(1-momentum)*d_delta[i+j];
+    d_weights[ii+jj]=d_weights[ii+jj]+d_momentum[ii+jj]*(1+momentum);
   }
 }
 
@@ -52,13 +54,14 @@ __global__ void dGradientDescentShrunkVector
 (float* d_delta, float* d_momentum, float* d_weights,
  int nOut, int nOutDropout,
  int* outFeaturesPresent,
- float learningRate) {
+ float learningRate,
+ float momentum) {
   for(int i=threadIdx.x; i<nOutDropout; i+=NTHREADS) {
     int ii=outFeaturesPresent[i];
     //NAG light
-    d_weights[ii]-=d_momentum[ii]*NAG_MU;
-    d_momentum[ii]=NAG_MU*d_momentum[ii]-learningRate*(1-NAG_MU)*d_delta[i];
-    d_weights[ii]=d_weights[ii]+d_momentum[ii]*(1+NAG_MU);
+    d_weights[ii]-=d_momentum[ii]*momentum;
+    d_momentum[ii]=momentum*d_momentum[ii]-learningRate*(1-momentum)*d_delta[i];
+    d_weights[ii]=d_weights[ii]+d_momentum[ii]*(1+momentum);
   }
 }
 
@@ -181,7 +184,8 @@ void NetworkInNetworkLayer::backwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output,
- float learningRate) {
+ float learningRate,
+ float momentum) {
   applySigmoidBackProp(output, output, fn);
   dw.resize(input.featuresPresent.size()*output.featuresPresent.size());
   db.resize(output.featuresPresent.size());
@@ -210,14 +214,14 @@ void NetworkInNetworkLayer::backwards
       (dw.dPtr(), MW.dPtr(), W.dPtr(),
        output.nFeatures, output.featuresPresent.size(),
        input.featuresPresent.dPtr(), output.featuresPresent.dPtr(),
-       learningRate);
+       learningRate,momentum);
     cudaCheckError();
 
     dGradientDescentShrunkVector<<<1,NTHREADS,0,cnnMemStream->stream>>>
       (db.dPtr(), MB.dPtr(), B.dPtr(),
        output.nFeatures, output.featuresPresent.size(),
        output.featuresPresent.dPtr(),
-       learningRate);
+       learningRate,momentum);
     cudaCheckError();
   } else {
     if (input.backpropErrors) {
@@ -230,10 +234,10 @@ void NetworkInNetworkLayer::backwards
       cudaCheckError();
     }
     dGradientDescent<<<nFeaturesIn,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
-      (dw.dPtr(), MW.dPtr(), W.dPtr(),  nFeaturesOut, learningRate);
+      (dw.dPtr(), MW.dPtr(), W.dPtr(),  nFeaturesOut, learningRate,momentum);
     cudaCheckError();
     dGradientDescent<<<1,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
-      (db.dPtr(), MB.dPtr(), B.dPtr(), nFeaturesOut, learningRate);
+      (db.dPtr(), MB.dPtr(), B.dPtr(), nFeaturesOut, learningRate,momentum);
     cudaCheckError();
   }
   // std::cout << __LINE__ << " "<<input.sub->dfeatures.meanAbs() << "\n";

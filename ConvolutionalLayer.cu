@@ -127,7 +127,8 @@ void ConvolutionalLayer::backwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output,
- float learningRate) {
+ float learningRate,
+ float momentum) {
   if (input.backpropErrors) {
     input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
     input.sub->dfeatures.setZero(*cnnMemStream);

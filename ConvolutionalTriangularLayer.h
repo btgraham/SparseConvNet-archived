@@ -31,6 +31,7 @@ public:
   void backwards(SpatiallySparseBatch &batch,
                  SpatiallySparseBatchInterface &input,
                  SpatiallySparseBatchInterface &output,
-                 float learningRate);
+                 float learningRate,
+                 float momentum);
   int calculateInputSpatialSize(int outputSpatialSize);
 };

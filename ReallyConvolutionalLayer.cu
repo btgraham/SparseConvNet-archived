@@ -28,15 +28,16 @@ __global__ void dGradientDescentShrunkMatrix
 (float* d_delta, float* d_momentum, float* d_weights,
  int nOut, int nOutDropout, int nIn, int nInDropout,
  int* inFeaturesPresent, int* outFeaturesPresent,
- float learningRate) {
+ float learningRate,
+ float momentum) {
   int i=blockIdx.x*nOutDropout;
   int ii=inFeaturesPresent[blockIdx.x%nInDropout]*nOut+(blockIdx.x/nInDropout)*nIn*nOut;
   for(int j=threadIdx.x; j<nOutDropout; j+=KERNELBLOCKSIZE) {
     int jj=outFeaturesPresent[j];
     //NAG light
-    d_weights[ii+jj]-=d_momentum[ii+jj]*NAG_MU;
-    d_momentum[ii+jj]=NAG_MU*d_momentum[ii+jj]-learningRate*(1-NAG_MU)*d_delta[i+j];
-    d_weights[ii+jj]=d_weights[ii+jj]+d_momentum[ii+jj]*(1+NAG_MU);
+    d_weights[ii+jj]-=d_momentum[ii+jj]*momentum;
+    d_momentum[ii+jj]=momentum*d_momentum[ii+jj]-learningRate*(1-momentum)*d_delta[i+j];
+    d_weights[ii+jj]=d_weights[ii+jj]+d_momentum[ii+jj]*(1+momentum);
   }
 }
 
@@ -232,7 +233,8 @@ void ReallyConvolutionalLayer::backwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output,
- float learningRate) {
+ float learningRate,
+ float momentum) {
   applySigmoidBackProp(output, output, fn);
   dw.resize(input.featuresPresent.size()*fs*output.featuresPresent.size());
   dw.setZero(*cnnMemStream);//////////////////////////////////////////////////////////////////
@@ -268,13 +270,13 @@ void ReallyConvolutionalLayer::backwards
       (dw.dPtr(), MW.dPtr(), W.dPtr(),
        output.nFeatures, output.featuresPresent.size(),
        input.featuresPresent.dPtr(), output.featuresPresent.dPtr(),
-       learningRate);
+       learningRate,momentum);
 
     dGradientDescentShrunkVector<<<1,NTHREADS>>>
       (db.dPtr(), MB.dPtr(), B.dPtr(),
        output.nFeatures, output.featuresPresent.size(),
        output.featuresPresent.dPtr(),
-       learningRate);
+       learningRate,momentum);
   } else {
     if (input.backpropErrors) {
       input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
@@ -290,9 +292,9 @@ void ReallyConvolutionalLayer::backwards
       cudaCheckError();
     }
     dGradientDescent<<<nFeaturesIn,KERNELBLOCKSIZE>>>
-      (dw.dPtr(), MW.dPtr(), W.dPtr(),  nFeaturesOut, learningRate);
+      (dw.dPtr(), MW.dPtr(), W.dPtr(),  nFeaturesOut, learningRate,momentum);
     dGradientDescent<<<1,KERNELBLOCKSIZE>>>
-      (db.dPtr(), MB.dPtr(), B.dPtr(), nFeaturesOut, learningRate);
+      (db.dPtr(), MB.dPtr(), B.dPtr(), nFeaturesOut, learningRate,momentum);
   }
   cudaCheckError();
 }

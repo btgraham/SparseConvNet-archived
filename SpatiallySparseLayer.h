@@ -20,7 +20,8 @@ public:
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,
    SpatiallySparseBatchInterface &output,
-   float learningRate) = 0;
+   float learningRate,
+   float momentum) = 0;
   virtual void loadWeightsFromStream(std::ifstream &f);
   virtual void putWeightsToStream(std::ofstream &f);
   virtual int calculateInputSpatialSize(int outputSpatialSize) = 0;

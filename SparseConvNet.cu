@@ -33,16 +33,16 @@ void SparseConvNet::addIndexLearnerLayer(){
   cnn->addIndexLearnerLayer();
 }
 
-float SparseConvNet::processDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate) {
-  return cnn->processDataset(dataset,batchSize,learningRate);
+float SparseConvNet::processDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate, float momentum) {
+  return cnn->processDataset(dataset,batchSize,learningRate,momentum);
 }
 
 void SparseConvNet::processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize, int nReps, std::string predictionsFilename,std::string header,std::string confusionMatrixFilename){
   cnn->processDatasetRepeatTest(dataset,batchSize,nReps,predictionsFilename,header,confusionMatrixFilename);
 }
 
-float SparseConvNet::processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate){
-  return cnn->processIndexLearnerDataset(dataset,batchSize,learningRate);
+float SparseConvNet::processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate, float momentum){
+  return cnn->processIndexLearnerDataset(dataset,batchSize,learningRate,momentum);
 }
 
 void SparseConvNet::processDatasetDumpTopLevelFeatures(SpatiallySparseDataset &dataset, int batchSize, int reps){
@@ -83,16 +83,16 @@ void SparseConvTriangLeNet::addIndexLearnerLayer(){
   cnn->addIndexLearnerLayer();
 }
 
-float SparseConvTriangLeNet::processDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate){
-  return cnn->processDataset(dataset,batchSize,learningRate);
+float SparseConvTriangLeNet::processDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate, float momentum){
+  return cnn->processDataset(dataset,batchSize,learningRate, momentum);
 }
 
 void SparseConvTriangLeNet::processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize, int nReps, std::string predictionsFilename,std::string header,std::string confusionMatrixFilename){
   cnn->processDatasetRepeatTest(dataset,batchSize,nReps,predictionsFilename,header,confusionMatrixFilename);
 }
 
-float SparseConvTriangLeNet::processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate){
-  return cnn->processIndexLearnerDataset(dataset,batchSize,learningRate);
+float SparseConvTriangLeNet::processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate,float momentum){
+  return cnn->processIndexLearnerDataset(dataset,batchSize,learningRate,momentum);
 }
 
 void SparseConvTriangLeNet::processDatasetDumpTopLevelFeatures(SpatiallySparseDataset &dataset, int batchSize, int reps){
