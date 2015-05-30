@@ -227,6 +227,8 @@ void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset
       f<<header;
       for (int i=0;i<dataset.pictures.size();++i) {
         f << dataset.pictures[i]->identify();
+        if (dataset.type!=UNLABELEDBATCH)
+          f<<","<<dataset.pictures[i]->label;
         for (int j=0;j<dataset.nClasses;++j)
           f <<"," << probs[i][j]/rep;
         f <<std::endl;
