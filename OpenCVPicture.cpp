@@ -34,15 +34,43 @@ void OpenCVPicture::affineTransform(float c00, float c01, float c10, float c11) 
   xOffset=-mat.cols/2;
   yOffset=-mat.rows/2;
 }
-void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize) {
-  if (mat.cols>=subsetSize)
-    xOffset=-rng.randint(mat.cols-subsetSize+1)-subsetSize/2;
-  else
-    xOffset=rng.randint(subsetSize-mat.cols+1)-subsetSize/2;
-  if (mat.cols>=subsetSize)
-    yOffset=-rng.randint(mat.rows-subsetSize+1)-subsetSize/2;
-  else
-    yOffset=rng.randint(subsetSize-mat.rows+1)-subsetSize/2;
+void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize, float minFill) {
+  if (minFill<0) { //Just pick a random subsetSize x subsetSquare that overlaps the picture as much as possible.
+    if (mat.cols>=subsetSize)
+      xOffset=-rng.randint(mat.cols-subsetSize+1)-subsetSize/2;
+    else
+      xOffset=rng.randint(subsetSize-mat.cols+1)-subsetSize/2;
+    if (mat.cols>=subsetSize)
+      yOffset=-rng.randint(mat.rows-subsetSize+1)-subsetSize/2;
+    else
+      yOffset=rng.randint(subsetSize-mat.rows+1)-subsetSize/2;
+  } else {
+    int fitCtr=100; //Give up after 100 failed attempts to find a good fit
+    bool goodFit=false;
+    while (!goodFit and fitCtr-- >0) {
+      xOffset=-subsetSize/2-rng.randint(mat.cols-subsetSize);//-rng.randint(mat.cols);
+      yOffset=-subsetSize/2-rng.randint(mat.rows-subsetSize);//-rng.randint(mat.rows);
+      int pointsCtr=0;
+      int interestingPointsCtr=0;
+      for (int X=5; X<subsetSize; X+=10) {
+        for (int Y=5; Y<subsetSize; Y+=10) {
+          int x=X-xOffset-subsetSize/2;
+          int y=Y-yOffset-subsetSize/2;
+          pointsCtr++;
+          if (0<=x and x<mat.cols and 0<=y and y<mat.rows)
+            interestingPointsCtr+=(mat.ptr()[(pointsCtr%mat.channels())+x*mat.channels()+y*mat.channels()*mat.cols]!=backgroundColor);
+        }
+      }
+      assert(pointsCtr>=10);
+      if (interestingPointsCtr>pointsCtr*minFill)
+        goodFit=true;
+    }
+    if (!goodFit) {
+      std::cout << filename << " " << std::flush;
+      xOffset=-mat.cols/2-16+rng.randint(32);
+      yOffset=-mat.rows/2-16+rng.randint(32);
+    }
+  }
 }
 void OpenCVPicture::centerMass() {
   float ax=0, ay=0, axx=0, ayy=0, axy, d=0.001;

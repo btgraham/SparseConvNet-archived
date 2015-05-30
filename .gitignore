@@ -1,3 +1,4 @@
+/confusionMatrix
 *.o
 cifar10
 cifar100

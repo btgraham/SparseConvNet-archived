@@ -2,7 +2,7 @@
 //We can either use
 // a) Google's sparsehash dense_hash_map, or
 // b) Boost's unordered_map, or
-// c) the C++11 std::unordered_map  (if using nvcc with -std=c++11)
+// c) the C++11 std::unordered_map
 // Option (a) seems fastest. To speed up (b) or (c), use a "greedy" custom allocator to prevent threads getting in each others way to access memory to grow the map??
 
 #define USE_GOOGLE_SPARSEHASH

@@ -34,7 +34,7 @@ void OpenCVPicture::affineTransform(float c00, float c01, float c10, float c11) 
   xOffset=-mat.cols/2;
   yOffset=-mat.rows/2;
 }
-void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize) { //subsetSize==spatialSize for codifyInputData
+void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize, float minFill) { //subsetSize==spatialSize for codifyInputData
   int fitCtr=100; //Give up after 100 failed attempts to find a good fit
   bool goodFit=false;
   while (!goodFit and fitCtr-- >0) {
