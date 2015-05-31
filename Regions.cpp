@@ -141,65 +141,106 @@ int RandomOverlappingFractionalPoolingRegions::lb3(int i0, int i1, int i2, int i
 int RandomOverlappingFractionalPoolingRegions::ub3(int i0, int i1, int i2, int i3) {return pb[3].ub[i3];}
 
 
+
 void gridRules
 (SparseGrid &inputGrid, //Keys 0,1,...,powf(regions.nIn,dimension)-1 represent grid points
  SparseGrid &outputGrid, //Keys 0,1,...,powf(regions.nOut,dimension)-1 represent grid points
  PoolingRegions& regions,
  int& nOutputSpatialSites,
- std::vector<int>& rules) {
+ std::vector<int>& rules,
+ int minActiveInputs) {
   switch(regions.dimension) {
   case 1:
     for (SparseGridIter iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
-      int i0=iter->first;
+      int i0=(iter->first)%regions.nIn;
       for (int j0=regions.lb0(i0);j0<=regions.ub0(i0);++j0) {
-        int64_t key=(int64_t)j0;
-        if(outputGrid.mp.find(key)==outputGrid.mp.end()) { // Add line to rules
-          for (int i=0;i<regions.sd;++i) rules.push_back(inputGrid.backgroundCol);
-          outputGrid.mp[key]=nOutputSpatialSites++;
+        int64_t outKey=(int64_t)j0;
+        if(outputGrid.mp.find(outKey)==outputGrid.mp.end()) { // Add line to rules
+          int activeInputCtr=0;
+          for (int ii0=regions.tl0(j0); ii0<regions.tl0(j0)+regions.s;++ii0) {
+            int64_t inKey=(int64_t)ii0;
+            auto iter2=inputGrid.mp.find(inKey);
+            if (iter2==inputGrid.mp.end()) {
+              rules.push_back(inputGrid.backgroundCol);
+            } else {
+              rules.push_back(iter2->second);
+              activeInputCtr++;
+            }
+          }
+          if (activeInputCtr>=minActiveInputs) {
+            outputGrid.mp[outKey]=nOutputSpatialSites++;
+          } else {
+            outputGrid.mp[outKey]=-2;
+            rules.resize(nOutputSpatialSites*regions.sd);
+          }
         }
-        rules[outputGrid.mp[key]*regions.sd
-              + (i0-regions.tl0(j0))]
-          = iter->second;
       }
     }
     break;
   case 2:
     for (SparseGridIter iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
-      int i0=iter->first/regions.nIn;
+      int i0=((iter->first)/regions.nIn)%regions.nIn;
       int i1=(iter->first)%regions.nIn;
       for (int j0=regions.lb0(i0,i1);j0<=regions.ub0(i0,i1);++j0) {
         for (int j1=regions.lb1(i0,i1);j1<=regions.ub1(i0,i1);++j1) {
-          int64_t key=(int64_t)j0*regions.nOut + (int64_t)j1;
-          if(outputGrid.mp.find(key)==outputGrid.mp.end()) { // Add line to rules
-            for (int i=0;i<regions.sd;++i) rules.push_back(inputGrid.backgroundCol);
-            outputGrid.mp[key]=nOutputSpatialSites++;
+          int64_t outKey=(int64_t)j0*regions.nOut + (int64_t)j1;
+          if(outputGrid.mp.find(outKey)==outputGrid.mp.end()) { // Add line to rules
+            int activeInputCtr=0;
+            for (int ii0=regions.tl0(j0,j1); ii0<regions.tl0(j0,j1)+regions.s;++ii0) {
+              for (int ii1=regions.tl1(j0,j1); ii1<regions.tl1(j0,j1)+regions.s;++ii1) {
+                int64_t inKey=(int64_t)ii0*regions.nIn + (int64_t)ii1;
+                auto iter2=inputGrid.mp.find(inKey);
+                if (iter2==inputGrid.mp.end()) {
+                  rules.push_back(inputGrid.backgroundCol);
+                } else {
+                  rules.push_back(iter2->second);
+                  activeInputCtr++;
+                }
+              }
+            }
+            if (activeInputCtr>=minActiveInputs) {
+              outputGrid.mp[outKey]=nOutputSpatialSites++;
+            } else {
+              outputGrid.mp[outKey]=-2;
+              rules.resize(nOutputSpatialSites*regions.sd);
+            }
           }
-          rules[outputGrid.mp[key]*regions.sd
-                + (i0-regions.tl0(j0,j1))*regions.s
-                + (i1-regions.tl1(j0,j1))]
-            = iter->second;
         }
       }
     }
     break;
   case 3:
     for (SparseGridIter iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
-      int i0=iter->first/regions.nIn/regions.nIn;
+      int i0=((iter->first)/regions.nIn/regions.nIn)%regions.nIn;
       int i1=((iter->first)/regions.nIn)%regions.nIn;
       int i2=(iter->first)%regions.nIn;
       for (int j0=regions.lb0(i0,i1,i2);j0<=regions.ub0(i0,i1,i2);++j0) {
         for (int j1=regions.lb1(i0,i1,i2);j1<=regions.ub1(i0,i1,i2);++j1) {
           for (int j2=regions.lb2(i0,i1,i2);j2<=regions.ub2(i0,i1,i2);++j2) {
-            int64_t key=(int64_t)j0*regions.nOut*regions.nOut + (int64_t)j1*regions.nOut + (int64_t)j2;
-            if(outputGrid.mp.find(key)==outputGrid.mp.end()) { // Add line to rules
-              for (int i=0;i<regions.sd;++i) rules.push_back(inputGrid.backgroundCol);
-              outputGrid.mp[key]=nOutputSpatialSites++;
+            int64_t outKey=(int64_t)j0*regions.nOut*regions.nOut + (int64_t)j1*regions.nOut + (int64_t)j2;
+            if(outputGrid.mp.find(outKey)==outputGrid.mp.end()) { // Add line to rules
+              int activeInputCtr=0;
+              for (int ii0=regions.tl0(j0,j1,j2); ii0<regions.tl0(j0,j1,j2)+regions.s;++ii0) {
+                for (int ii1=regions.tl1(j0,j1,j2); ii1<regions.tl1(j0,j1,j2)+regions.s;++ii1) {
+                  for (int ii2=regions.tl2(j0,j1,j2); ii2<regions.tl2(j0,j1,j2)+regions.s;++ii2) {
+                    int64_t inKey=(int64_t)ii0*regions.nIn*regions.nIn + (int64_t)ii1*regions.nIn + (int64_t)ii2;
+                    auto iter2=inputGrid.mp.find(inKey);
+                    if (iter2==inputGrid.mp.end()) {
+                      rules.push_back(inputGrid.backgroundCol);
+                    } else {
+                      rules.push_back(iter2->second);
+                      activeInputCtr++;
+                    }
+                  }
+                }
+              }
+              if (activeInputCtr>=minActiveInputs) {
+                outputGrid.mp[outKey]=nOutputSpatialSites++;
+              } else {
+                outputGrid.mp[outKey]=-2;
+                rules.resize(nOutputSpatialSites*regions.sd);
+              }
             }
-            rules[outputGrid.mp[key]*regions.sd
-                  + (i0-regions.tl0(j0,j1,j2))*regions.s*regions.s
-                  + (i1-regions.tl1(j0,j1,j2))*regions.s
-                  + (i2-regions.tl2(j0,j1,j2))]
-              = iter->second;
           }
         }
       }
@@ -215,17 +256,32 @@ void gridRules
         for (int j1=regions.lb1(i0,i1,i2,i3);j1<=regions.ub1(i0,i1,i2,i3);++j1) {
           for (int j2=regions.lb2(i0,i1,i2,i3);j2<=regions.ub2(i0,i1,i2,i3);++j2) {
             for (int j3=regions.lb3(i0,i1,i2,i3);j3<=regions.ub3(i0,i1,i2,i3);++j3) {
-              int64_t key=(int64_t)j0*regions.nOut*regions.nOut*regions.nOut + (int64_t)j1*regions.nOut*regions.nOut + (int64_t)j2*regions.nOut + (int64_t)j3;
-              if(outputGrid.mp.find(key)==outputGrid.mp.end()) { // Add line to rules
-                for (int i=0;i<regions.sd;++i) rules.push_back(inputGrid.backgroundCol);
-                outputGrid.mp[key]=nOutputSpatialSites++;
+              int64_t outKey=(int64_t)j0*regions.nOut*regions.nOut*regions.nOut + (int64_t)j1*regions.nOut*regions.nOut + (int64_t)j2*regions.nOut + (int64_t)j3;
+              if(outputGrid.mp.find(outKey)==outputGrid.mp.end()) { // Add line to rules
+                int activeInputCtr=0;
+                for (int ii0=regions.tl0(j0,j1,j2,j3); ii0<regions.tl0(j0,j1,j2,j3)+regions.s;++ii0) {
+                  for (int ii1=regions.tl1(j0,j1,j2,j3); ii1<regions.tl1(j0,j1,j2,j3)+regions.s;++ii1) {
+                    for (int ii2=regions.tl2(j0,j1,j2,j3); ii2<regions.tl2(j0,j1,j2,j3)+regions.s;++ii2) {
+                      for (int ii3=regions.tl3(j0,j1,j2,j3); ii3<regions.tl3(j0,j1,j2,j3)+regions.s;++ii3) {
+                        int64_t inKey=(int64_t)ii0*regions.nIn*regions.nIn*regions.nIn + (int64_t)ii1*regions.nIn*regions.nIn + (int64_t)ii2*regions.nIn + (int64_t)ii3;
+                        auto iter2=inputGrid.mp.find(inKey);
+                        if (iter2==inputGrid.mp.end()) {
+                          rules.push_back(inputGrid.backgroundCol);
+                        } else {
+                          rules.push_back(iter2->second);
+                          activeInputCtr++;
+                        }
+                      }
+                    }
+                  }
+                }
+                if (activeInputCtr>=minActiveInputs) {
+                  outputGrid.mp[outKey]=nOutputSpatialSites++;
+                } else {
+                  outputGrid.mp[outKey]=-2;
+                  rules.resize(nOutputSpatialSites*regions.sd);
+                }
               }
-              rules[outputGrid.mp[key]*regions.sd
-                    + (i0-regions.tl0(j0,j1,j2,j3))*regions.s*regions.s*regions.s
-                    + (i1-regions.tl1(j0,j1,j2,j3))*regions.s*regions.s
-                    + (i2-regions.tl2(j0,j1,j2,j3))*regions.s
-                    + (i3-regions.tl3(j0,j1,j2,j3))]
-                = iter->second;
             }
           }
         }
@@ -238,7 +294,6 @@ void gridRules
     outputGrid.backgroundCol=nOutputSpatialSites++;
   }
 }
-
 
 
 
@@ -351,8 +406,6 @@ void gridRulesTriangular
                 }
                 outputGrid.mp[key]=nOutputSpatialSites++;
               }
-              if (iter->second<0)
-                std::cout << "!" << std::flush;
               rules[ outputGrid.mp[key]*regions.S + r ] = iter->second;
             }
           }

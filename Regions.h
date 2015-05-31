@@ -126,7 +126,8 @@ void gridRules
  SparseGrid& outputGrid, //Keys 0,1,...,powf(regions.nOut,3)-1 represent grid points; key -1 represents null/background std::vector
  PoolingRegions& regions,
  int& nOutputSpatialSites,
- std::vector<int>& rules);
+ std::vector<int>& rules,
+ int minActiveInputs=1);
 
 
 
