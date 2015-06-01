@@ -55,32 +55,34 @@ void SparseConvNetCUDA::addConvolutionalLayer(int nFeatures,
                                               int filterSize,
                                               int filterStride,
                                               ActivationFunction activationFn,
-                                              float dropout,                             float poolingToFollow) {
+                                              float dropout,
+                                              int minActiveInputs,
+                                              float poolingToFollow) {
   if (false/*layers.size()==0*/) {
-    layers.push_back(new ReallyConvolutionalLayer(nOutputFeatures, nFeatures, filterSize, filterStride, dimension, activationFn, dropout, poolingToFollow));
+    layers.push_back(new ReallyConvolutionalLayer(nOutputFeatures, nFeatures, filterSize, filterStride, dimension, activationFn, dropout, minActiveInputs, poolingToFollow));
     nOutputFeatures=nFeatures;
   } else {
     if (filterSize>1) {
-      layers.push_back(new ConvolutionalLayer(filterSize, filterStride, dimension, nOutputFeatures));
+      layers.push_back(new ConvolutionalLayer(filterSize, filterStride, dimension, nOutputFeatures, minActiveInputs));
       nOutputFeatures*=ipow(filterSize,dimension);
     }
     addLearntLayer(nFeatures,activationFn,dropout,powf(filterSize*1.0/filterStride/poolingToFollow,2));
   }
 }
-void SparseConvNetCUDA::addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout) {
-  addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,poolSize);
+void SparseConvNetCUDA::addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout, int minActiveInputs) {
+  addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,minActiveInputs,poolSize);
   if (poolSize>1) {
     layers.push_back(new MaxPoolingLayer(poolSize, poolStride,dimension));
   }
 }
-void SparseConvNetCUDA::addLeNetLayerROFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout) {
-  addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,fmpShrink);
+void SparseConvNetCUDA::addLeNetLayerROFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout, int minActiveInputs) {
+  addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,minActiveInputs,fmpShrink);
   if (fmpShrink>1) {
     layers.push_back(new RandomOverlappingFractionalMaxPoolingLayer(poolSize,fmpShrink,dimension));
   }
 }
-void SparseConvNetCUDA::addLeNetLayerPOFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout) {
-  addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,fmpShrink);
+void SparseConvNetCUDA::addLeNetLayerPOFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout, int minActiveInputs) {
+  addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,minActiveInputs,fmpShrink);
   if (fmpShrink>1)
     layers.push_back(new PseudorandomOverlappingFractionalMaxPoolingLayer(poolSize,fmpShrink,dimension));
 }
@@ -90,15 +92,16 @@ void SparseConvNetCUDA::addTriangularConvolutionalLayer(int nFeatures,
                                                         int filterStride,
                                                         ActivationFunction activationFn,
                                                         float dropout,
-                                                        float poolingToFollow, int lPad, int rPad) {
+                                                        int minActiveInputs,
+                                                        float poolingToFollow) {
   if (filterSize>1) {
-    layers.push_back(new ConvolutionalTriangularLayer(filterSize, filterStride, dimension, nOutputFeatures, lPad, rPad));
+    layers.push_back(new ConvolutionalTriangularLayer(filterSize, filterStride, dimension, nOutputFeatures, minActiveInputs));
     nOutputFeatures*=triangleSize(filterSize,dimension);
   }
   addLearntLayer(nFeatures,activationFn,dropout,powf(filterSize*1.0/filterStride/poolingToFollow,2));
 }
-void SparseConvNetCUDA::addTriangularLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout, int lPad, int rPad) {
-  addTriangularConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,poolSize,lPad,rPad);
+void SparseConvNetCUDA::addTriangularLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout, int minActiveInputs) {
+  addTriangularConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,poolSize,minActiveInputs);
   if (poolSize>1) {
     layers.push_back(new MaxPoolingTriangularLayer(poolSize, poolStride,dimension));
   }

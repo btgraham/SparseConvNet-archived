@@ -17,6 +17,7 @@ public:
   int nFeaturesIn;
   int nFeaturesOut;
   float dropout;
+  int minActiveInputs;
   vectorCUDA<float> W; //Weights
   vectorCUDA<float> MW; //momentum
   vectorCUDA<float> w; //shrunk versions
@@ -32,6 +33,7 @@ public:
                            int dimension,
                            ActivationFunction fn,
                            float dropout,
+                           int minActiveInputs=1,
                            float poolingToFollow=1);
   void preprocess
   (SpatiallySparseBatch &batch,

@@ -48,27 +48,6 @@ public:
   int ub3(int i0, int i1=0, int i2=0, int i3=0);
 };
 
-class PaddedPoolingRegions : public PoolingRegions {
-  int poolSize;
-  int poolStride;
-  int lPad;
-  int rPad;
-public:
-  PaddedPoolingRegions(int nIn, int nOut, int dimension, int poolSize, int poolStride, int lPad=0, int rPad=0);
-  int tl0(int j0, int j1=0, int j2=0, int j3=0);
-  int tl1(int j0, int j1=0, int j2=0, int j3=0);
-  int tl2(int j0, int j1=0, int j2=0, int j3=0);
-  int tl3(int j0, int j1=0, int j2=0, int j3=0);
-
-  int lb0(int i0, int i1=0, int i2=0, int i3=0);
-  int ub0(int i0, int i1=0, int i2=0, int i3=0);
-  int lb1(int i0, int i1=0, int i2=0, int i3=0);
-  int ub1(int i0, int i1=0, int i2=0, int i3=0);
-  int lb2(int i0, int i1=0, int i2=0, int i3=0);
-  int ub2(int i0, int i1=0, int i2=0, int i3=0);
-  int lb3(int i0, int i1=0, int i2=0, int i3=0);
-  int ub3(int i0, int i1=0, int i2=0, int i3=0);
-};
 
 class PseudorandomOverlappingFractionalMaxPoolingBlocks {
 public:
@@ -197,27 +176,6 @@ public:
   int lb3(int i0, int i1=0, int i2=0, int i3=0);
   int ub3(int i0, int i1=0, int i2=0, int i3=0);
 };
-class PaddedPoolingRegionsTriangular : public PoolingRegionsTriangular {
-  int poolSize;
-  int poolStride;
-  int lPad;
-  int rPad;
-public:
-  PaddedPoolingRegionsTriangular(int nIn, int nOut, int dimension, int poolSize, int poolStride, int lPad=0, int rPad=0);
-  int tl0(int j0, int j1=0, int j2=0, int j3=0);
-  int tl1(int j0, int j1=0, int j2=0, int j3=0);
-  int tl2(int j0, int j1=0, int j2=0, int j3=0);
-  int tl3(int j0, int j1=0, int j2=0, int j3=0);
-
-  int lb0(int i0, int i1=0, int i2=0, int i3=0);
-  int ub0(int i0, int i1=0, int i2=0, int i3=0);
-  int lb1(int i0, int i1=0, int i2=0, int i3=0);
-  int ub1(int i0, int i1=0, int i2=0, int i3=0);
-  int lb2(int i0, int i1=0, int i2=0, int i3=0);
-  int ub2(int i0, int i1=0, int i2=0, int i3=0);
-  int lb3(int i0, int i1=0, int i2=0, int i3=0);
-  int ub3(int i0, int i1=0, int i2=0, int i3=0);
-};
 
 
 
@@ -226,4 +184,5 @@ void gridRulesTriangular
  SparseGrid& outputGrid, //Keys 0,1,...,powf(regions.nOut,3)-1 represent grid points (plus paddding to form a square/cube); key -1 represents null/background vector
  PoolingRegionsTriangular& regions,
  int& nOutputSpatialSites,
- std::vector<int>& rules);
+ std::vector<int>& rules,
+ int minActiveInputs=1);

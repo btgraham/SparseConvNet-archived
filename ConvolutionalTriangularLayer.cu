@@ -6,9 +6,9 @@
 #include "Regions.h"
 
 ConvolutionalTriangularLayer::ConvolutionalTriangularLayer
-(int filterSize, int filterStride, int dimension, int nFeaturesIn, int lPad, int rPad)
+(int filterSize, int filterStride, int dimension, int nFeaturesIn, int minActiveInputs)
   : filterSize(filterSize), filterStride(filterStride), dimension(dimension),
-    nFeaturesIn(nFeaturesIn), lPad(lPad), rPad(rPad) {
+    nFeaturesIn(nFeaturesIn), minActiveInputs(minActiveInputs) {
   fs=triangleSize(filterSize, dimension);
   nFeaturesOut=fs*nFeaturesIn;
   std::cout << dimension << "D ConvolutionalTriangularLayer side-length=" << filterSize
@@ -22,20 +22,21 @@ void ConvolutionalTriangularLayer::preprocess
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
   assert(input.nFeatures==nFeaturesIn);
-  assert(input.spatialSize+lPad+rPad>=filterSize);
-  assert((input.spatialSize+lPad+rPad-filterSize)%filterStride==0);
+  assert(input.spatialSize>=filterSize);
+  assert((input.spatialSize-filterSize)%filterStride==0);
   output.nFeatures=nFeaturesOut;
-  output.spatialSize=(input.spatialSize+lPad+rPad-filterSize)/filterStride+1;
+  output.spatialSize=(input.spatialSize-filterSize)/filterStride+1;
   output.nSpatialSites=0;
   output.grids.resize(batch.batchSize);
   output.backpropErrors=input.backpropErrors;
-  PaddedPoolingRegionsTriangular regions(inSpatialSize, outSpatialSize,dimension,filterSize, filterStride, lPad, rPad);
+  RegularPoolingRegionsTriangular regions(inSpatialSize, outSpatialSize,dimension,filterSize, filterStride);
   for (int item=0;item<batch.batchSize;item++)
     gridRulesTriangular(input.grids[item],
                         output.grids[item],
                         regions,
                         output.nSpatialSites,
-                        output.rules.hVector());
+                        output.rules.hVector(),
+                        minActiveInputs);
   output.featuresPresent.copyToCPU();
   output.featuresPresent.resize(input.featuresPresent.size()*fs);
   convolutionFeaturesPresent(input.featuresPresent.hVector(), output.featuresPresent.hVector(), input.nFeatures, input.featuresPresent.size(), fs);
@@ -70,7 +71,7 @@ void ConvolutionalTriangularLayer::backwards
 }
 int ConvolutionalTriangularLayer::calculateInputSpatialSize(int outputSpatialSize) {
   outSpatialSize=outputSpatialSize;
-  inSpatialSize=filterSize+(outputSpatialSize-1)*filterStride-lPad-rPad;
+  inSpatialSize=filterSize+(outputSpatialSize-1)*filterStride;
   std::cout << "(" << outSpatialSize <<"C" <<inSpatialSize << ") ";
   return inSpatialSize;
 }

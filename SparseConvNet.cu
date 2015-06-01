@@ -9,16 +9,16 @@ SparseConvNet::SparseConvNet(int dimension, int nInputFeatures, int nClasses, in
 SparseConvNet::~SparseConvNet(){
 }
 
-void SparseConvNet::addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout){
-  cnn->addLeNetLayerMP(nFeatures, filterSize, filterStride, poolSize, poolStride, activationFn, dropout);
+void SparseConvNet::addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout, int minActiveInputs){
+  cnn->addLeNetLayerMP(nFeatures, filterSize, filterStride, poolSize, poolStride, activationFn, dropout, minActiveInputs);
 }
 
-void SparseConvNet::addLeNetLayerPOFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout){
-  cnn->addLeNetLayerPOFMP(nFeatures, filterSize, filterStride, poolSize, fmpShrink, activationFn, dropout);
+void SparseConvNet::addLeNetLayerPOFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout, int minActiveInputs){
+  cnn->addLeNetLayerPOFMP(nFeatures, filterSize, filterStride, poolSize, fmpShrink, activationFn, dropout, minActiveInputs);
 }
 
-void SparseConvNet::addLeNetLayerROFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout){
-  cnn->addLeNetLayerROFMP(nFeatures, filterSize, filterStride, poolSize, fmpShrink, activationFn, dropout);
+void SparseConvNet::addLeNetLayerROFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout, int minActiveInputs){
+  cnn->addLeNetLayerROFMP(nFeatures, filterSize, filterStride, poolSize, fmpShrink, activationFn, dropout, minActiveInputs);
 }
 
 void SparseConvNet::addTerminalPoolingLayer(int poolSize){
@@ -67,8 +67,8 @@ SparseConvTriangLeNet::SparseConvTriangLeNet(int dimension, int nInputFeatures, 
 SparseConvTriangLeNet::~SparseConvTriangLeNet(){
 }
 
-void SparseConvTriangLeNet::addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout, int lPad, int rPad){
-  cnn->addTriangularLeNetLayerMP(nFeatures, filterSize, filterStride, poolSize, poolStride, activationFn, dropout, lPad, rPad);
+void SparseConvTriangLeNet::addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn, float dropout, int minActiveInputs){
+  cnn->addTriangularLeNetLayerMP(nFeatures, filterSize, filterStride, poolSize, poolStride, activationFn, dropout, minActiveInputs);
 }
 
 void SparseConvTriangLeNet::addTerminalPoolingLayer(int poolSize) {

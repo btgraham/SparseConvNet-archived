@@ -73,18 +73,22 @@ template void convolutionFeaturesPresent<int>(std::vector<int>& d_src, std::vect
 ConvolutionalLayer::ConvolutionalLayer(int filterSize,
                                        int filterStride,
                                        int dimension,
-                                       int nFeaturesIn) :
+                                       int nFeaturesIn,
+                                       int minActiveInputs) :
   filterSize(filterSize),
   filterStride(filterStride),
   dimension(dimension),
-  nFeaturesIn(nFeaturesIn) {
+  nFeaturesIn(nFeaturesIn),
+  minActiveInputs(minActiveInputs) {
   fs=ipow(filterSize,dimension);
   nFeaturesOut=fs*nFeaturesIn;
   std::cout << "Convolution "
             << filterSize <<"^" <<dimension<< "x"<< nFeaturesIn
             << "->" << nFeaturesOut;
   if (filterStride>1)
-    std::cout << " stride " << filterStride;
+    std::cout << " stride:" << filterStride;
+  if (minActiveInputs>1)
+    std::cout << " minActiveInputs:"  << minActiveInputs;
   std::cout << std::endl;
   }
 void ConvolutionalLayer::preprocess
@@ -105,12 +109,12 @@ void ConvolutionalLayer::preprocess
               output.grids[item],
               regions,
               output.nSpatialSites,
-              output.rules.hVector());
+              output.rules.hVector(),
+              minActiveInputs);
   }
   output.featuresPresent.copyToCPU();
   output.featuresPresent.resize(input.featuresPresent.size()*fs);
   convolutionFeaturesPresent(input.featuresPresent.hVector(), output.featuresPresent.hVector(), input.nFeatures, input.featuresPresent.size(), fs);
-
 }
 void ConvolutionalLayer::forwards
 (SpatiallySparseBatch &batch,

@@ -3,7 +3,7 @@
 // a) Google's sparsehash dense_hash_map, or
 // b) Boost's unordered_map, or
 // c) the C++11 std::unordered_map
-// Option (a) seems fastest. To speed up (b) or (c), use a "greedy" custom allocator to prevent threads getting in each others way to access memory to grow the map??
+// Option (a) seems fastest. To speed up (b) or (c), use a "greedy" custom allocator to prevent threads getting in each others way as they access memory to grow the map??
 
 #define USE_GOOGLE_SPARSEHASH
 
@@ -30,8 +30,9 @@ public:
   SparseGrid() {
     backgroundCol=-1; //Indicate that no "null vector" is needed
     mp.set_empty_key(-1); // dense_hash_map needs an empty key that will not be used as a real key
-    mp.set_deleted_key(-2); // dense_hash_map needs an "deleted" key that will not be used as a real key to delete elements
+    mp.set_deleted_key(-99);
     mp.min_load_factor(0.0f);
+
   }
 };
 #else

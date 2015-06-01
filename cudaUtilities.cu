@@ -75,6 +75,7 @@ int initializeGPU(int pciBusID) { //pciBusID, or -1 for the first device
   assert(deviceID>=0);
   cublasError(cublasCreate(&cublasHandle),__FILE__,__LINE__);
   cnnMemStream = new cudaMemStream();
+  cublasError(cublasSetStream(cublasHandle, cnnMemStream->stream));
   return deviceID;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////

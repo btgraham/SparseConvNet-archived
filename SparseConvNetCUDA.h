@@ -54,17 +54,19 @@ public:
                              int filterStride,
                              ActivationFunction activationFn=RELU,
                              float dropout=0.0f,
+                             int minActiveInputs=1,
                              float poolingToFollow=1.0f);
-  void addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn=RELU, float dropout=0.0f);
-  void addLeNetLayerROFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn=RELU, float dropout=0.0f);
-  void addLeNetLayerPOFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn=RELU, float dropout=0.0f);
+  void addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn=RELU, float dropout=0.0f, int minActiveInputs=1);
+  void addLeNetLayerROFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn=RELU, float dropout=0.0f, int minActiveInputs=1);
+  void addLeNetLayerPOFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn=RELU, float dropout=0.0f, int minActiveInputs=1);
   void addTriangularConvolutionalLayer(int nFeatures,
                                        int filterSize,
                                        int filterStride,
                                        ActivationFunction activationFn=RELU,
                                        float dropout=0.0f,
-                                       float poolingToFollow=1.0f,int lPad=0, int rPad=0);
-  void addTriangularLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn=RELU, float dropout=0.0f, int lPad=0, int rPad=0);
+                                       int minActiveInputs=1,
+                                       float poolingToFollow=1.0f);
+  void addTriangularLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn=RELU, float dropout=0.0f, int minActiveInputs=1);
   void addSoftmaxLayer();
   void addTerminalPoolingLayer(int poolSize, int S);
   void addIndexLearnerLayer();

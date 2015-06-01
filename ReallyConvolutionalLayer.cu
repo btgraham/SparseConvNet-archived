@@ -132,7 +132,7 @@ __global__ void dMultiply_InputT_dOutput_dWeights
 
 ReallyConvolutionalLayer::ReallyConvolutionalLayer
 (int nFeaturesIn, int nFeaturesOut, int filterSize, int filterStride, int dimension,
- ActivationFunction fn, float dropout, float poolingToFollow)
+ ActivationFunction fn, float dropout, int minActiveInputs, float poolingToFollow)
   : nFeaturesIn(nFeaturesIn),
     nFeaturesOut(nFeaturesOut),
     filterSize(filterSize),
@@ -144,7 +144,8 @@ ReallyConvolutionalLayer::ReallyConvolutionalLayer
     W(true,nFeaturesIn*fs*nFeaturesOut),
     MW(true,nFeaturesIn*fs*nFeaturesOut),
     B(true,nFeaturesOut),
-    MB(true,nFeaturesOut) {
+    MB(true,nFeaturesOut),
+  minActiveInputs(minActiveInputs) {
   std::cout << "Convolution "
             << filterSize <<"^" <<dimension
             << "x"<< nFeaturesIn
@@ -164,7 +165,7 @@ ReallyConvolutionalLayer::ReallyConvolutionalLayer
   case VLEAKYRELU: leaky=0.333; break;
   default: assert(0);
   }
-}
+  }
 void ReallyConvolutionalLayer::preprocess
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
@@ -183,7 +184,8 @@ void ReallyConvolutionalLayer::preprocess
               output.grids[item],
               regions,
               output.nSpatialSites,
-              output.rules.hVector());
+              output.rules.hVector(),
+              minActiveInputs);
   }
   output.featuresPresent.copyToCPU();
   int o=nFeaturesOut*(batch.type==TRAINBATCH?(1.0f-dropout):1.0f);
