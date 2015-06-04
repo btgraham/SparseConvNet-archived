@@ -1,6 +1,7 @@
 #include "Regions.h"
 #include "utilities.h"
 #include <iostream>
+#include <cassert>
 
 PoolingRegions::PoolingRegions(int nIn, int nOut, int dimension, int s)
   : nIn(nIn), nOut(nOut), dimension(dimension), s(s) {

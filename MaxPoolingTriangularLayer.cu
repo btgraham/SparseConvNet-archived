@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 #include "utilities.h"
 #include "cudaUtilities.h"
 #include "MaxPoolingLayer.h"

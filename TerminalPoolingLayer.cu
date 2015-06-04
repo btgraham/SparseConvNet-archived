@@ -2,6 +2,7 @@
 
 #define TERMINAL_POOLING_MAX_ACTIVE_SITES 1024
 #include <iostream>
+#include <cassert>
 #include "utilities.h"
 #include "cudaUtilities.h"
 #include "TerminalPoolingLayer.h"

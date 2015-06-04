@@ -3,6 +3,7 @@
 #include "ConvolutionalLayer.h"
 #include <iostream>
 #include <vector>
+#include <cassert>
 #include "cudaUtilities.h"
 #include "utilities.h"
 #include "Regions.h"

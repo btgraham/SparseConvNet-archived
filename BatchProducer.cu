@@ -2,9 +2,11 @@
 #include "SpatiallySparseBatch.h"
 #include "utilities.h"
 #include "cudaUtilities.h"
+#include <algorithm>
 #include <functional>
 #include <mutex>
 #include <chrono>
+#include <cassert>
 #define NBATCHPRODUCERTHREADS 10
 
 bool batchProducerBatchesInitialized; //intially false
@@ -111,8 +113,10 @@ BatchProducer::BatchProducer (SparseConvNetCUDA& cnn,
   }
   nBatches=(dataset.pictures.size()+batchSize-1)/batchSize;
   permutation=range(dataset.pictures.size());
-  if (dataset.type==TRAINBATCH)
-    random_shuffle ( permutation.begin(), permutation.end());
+  if (dataset.type==TRAINBATCH) {
+    RNG rng;
+    rng.vectorShuffle(permutation);
+  }
   for (int nThread=0; nThread<NBATCHPRODUCERTHREADS; nThread++)
     workers.emplace_back(std::thread(std::bind(&BatchProducer::batchProducerThread,this,nThread)));
 }

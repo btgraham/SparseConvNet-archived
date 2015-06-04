@@ -2,6 +2,7 @@
 #include "cudaUtilities.h"
 #include "SigmoidLayer.h"
 #include <iostream>
+#include <cassert>
 
 __global__ void dShrinkMatrixForDropout
 (float* m, float* md,

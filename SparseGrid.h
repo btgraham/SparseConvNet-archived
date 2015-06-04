@@ -29,16 +29,16 @@ public:
   SparseGridMap mp;
   SparseGrid() {
     backgroundCol=-1; //Indicate that no "null vector" is needed
-    mp.set_empty_key(-1); // dense_hash_map needs an empty key that will not be used as a real key
-    mp.set_deleted_key(-99);
+    mp.set_empty_key(-99); // dense_hash_map needs an empty key that will not be used as a real key
+    mp.set_deleted_key(-98);
     mp.min_load_factor(0.0f);
 
   }
 };
 #else
-#include <boost/unordered_map.hpp>
-typedef boost::unordered_map<int64_t,int> SparseGridMap;
-typedef boost::unordered_map<int64_t,int>::iterator SparseGridIter;
+#include <unordered_map>
+typedef std::unordered_map<int64_t,int> SparseGridMap;
+typedef std::unordered_map<int64_t,int>::iterator SparseGridIter;
 
 class SparseGrid {
 public:

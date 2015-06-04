@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <cassert>
 #include "cudaUtilities.h"
 #include "utilities.h"
 #include "SigmoidLayer.h"

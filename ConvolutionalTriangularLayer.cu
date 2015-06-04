@@ -1,6 +1,7 @@
 #include "ConvolutionalTriangularLayer.h"
 #include "ConvolutionalLayer.h"
 #include <iostream>
+#include <cassert>
 #include "cudaUtilities.h"
 #include "utilities.h"
 #include "Regions.h"

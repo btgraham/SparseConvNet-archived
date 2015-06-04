@@ -2,6 +2,7 @@
 #include "cudaUtilities.h"
 #include "SigmoidLayer.h"
 #include <iostream>
+#include <cassert>
 #include "SoftmaxClassifier.h"
 #include "NetworkInNetworkLayer.h"
 #include "utilities.h"
