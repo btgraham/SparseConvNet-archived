@@ -1,0 +1,13 @@
+x=0
+for y in $(find kagglePlankton/train/ -name "*.jpg"); do
+   x=$((x+1))
+   echo $x $y
+   cp $y a.jpg
+   convert a.jpg -negate -normalize __${y}
+done
+for y in $(find kagglePlankton/test/ -name "*.jpg"); do
+   x=$((x+1))
+   echo $x $y
+   cp $y a.jpg
+   convert a.jpg -negate -normalize __${y}
+done
