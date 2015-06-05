@@ -2,7 +2,7 @@
 //We can either use
 // a) Google's sparsehash dense_hash_map, or
 // b) the C++11 std::unordered_map
-// Option (a) seems fastest. To speed up (b), use a "greedy" custom allocator to prevent threads getting in each others way as they access memory to grow the map??
+// Option (a) seems fastest. To speed up (b), use tbb::scalable_alloc (or similar) to prevent threads getting in each others way as they access memory to grow the maps.
 
 #define USE_GOOGLE_SPARSEHASH
 
@@ -37,8 +37,7 @@ typedef std::unordered_map<int64_t,int,std::hash<int64_t>,std::equal_to<int64_t>
 class SparseGrid {
 public:
   int backgroundCol; //Set to -1 when no "null vector" is needed
-  HeapArena ha;
   SparseGridMap mp;
-  SparseGrid() : ha(1048576), mp(ha), backgroundCol(-1) {}
+  SparseGrid() : backgroundCol(-1) {}
 };
 #endif
