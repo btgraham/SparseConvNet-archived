@@ -17,7 +17,7 @@ void terminalGridPoolingRules
   if (inputGrid.mp.size()==0) { //Danger, total loss of information
     rules.push_back(inputGrid.backgroundCol);
   } else {
-    for (SparseGridIter iter = inputGrid.mp.begin(); iter != inputGrid.mp.end(); ++iter)
+    for (auto iter = inputGrid.mp.begin(); iter != inputGrid.mp.end(); ++iter)
       rules.push_back(iter->second);
   }
   outputGrid.mp[0]=nOutputSpatialSites++;

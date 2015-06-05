@@ -136,7 +136,7 @@ void gridRules
  int minActiveInputs) {
   switch(regions.dimension) {
   case 1:
-    for (SparseGridIter iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
       int i0=(iter->first)%regions.nIn;
       for (int j0=regions.lb0(i0);j0<=regions.ub0(i0);++j0) {
         int64_t outKey=(int64_t)j0;
@@ -163,7 +163,7 @@ void gridRules
     }
     break;
   case 2:
-    for (SparseGridIter iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
       int i0=((iter->first)/regions.nIn)%regions.nIn;
       int i1=(iter->first)%regions.nIn;
       for (int j0=regions.lb0(i0,i1);j0<=regions.ub0(i0,i1);++j0) {
@@ -195,7 +195,7 @@ void gridRules
     }
     break;
   case 3:
-    for (SparseGridIter iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
       int i0=((iter->first)/regions.nIn/regions.nIn)%regions.nIn;
       int i1=((iter->first)/regions.nIn)%regions.nIn;
       int i2=(iter->first)%regions.nIn;
@@ -232,7 +232,7 @@ void gridRules
     }
     break;
   case 4:
-    for (SparseGridIter iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
       int i0=iter->first/regions.nIn/regions.nIn/regions.nIn;
       int i1=((iter->first)/regions.nIn/regions.nIn)%regions.nIn;
       int i2=((iter->first)/regions.nIn)%regions.nIn;
@@ -274,7 +274,7 @@ void gridRules
     }
     break;
   }
-  for (SparseGridIter iter = outputGrid.mp.begin();iter != outputGrid.mp.end(); ++iter)
+  for (auto iter = outputGrid.mp.begin();iter != outputGrid.mp.end(); ++iter)
     if (iter->second==-2)
       outputGrid.mp.erase(iter);
   if (outputGrid.mp.size()< ipow(regions.nOut,regions.dimension)) { //Null vector/background needed
@@ -342,7 +342,7 @@ void gridRulesTriangular
  int minActiveInputs) {
   switch(regions.dimension) {
   case 1:
-    for (SparseGridIter iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
       int i0=iter->first;
       for (int j0=regions.lb0(i0);j0<=regions.ub0(i0);++j0) {
         int64_t outKey=(int64_t)j0;
@@ -370,7 +370,7 @@ void gridRulesTriangular
     }
     break;
   case 2:
-    for (SparseGridIter iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
       int i0=iter->first/regions.nIn;
       int i1=(iter->first)%regions.nIn;
       for (int j0=regions.lb0(i0,i1);j0<=regions.ub0(i0,i1);++j0) {
@@ -406,7 +406,7 @@ void gridRulesTriangular
     }
     break;
   case 3:
-    for (SparseGridIter iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
       int i0=iter->first/regions.nIn/regions.nIn;
       int i1=((iter->first)/regions.nIn)%regions.nIn;
       int i2=(iter->first)%regions.nIn;
@@ -448,7 +448,7 @@ void gridRulesTriangular
     }
     break;
   case 4:
-    for (SparseGridIter iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
       int i0=iter->first/regions.nIn/regions.nIn/regions.nIn;
       int i1=((iter->first)/regions.nIn/regions.nIn)%regions.nIn;
       int i2=((iter->first)/regions.nIn)%regions.nIn;
@@ -496,7 +496,7 @@ void gridRulesTriangular
     }
     break;
   }
-  for (SparseGridIter iter = outputGrid.mp.begin();iter != outputGrid.mp.end(); ++iter)
+  for (auto iter = outputGrid.mp.begin();iter != outputGrid.mp.end(); ++iter)
     if (iter->second==-2)
       outputGrid.mp.erase(iter);
   if (outputGrid.mp.size()< triangleSize(regions.nOut,regions.dimension)) { //Null vector/background needed
