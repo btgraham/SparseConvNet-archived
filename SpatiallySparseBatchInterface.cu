@@ -19,15 +19,7 @@ void SpatiallySparseBatchInterface::summary() {
 void SpatiallySparseBatchInterface::reset() {
   featuresPresent.resize(0);
   nSpatialSites=0;
-#ifdef USE_GOOGLE_SPARSEHASH
   grids.resize(0);
-  // for (auto &grid : grids) {
-  //   grid.backgroundCol=-1;
-  //   grid.mp.clear_no_resize();
-  // }
-#else
-  grids.resize(0);
-#endif
   rules.resize(0);
   backpropErrors=false;
 }

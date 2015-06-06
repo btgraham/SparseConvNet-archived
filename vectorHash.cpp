@@ -31,24 +31,20 @@ void vectorHash::erase(vectorHashIterator iter) {
 
 
 void vectorHashIterator::seek() {
-  while (first<vh.vec.size() and second==-99) {
+  while (first<vh.vec.size() and vh.vec[first]==-99)
     first++;
-    second=vh[first];
-  }
+  if (first<vh.vec.size())
+    second=vh.vec[first];
 }
 vectorHashIterator::vectorHashIterator(vectorHash &vh, int x) : vh(vh) {
   first=x;
-  if (x<vh.size()) {
-    second=vh.vec[x];
-    seek();
-  }
+  seek();
 }
 vectorHashIterator* vectorHashIterator::operator-> () {
   return this;
 }
 vectorHashIterator vectorHashIterator::operator++() {
   first++;
-  second=vh.vec[first];
   seek();
   return *this;
 }

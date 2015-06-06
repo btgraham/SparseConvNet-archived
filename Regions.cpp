@@ -134,6 +134,9 @@ void gridRules
  int& nOutputSpatialSites,
  std::vector<int>& rules,
  int minActiveInputs) {
+#ifdef USE_VECTOR_HASH
+  outputGrid.mp.vec.resize(ipow(regions.nOut,regions.dimension),-99);
+#endif
   switch(regions.dimension) {
   case 1:
     for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
@@ -340,6 +343,9 @@ void gridRulesTriangular
  int& nOutputSpatialSites,
  std::vector<int>& rules,
  int minActiveInputs) {
+#ifdef USE_VECTOR_HASH
+  outputGrid.mp.vec.resize(triangleSize(regions.nOut,regions.dimension));
+#endif
   switch(regions.dimension) {
   case 1:
     for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
