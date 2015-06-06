@@ -344,7 +344,7 @@ void gridRulesTriangular
  std::vector<int>& rules,
  int minActiveInputs) {
 #ifdef USE_VECTOR_HASH
-  outputGrid.mp.vec.resize(triangleSize(regions.nOut,regions.dimension));
+  outputGrid.mp.vec.resize(triangleSize(regions.nOut,regions.dimension),-99);
 #endif
   switch(regions.dimension) {
   case 1:
