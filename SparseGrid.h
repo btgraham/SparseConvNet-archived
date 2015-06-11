@@ -5,10 +5,10 @@
 // c) the C++11 std::unordered_map with tbb::scalable_alloc (or similar) to prevent threads getting in each others way as they access memory to grow the maps,
 // d) vectors disguised as a hash map (ok in 2 dimensions)
 
-//#define USE_GOOGLE_SPARSEHASH
+#define USE_GOOGLE_SPARSEHASH
 //#define USE_UNORDERED_MAP
 //#define USE_UNORDERED_MAP_TBB
-#define USE_VECTOR_HASH
+//#define USE_VECTOR_HASH
 
 
 #pragma once

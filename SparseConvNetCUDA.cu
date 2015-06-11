@@ -59,7 +59,7 @@ void SparseConvNetCUDA::addConvolutionalLayer(int nFeatures,
                                               float dropout,
                                               int minActiveInputs,
                                               float poolingToFollow) {
-  if (false/*layers.size()==0*/) {
+  if (layers.size()==-100) {
     layers.push_back(new ReallyConvolutionalLayer(nOutputFeatures, nFeatures, filterSize, filterStride, dimension, activationFn, dropout, minActiveInputs, poolingToFollow));
     nOutputFeatures=nFeatures;
   } else {
@@ -181,7 +181,7 @@ float SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset, int bat
 
   std::cout << dataset.name
             << " Mistakes:"
-            << 100*errorRate
+            << 100.0*errorRate
             << "% NLL:"
             << nll
             << " MegaMultiplyAdds/sample:"
@@ -255,7 +255,7 @@ void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset
     auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
     std::cout << dataset.name
               << " rep " << rep <<"/"<<nReps
-              << " Mistakes: " << 100*errors/dataset.pictures.size()
+              << " Mistakes: " << 100.0*errors/dataset.pictures.size()
               << "% NLL " << nll/dataset.pictures.size()
               << " MegaMultiplyAdds/sample:"
               << roundf(multiplyAddCount/dataset.pictures.size()/1000000)

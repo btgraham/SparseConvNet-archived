@@ -11,8 +11,9 @@ KagglePlanktonLabeledDataSet::KagglePlanktonLabeledDataSet
   {
     std::ifstream f(classesListFile.c_str());
     std::string cl;
+    int ctr=0;
     while (f >> cl)
-      classes[cl]=classes.size()-1;
+      classes[cl]=ctr++;
   }
   nClasses=classes.size();
   for (auto &kv : classes) {
@@ -34,8 +35,9 @@ KagglePlanktonUnlabeledDataSet::KagglePlanktonUnlabeledDataSet
   {
     std::ifstream f(classesListFile.c_str());
     std::string cl;
+    int ctr=0;
     while (f >> cl) {
-      classes[cl]=classes.size()-1;
+      classes[cl]=ctr++;
       header=header+","+cl;
     }
   }

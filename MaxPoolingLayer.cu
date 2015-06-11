@@ -159,13 +159,14 @@ void PseudorandomOverlappingFractionalMaxPoolingLayer::preprocess
   output.grids.resize(batch.batchSize);
   output.backpropErrors=input.backpropErrors;
   PseudorandomOverlappingFractionalPoolingRegions regions(inSpatialSize, outSpatialSize,dimension, poolSize,rng);
-  for (int item=0;item<batch.batchSize;item++)
+  for (int item=0;item<batch.batchSize;item++) {
     gridRules
       (input.grids[item],
        output.grids[item],
        regions,
        output.nSpatialSites,
        output.rules.hVector());
+  }
 }
 void PseudorandomOverlappingFractionalMaxPoolingLayer::forwards
 (SpatiallySparseBatch &batch,

@@ -47,7 +47,7 @@ void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize, float minFill) {
   } else {
     int fitCtr=100; //Give up after 100 failed attempts to find a good fit
     bool goodFit=false;
-    while (!goodFit and fitCtr-- >0) {
+    while (!goodFit and fitCtr --> 0) {
       xOffset=-subsetSize/2-rng.randint(mat.cols-subsetSize);//-rng.randint(mat.cols);
       yOffset=-subsetSize/2-rng.randint(mat.rows-subsetSize);//-rng.randint(mat.rows);
       int pointsCtr=0;
