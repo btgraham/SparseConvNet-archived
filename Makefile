@@ -48,10 +48,5 @@ imagenet2012triangular: $(OBJ) OpenCVTriangularPicture.o SpatiallySparseDatasetI
 mnist: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetMnist.o mnist.o
 	$(NVCC) -o mnist $(OBJ) OpenCVPicture.o SpatiallySparseDatasetMnist.o mnist.o $(LIBS) $(NVCCFLAGS)
 
-kagglePlanktonQuick: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o kagglePlanktonQuick.o
-	$(NVCC) -o kagglePlanktonQuick $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o kagglePlanktonQuick.o $(LIBS) $(NVCCFLAGS)
-
-kagglePlankton: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o kagglePlankton.o
-	$(NVCC) -o kagglePlankton $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o kagglePlankton.o $(LIBS) $(NVCCFLAGS)
-kagglePlankton2: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o kagglePlankton2.o
-	$(NVCC) -o kagglePlankton2 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o kagglePlankton2.o $(LIBS) $(NVCCFLAGS)
+plankton: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton.o
+	$(NVCC) -o plankton $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton.o $(LIBS) $(NVCCFLAGS)

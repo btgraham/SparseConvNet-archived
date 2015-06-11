@@ -30,7 +30,7 @@ KagglePlanktonLabeledDataSet::KagglePlanktonLabeledDataSet
 KagglePlanktonUnlabeledDataSet::KagglePlanktonUnlabeledDataSet
 (std::string classesListFile, std::string dataDirectory, int backgroundCol) {
   name=dataDirectory;
-  header="image,";
+  header="image";
   type=UNLABELEDBATCH;
   {
     std::ifstream f(classesListFile.c_str());
