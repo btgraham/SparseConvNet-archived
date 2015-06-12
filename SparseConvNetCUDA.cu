@@ -5,6 +5,7 @@
 #include <vector>
 #include <chrono>
 #include <cassert>
+#include <algorithm>
 #include "cudaUtilities.h"
 #include "utilities.h"
 #include "SigmoidLayer.h"
@@ -21,11 +22,11 @@
 #include "SpatiallySparseDataset.h"
 
 
-SparseConvNetCUDA::SparseConvNetCUDA (int dimension,
-                                      int nInputFeatures,
-                                      int nClasses,
-                                      int pciBusID,
-                                      int nTop) :
+SparseConvNetCUDA::SparseConvNetCUDA(int dimension,
+                                     int nInputFeatures,
+                                     int nClasses,
+                                     int pciBusID,
+                                     int nTop) :
   dimension(dimension),
   nInputFeatures(nInputFeatures),
   nClasses(nClasses),
@@ -379,7 +380,7 @@ void SparseConvNetCUDA::calculateInputRegularizingConstants(SpatiallySparseDatas
   inputNormalizingConstants.resize(0); //Make sure input features rescaling is turned off.
   std::cout << "Using " << std::min(10000,(int)dataset.pictures.size()) << " out of " << dataset.pictures.size() << " training samples to calculate regularizing constants." << std::endl;
   dataset.pictures.resize(10000);
-  dataset.type=TESTBATCH; //pretend it is a test batch to turn off dropout and training data augmentation
+  dataset.type=TESTBATCH;  //pretend it is a test batch to turn off dropout and training data augmentation
   BatchProducer bp(*this,dataset,inputSpatialSize,100);
   std::vector<float> c(nInputFeatures,0);
   while(SpatiallySparseBatch* batch=bp.nextBatch()) {
