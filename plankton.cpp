@@ -3,7 +3,7 @@
 
 int epoch=0;
 int cudaDevice=-1; // PCI bus ID: -1 for default GPU
-int batchSize=100; // Increase/decrease according to GPU memory
+int batchSize=50; // Increase/decrease according to GPU memory
 
 Picture* OpenCVPicture::distort(RNG& rng, batchType type) {
   OpenCVPicture* pic=new OpenCVPicture(*this);
@@ -34,7 +34,7 @@ class FractionalSparseConvNet : public SparseConvNet {
 public:
   FractionalSparseConvNet(int nInputFeatures, int nClasses, int cudaDevice) : SparseConvNet(2,nInputFeatures, nClasses, cudaDevice) {
     int l=12;
-    float p=0.25f;
+    float p=0.375f;
     const float fmpShrink=1.414;
     for (int i=0;i<l;i++) {
       addLeNetLayerPOFMP(f(i),2,1,2,fmpShrink,VLEAKYRELU,p*std::max(i-4,0)/(l-3));
@@ -50,21 +50,22 @@ public:
 int main() {
   std::string baseName="weights/plankton";
 
-  KagglePlanktonLabeledDataSet trainSet("Data/___kagglePlankton/classList","Data/___kagglePlankton/train/",TRAINBATCH,0);
+  KagglePlanktonLabeledDataSet trainSet("Data/kagglePlankton/classList","Data/kagglePlankton/train/",TRAINBATCH,255);
   trainSet.summary();
-  KagglePlanktonLabeledDataSet cheekyExtraTrainSet("Data/___kagglePlankton/classList","Data/___kagglePlankton/testPrivate/",TRAINBATCH,0);  //Use the "private test set" as extra training data.
+  KagglePlanktonLabeledDataSet cheekyExtraTrainSet("Data/kagglePlankton/classList","Data/kagglePlankton/testPrivate/",TRAINBATCH,255);  //Use the "private test set" as extra training data.
   cheekyExtraTrainSet.summary();
-  KagglePlanktonLabeledDataSet valSet("Data/___kagglePlankton/classList","Data/___kagglePlankton/testPublic/",TESTBATCH,0);
+  KagglePlanktonLabeledDataSet valSet("Data/kagglePlankton/classList","Data/kagglePlankton/testPublic/",TESTBATCH,255);
   valSet.summary();
 
   FractionalSparseConvNet cnn(trainSet.nFeatures,trainSet.nClasses,cudaDevice);
 
   if (epoch>0) {
     cnn.loadWeights(baseName,epoch);
+    cnn.processDatasetRepeatTest(valSet, batchSize/2, 12);
   }
   for (epoch++;;epoch++) {
     std::cout <<"epoch: " << epoch << std::endl;
-    float lr=0.003; //anneal
+    float lr=0.003;
     cnn.processDataset(trainSet, batchSize,lr,0.999);
     cnn.processDataset(cheekyExtraTrainSet, batchSize,lr,0.999);
     cnn.processDataset(trainSet, batchSize,lr,0.999);
@@ -72,11 +73,11 @@ int main() {
     cnn.processDataset(trainSet, batchSize,lr,0.999);
     cnn.processDataset(cheekyExtraTrainSet, batchSize,lr,0.999);
     cnn.saveWeights(baseName,epoch);
-    cnn.processDatasetRepeatTest(valSet, batchSize/2, 3);
+    cnn.processDatasetRepeatTest(valSet, batchSize/2, 1);
   }
 
   // For unlabelled data (but there is overlap between this "test" data and our expanded training set!!!)
-  // KagglePlanktonUnlabeledDataSet testSet("Data/___kagglePlankton/classList","Data/___kagglePlankton/test/",0);
+  // KagglePlanktonUnlabeledDataSet testSet("Data/kagglePlankton/classList","Data/kagglePlankton/test/",255);
   // testSet.summary();
   // cnn.processDatasetRepeatTest(testSet, batchSize/2, 24,"plankton.predictions",testSet.header);
 }

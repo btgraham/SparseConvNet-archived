@@ -194,22 +194,26 @@ template <typename t> void vectorCUDA<t>::check(const char* file, int linenumber
 template <> void vectorCUDA<float>::check(const char* file, int linenumber) {
   if (onGPU and dsize>0) {
     if (dsize==0) return;
+    cudaCheckError();
     bool *d_result, h_result=true;
-    cudaMalloc((void **)&d_result, sizeof (bool));
-    cudaMemcpy(d_result, &h_result, sizeof(bool), cudaMemcpyHostToDevice);
+    cudaSafeCall(cudaMalloc((void **)&d_result, sizeof (bool)));
+    cudaSafeCall(cudaMemcpy(d_result, &h_result, sizeof(bool), cudaMemcpyHostToDevice));
     dNanCheck<<<1,128>>>(d_vec, dsize, d_result);
-    cudaMemcpy(&h_result, d_result, sizeof(bool), cudaMemcpyDeviceToHost);
+    cudaCheckError();
+    cudaSafeCall(cudaMemcpy(&h_result, d_result, sizeof(bool), cudaMemcpyDeviceToHost));
+    cudaSafeCall(cudaFree(d_result));
     if (!h_result) {
-      std::cout <<"NaN " << file <<" " << linenumber << "\n";
+      std::cout <<"GPU NaN " << file <<" " << linenumber << " dsize " << dsize <<"\n";
       exit(1);
     }
+    cudaCheckError();
   }
   if (!onGPU) {
     bool result=true;
     for (int i=0; i<vec.size();++i)
       if (isnan(vec[i])) result=false;
     if (!result) {
-      std::cout <<"NaN " << file <<" " << linenumber << "\n";
+      std::cout <<"CPU NaN " << file <<" " << linenumber << "\n";
       exit(1);
     }
   }
