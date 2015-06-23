@@ -18,6 +18,9 @@ casia: $(OBJ) OnlineHandwritingPicture.o SpatiallySparseDatasetCasiaOLHWDB.o cas
 cifar10: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10.o
 	$(NVCC) -o cifar10 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10.o $(LIBS) $(NVCCFLAGS)
 
+cifar10fmp: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10fmp.o
+	$(NVCC) -o cifar10fmp $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10fmp.o $(LIBS) $(NVCCFLAGS)
+
 cifar100: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR100.o cifar100.o
 	$(NVCC) -o cifar100 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR100.o cifar100.o $(LIBS) $(NVCCFLAGS)
 
