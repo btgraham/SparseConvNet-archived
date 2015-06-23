@@ -23,6 +23,10 @@ void OpenCVPicture::jiggle(RNG &rng, int offlineJiggle) {
   xOffset+=rng.randint(offlineJiggle*2+1)-offlineJiggle;
   yOffset+=rng.randint(offlineJiggle*2+1)-offlineJiggle;
 }
+void OpenCVPicture::colorDistortion(RNG &rng, int sigma1, int sigma2, int sigma3, int sigma4) {
+  distortImageColor(mat, rng, sigma1, sigma2, sigma3, sigma4);
+
+}
 void OpenCVPicture::randomCrop(RNG &rng, int subsetSize) {
   assert(subsetSize<=std::min(mat.rows,mat.cols));
   cropImage(mat, rng.randint(mat.cols-subsetSize),rng.randint(mat.rows-subsetSize), subsetSize, subsetSize);

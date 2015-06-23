@@ -25,6 +25,7 @@ public:
   void codifyInputData(SparseGrid &grid, std::vector<float> &features, int &nSpatialSites, int spatialSize);
   void jiggle(RNG &rng, int offlineJiggle);
   void jiggleFit(RNG &rng, int subsetSize, float minFill=-1);
+  void colorDistortion(RNG &rng, int sigma1, int sigma2, int sigma3, int sigma4);
   void loadData  (int scale_=-1);
   void loadDataWithoutScaling(int flag=-1);
   void randomCrop(RNG &rng, int subsetSize);
