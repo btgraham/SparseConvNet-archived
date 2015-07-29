@@ -84,14 +84,16 @@ int PseudorandomOverlappingFractionalPoolingRegions::lb3(int i0, int i1, int i2,
 int PseudorandomOverlappingFractionalPoolingRegions::ub3(int i0, int i1, int i2, int i3) {return pb[3].ub[i3];}
 
 
-RandomOverlappingFractionalMaxPoolingBlocks::RandomOverlappingFractionalMaxPoolingBlocks(int nIn, int nOut, int poolSize, RNG& rng) {
-  assert(nIn>nOut-1+poolSize);
+RandomOverlappingFractionalMaxPoolingBlocks::RandomOverlappingFractionalMaxPoolingBlocks
+(int nIn, int nOut, int poolSize, RNG& rng) {
+  assert(nIn>=nOut-1+poolSize);
   std::vector<int> inc;
-  float alpha=(nIn-poolSize)*1.0/(nOut-1);
-  for (int i=0;i<nOut-1;i++)
-    tl.push_back((int)((i+1)*alpha) - (int)((i)*alpha));
+  int alpha=(nIn-poolSize)*1.0/(nOut-1);
+  int k=(nOut-1)*(alpha+1)-(nIn-poolSize);
+  inc.resize(k,alpha);
+  inc.resize(nOut-1,alpha+1);
   rng.vectorShuffle(inc);
-  tl.push_back(poolSize);
+  inc.push_back(poolSize);
   tl.resize(1,0);
   for (int i=0;i<nOut-1;i++)
     tl.push_back(tl.back()+inc[i]);
@@ -110,7 +112,7 @@ RandomOverlappingFractionalPoolingRegions::RandomOverlappingFractionalPoolingReg
   PoolingRegions(nIn,nOut,dimension, poolSize) {
   for (int i=0;i<dimension;++i)
     pb.push_back(RandomOverlappingFractionalMaxPoolingBlocks(nIn,nOut,poolSize,rng));
-  assert(nIn>nOut+poolSize-1);
+  assert(nIn>=nOut+poolSize-1);
 }
 int RandomOverlappingFractionalPoolingRegions::tl0(int j0, int j1, int j2, int j3) {return pb[0].tl[j0];}
 int RandomOverlappingFractionalPoolingRegions::tl1(int j0, int j1, int j2, int j3) {return pb[1].tl[j1];}

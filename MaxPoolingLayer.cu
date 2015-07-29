@@ -41,6 +41,7 @@ void maxPool(float* g1, float* g2, int* rules, int count, int sd, int nOut, int*
       // powers of 2 for square grids,
       // powers of 3 for cubic grids, also
       // powers of 4, triangular numbers, tetrahedral numbers, etc
+    case  2: dMaxPool< 2><<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>> (g1, g2+processed*nOut, rules+processed*sd, nOut, d_choice+processed*nOut); break;
     case  3: dMaxPool< 3><<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>> (g1, g2+processed*nOut, rules+processed*sd, nOut, d_choice+processed*nOut); break;
     case  4: dMaxPool< 4><<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>> (g1, g2+processed*nOut, rules+processed*sd, nOut, d_choice+processed*nOut); break;
     case  5: dMaxPool< 5><<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>> (g1, g2+processed*nOut, rules+processed*sd, nOut, d_choice+processed*nOut); break;

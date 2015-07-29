@@ -132,6 +132,6 @@ void TerminalPoolingLayer::backwards
 }
 int TerminalPoolingLayer::calculateInputSpatialSize(int outputSpatialSize) {
   assert(outputSpatialSize==1);
-  std::cout << "(" << outSpatialSize <<"," <<inSpatialSize << ") ";
+  std::cout << "(" << outSpatialSize <<"TP" <<inSpatialSize << ") ";
   return inSpatialSize;
 }

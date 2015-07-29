@@ -247,6 +247,8 @@ void NetworkInNetworkLayer::backwards
 void NetworkInNetworkLayer::loadWeightsFromStream(std::ifstream &f) {
   f.read((char*)&W.hVector()[0],sizeof(float)*W.size());
   f.read((char*)&B.hVector()[0],sizeof(float)*B.size());
+  MW.setZero();
+  MB.setZero();
 };
 void NetworkInNetworkLayer::putWeightsToStream(std::ofstream &f)  {
   f.write((char*)&W.hVector()[0],sizeof(float)*W.size());

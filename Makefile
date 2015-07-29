@@ -18,8 +18,8 @@ casia: $(OBJ) OnlineHandwritingPicture.o SpatiallySparseDatasetCasiaOLHWDB.o cas
 cifar10: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10.o
 	$(NVCC) -o cifar10 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10.o $(LIBS) $(NVCCFLAGS)
 
-cifar10fmp: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10fmp.o
-	$(NVCC) -o cifar10fmp $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10fmp.o $(LIBS) $(NVCCFLAGS)
+cifar10FullyConnected: $(OBJ) SpatiallySparseDatasetCIFAR10FullyConnected.o cifar10FullyConnected.o
+	$(NVCC) -o cifar10FullyConnected $(OBJ) SpatiallySparseDatasetCIFAR10FullyConnected.o cifar10FullyConnected.o $(LIBS) $(NVCCFLAGS)
 
 cifar100: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR100.o cifar100.o
 	$(NVCC) -o cifar100 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR100.o cifar100.o $(LIBS) $(NVCCFLAGS)
@@ -53,3 +53,6 @@ mnist: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetMnist.o mnist.o
 
 plankton: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton.o
 	$(NVCC) -o plankton $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton.o $(LIBS) $(NVCCFLAGS)
+
+cifar10indexLearning: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10indexLearning.o
+	$(NVCC) -o cifar10indexLearning $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10indexLearning.o $(LIBS) $(NVCCFLAGS)
