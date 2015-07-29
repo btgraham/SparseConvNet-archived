@@ -235,7 +235,7 @@ void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset
     if (!predictionsFilename.empty()) {
       std::cout << predictionsFilename << std::endl;
       std::ofstream f(predictionsFilename.c_str());
-      f<<header;
+      f << header << std::endl;
       for (int i=0;i<dataset.pictures.size();++i) {
         f << dataset.pictures[i]->identify();
         if (dataset.type!=UNLABELEDBATCH)
