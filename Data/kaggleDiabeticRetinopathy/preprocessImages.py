@@ -8,8 +8,8 @@ def scaleRadius(img,scale):
     s=scale*1.0/r
     return cv2.resize(img,(0,0),fx=s,fy=s)
 
-for scale in [300, 500]:
-    for f in (glob.glob("train/*.jpeg")+glob.glob("test/*.jpeg"))[2::3]:
+for scale in [300, 500, 1000]:
+    for f in (glob.glob("train/*.jpeg")+glob.glob("test/*.jpeg")):
         try:
             a=cv2.imread(f)
             a=scaleRadius(a,scale)
