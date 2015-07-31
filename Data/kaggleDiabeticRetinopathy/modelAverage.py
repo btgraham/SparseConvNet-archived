@@ -94,10 +94,13 @@ def pickleLoad(name):
 
 print "Validation data"
 
-#r=rf(1000,n_jobs=5)
-#r.fit(trainX,trainY)
-#pickleSave(r,"kaggleDiabetesRandomForest2b__.forest.pickle")
-r=pickleLoad("kaggleDiabetesRandomForest2b__.forest.pickle")
+fitForest=False
+if fitForest:
+    r=rf(1000,n_jobs=5)
+    r.fit(trainX,trainY)
+    pickleSave(r,"kaggleDiabeticRetinopathyCompetitionModelFiles/modelAverage.forest.pickle")
+else:
+    r=pickleLoad("kaggleDiabeticRetinopathyCompetitionModelFiles/modelAverage.forest.pickle")
 print "accuracy", numpy.mean(r.predict(validationX)==validationY)
 print "mse", numpy.mean((r.predict(validationX)-validationY)**2)
 a=(r.predict_proba(validationX)*numpy.arange(5).reshape((1,5))).sum(1)

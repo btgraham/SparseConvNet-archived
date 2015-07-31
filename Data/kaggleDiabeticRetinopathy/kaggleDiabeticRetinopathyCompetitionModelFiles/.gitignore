@@ -2,3 +2,4 @@
 *.validation
 *.test
 *.cnn
+*.pickle
