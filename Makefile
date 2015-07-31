@@ -57,9 +57,9 @@ plankton: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton
 cifar10indexLearning: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10indexLearning.o
 	$(NVCC) -o cifar10indexLearning $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10indexLearning.o $(LIBS) $(NVCCFLAGS)
 
-kaggleDiabetes302: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKaggleDiabeticRetinopathy.o kaggleDiabetes302.o
-	$(NVCC) -o kaggleDiabetes302 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKaggleDiabeticRetinopathy.o kaggleDiabetes302.o $(LIBS) $(NVCCFLAGS)
-kaggleDiabetes307: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKaggleDiabeticRetinopathy.o kaggleDiabetes307.o
-	$(NVCC) -o kaggleDiabetes307 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKaggleDiabeticRetinopathy.o kaggleDiabetes307.o $(LIBS) $(NVCCFLAGS)
-kaggleDiabetes500: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKaggleDiabeticRetinopathy.o kaggleDiabetes500.o
-	$(NVCC) -o kaggleDiabetes500 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKaggleDiabeticRetinopathy.o kaggleDiabetes500.o $(LIBS) $(NVCCFLAGS)
+kaggleDiabetes1: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKaggleDiabeticRetinopathy.o kaggleDiabetes1.o
+	$(NVCC) -o kaggleDiabetes1 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKaggleDiabeticRetinopathy.o kaggleDiabetes1.o $(LIBS) $(NVCCFLAGS)
+kaggleDiabetes2: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKaggleDiabeticRetinopathy.o kaggleDiabetes2.o
+	$(NVCC) -o kaggleDiabetes2 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKaggleDiabeticRetinopathy.o kaggleDiabetes2.o $(LIBS) $(NVCCFLAGS)
+kaggleDiabetes3: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKaggleDiabeticRetinopathy.o kaggleDiabetes3.o
+	$(NVCC) -o kaggleDiabetes3 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKaggleDiabeticRetinopathy.o kaggleDiabetes3.o $(LIBS) $(NVCCFLAGS)
