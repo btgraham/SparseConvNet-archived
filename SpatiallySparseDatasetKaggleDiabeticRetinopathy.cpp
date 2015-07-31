@@ -63,48 +63,6 @@ SpatiallySparseDataset KDRTestSet(std::string dirNameTest) {
   }
   return dataset;
 }
-SpatiallySparseDataset KDRTestSubset(std::string dirNameTest, int i) {
-  SpatiallySparseDataset dataset;
-  dataset.name=std::string("dr/kaggleDiabetes1_epoch67.test")+std::to_string(i);
-  std::cout << "Loading "<< dataset.name<<"\n";
-  dataset.type=UNLABELEDBATCH;
-  dataset.nFeatures=3;
-  dataset.nClasses=5;
-
-  std::string imageName;
-  int ctr;
-  std::ifstream file("/home/ben/Archive/Datasets/kaggleDiabeticRetinopathy/test_set");
-  while (file >> imageName) {
-    std::string filename=dirNameTest+imageName+std::string(".jpeg");
-    if(globVector(filename).size()==1 and (ctr++)%1000==i) {
-      OpenCVPicture*  pic = new OpenCVPicture(filename,-1,128,0);
-      dataset.pictures.push_back(pic);
-    }
-  }
-  return dataset;
-}
-
-
-SpatiallySparseDataset KDRTrainSetRelabeled(std::string dirName) {
-  SpatiallySparseDataset dataset;
-  dataset.name="DR train minus val relabeled";
-  std::cout << "Loading "<< dataset.name<<"\n";
-  dataset.type=TRAINBATCH;
-  dataset.nFeatures=3;
-  dataset.nClasses=5;
-
-  std::string imageName;
-  int cl;
-  float p[5];
-  std::ifstream file("/home/ben/Desktop/Code/SparseConvNet/dr/301_266_predictions");
-  while (file >> imageName >> cl >> p[0]>> p[1]>> p[2]>> p[3]>> p[4]) {
-    std::string filename=dirName+imageName;
-    for (int i=0; i<=4; ++i)
-      for (int j=0;j<10*p[i]-0.5;++j)
-        dataset.pictures.push_back(new OpenCVPicture(filename,-1,128,i));
-  }
-  return dataset;
-}
 
 void distortImageColorDR(cv::Mat& mat, RNG& rng, float sigma0, float sigma1, float sigma2, float sigma3) { //Background color 128
   cv::Mat mat2=cv::Mat::zeros(mat.rows,mat.cols,CV_8UC(mat.channels()));
