@@ -16,3 +16,5 @@ kagglePlankton2
 kagglePlanktonQuick
 *.features
 cifar10indexLearning
+old/
+Data/plankton-JO-2/
