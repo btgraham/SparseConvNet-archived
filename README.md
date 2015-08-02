@@ -4,7 +4,9 @@
 
 ## Git branch for the [Kaggle Diabetic Retinopathy competition](https://www.kaggle.com/c/diabetic-retinopathy-detection).
 
-SparseConvNet is a convolutional neural network. It was designed for processing sparse data, but it can also handle non-sparse data.
+[Competition report](competitionreport.pdf)
+
+SparseConvNet is a convolutional neural network. It was designed for processing sparse data, but it can also handle non-sparse data. It implements [Fractional Max-Pooling](http://arxiv.org/abs/1412.6071).
 
 ## [Wiki](https://github.com/btgraham/SparseConvNet/wiki)
 ## [Dependencies and Installation](https://github.com/btgraham/SparseConvNet/wiki/Installation)
