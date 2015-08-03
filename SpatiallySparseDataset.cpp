@@ -19,7 +19,6 @@ SpatiallySparseDataset SpatiallySparseDataset::extractValidationSet(float p) {
   val.type=TESTBATCH;
   std::mt19937 gen(123);
   std::shuffle(pictures.begin(), pictures.end(), gen);
-  shuffle();
   int size=pictures.size()*p;
   for (;size>0;size--) {
     val.pictures.push_back(pictures.back());
