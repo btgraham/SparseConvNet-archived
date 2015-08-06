@@ -94,7 +94,6 @@ void cropImage(cv::Mat& src, int X, int Y, int Width, int Height) {
 }
 
 void distortImageColor(cv::Mat& mat, RNG& rng, float sigma1, float sigma2, float sigma3, float sigma4) {
-  cv::Mat mat2=cv::Mat::zeros(mat.rows,mat.cols,CV_8UC(mat.channels()));
   std::vector<float> delta1(mat.channels());
   std::vector<float> delta2(mat.channels());
   std::vector<float> delta3(mat.channels());
@@ -109,15 +108,14 @@ void distortImageColor(cv::Mat& mat, RNG& rng, float sigma1, float sigma2, float
   for (int y=0;y<mat.rows;++y) {
     for (int x=0;x<mat.cols;++x) {
       for (int i=0;i<mat.channels();++i) {
-        mat2.ptr()[j]=std::max(0,std::min(255,
-                                          (int)(mat.ptr()[j]+
-                                                delta1[i]+
-                                                delta2[i]*cos(mat.ptr()[j]*3.1415926535/255)+
-                                                delta3[i]*(x-mat.cols/2)+
-                                                delta4[i]*(y-mat.rows/2))));
+        mat.ptr()[j]=std::max(0,std::min(255,
+                                         (int)(mat.ptr()[j]+
+                                               delta1[i]+
+                                               delta2[i]*cos(mat.ptr()[j]*3.1415926535/255)+
+                                               delta3[i]*(x-mat.cols/2)+
+                                               delta4[i]*(y-mat.rows/2))));
         ++j;
       }
     }
   }
-  mat=mat2;
 }

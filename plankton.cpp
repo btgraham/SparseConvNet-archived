@@ -12,7 +12,7 @@ Picture* OpenCVPicture::distort(RNG& rng, batchType type) {
     c00=1, c01=0,  //2x2 identity matrix---starting point for calculating affine distortion matrix
     c10=0, c11=1;
   float r, alpha, beta;
-  if (false and type==TRAINBATCH) {
+  if (type==TRAINBATCH) {
     r=rng.uniform(-0.1,0.1);
     alpha=rng.uniform(0,2*3.1415926535);
     beta=rng.uniform(-0.2,0.2)+alpha;
