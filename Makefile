@@ -54,5 +54,21 @@ mnist: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetMnist.o mnist.o
 plankton: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton.o
 	$(NVCC) -o plankton $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton.o $(LIBS) $(NVCCFLAGS)
 
+plankton_jluo_30july2015: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton_jluo_30july2015.o
+	$(NVCC) -o plankton_jluo_30july2015 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton_jluo_30july2015.o $(LIBS) $(NVCCFLAGS)
+plankton_jluo_30july2015_2: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton_jluo_30july2015_2.o
+	$(NVCC) -o plankton_jluo_30july2015_2 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton_jluo_30july2015_2.o $(LIBS) $(NVCCFLAGS)
+
 cifar10indexLearning: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10indexLearning.o
 	$(NVCC) -o cifar10indexLearning $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10indexLearning.o $(LIBS) $(NVCCFLAGS)
+
+imagenet2012: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012.o
+	$(NVCC) -o imagenet2012 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012.o $(LIBS) $(NVCCFLAGS)
+imagenet2012fmp: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012fmp.o
+	$(NVCC) -o imagenet2012fmp $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012fmp.o $(LIBS) $(NVCCFLAGS)
+imagenet2012fmp2: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012fmp2.o
+	$(NVCC) -o imagenet2012fmp2 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012fmp2.o $(LIBS) $(NVCCFLAGS)
+imagenet2012fmp3: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012fmp3.o
+	$(NVCC) -o imagenet2012fmp3 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012fmp3.o $(LIBS) $(NVCCFLAGS)
+imagenet2012alexnetTriangular: $(OBJ) OpenCVTriangularPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012alexnetTriangular.o
+	$(NVCC) -o imagenet2012alexnetTriangular $(OBJ) OpenCVTriangularPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012alexnetTriangular.o $(LIBS) $(NVCCFLAGS)

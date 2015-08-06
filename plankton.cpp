@@ -7,20 +7,24 @@ int batchSize=50; // Increase/decrease according to GPU memory
 
 Picture* OpenCVPicture::distort(RNG& rng, batchType type) {
   OpenCVPicture* pic=new OpenCVPicture(*this);
-  pic->loadData();
-  float c00=1, c01=0;
-  float c10=0, c11=1;
-  if (rng.randint(2)==0) c00*=-1; //Mirror image
-  {
-    float alpha=rng.uniform(-3.14159265,3.14159265);
-    matrixMul2x2inPlace(c00,c01,c10,c11,cos(alpha),-sin(alpha),sin(alpha),cos(alpha)); //Rotate
+  pic->loadDataWithoutScaling();
+  float
+    c00=1, c01=0,  //2x2 identity matrix---starting point for calculating affine distortion matrix
+    c10=0, c11=1;
+  float r, alpha, beta;
+  if (false and type==TRAINBATCH) {
+    r=rng.uniform(-0.1,0.1);
+    alpha=rng.uniform(0,2*3.1415926535);
+    beta=rng.uniform(-0.2,0.2)+alpha;
+  } else {
+    r=0;
+    alpha=rng.uniform(0,2*3.1415926535);
+    beta=alpha;
   }
-  if (type==TRAINBATCH) {
-    matrixMul2x2inPlace(c00,c01,c10,c11,1+rng.uniform(-0.2,0.2),rng.uniform(-0.2,0.2),rng.uniform(-0.2,0.2),1+rng.uniform(-0.2,0.2));
-    float alpha=rng.uniform(-3.14159265,3.14159265);
-    matrixMul2x2inPlace(c00,c01,c10,c11,cos(alpha),-sin(alpha),sin(alpha),cos(alpha));
-  }
-  transformImage(pic->mat, backgroundColor, c00, c01, c10, c11);
+  c00=(1+r)*cos(alpha); c01=(1+r)*sin(alpha);
+  c10=-(1-r)*sin(beta); c11=(1-r)*cos(beta);
+  if (rng.randint(2)==0) {c00*=-1; c01*=-1;}//Horizontal flip
+  pic->affineTransform(c00, c01, c10, c11);
   pic->jiggle(rng,300);
   return pic;
 }
@@ -34,7 +38,7 @@ class FractionalSparseConvNet : public SparseConvNet {
 public:
   FractionalSparseConvNet(int nInputFeatures, int nClasses, int cudaDevice) : SparseConvNet(2,nInputFeatures, nClasses, cudaDevice) {
     int l=12;
-    float p=0.375f;
+    float p=0.0f;
     const float fmpShrink=1.414;
     for (int i=0;i<l;i++) {
       addLeNetLayerPOFMP(f(i),2,1,2,fmpShrink,VLEAKYRELU,p*std::max(i-4,0)/(l-3));
@@ -65,15 +69,14 @@ int main() {
   }
   for (epoch++;;epoch++) {
     std::cout <<"epoch: " << epoch << std::endl;
-    float lr=0.003;
-    cnn.processDataset(trainSet, batchSize,lr,0.999);
-    cnn.processDataset(cheekyExtraTrainSet, batchSize,lr,0.999);
-    cnn.processDataset(trainSet, batchSize,lr,0.999);
-    cnn.processDataset(cheekyExtraTrainSet, batchSize,lr,0.999);
-    cnn.processDataset(trainSet, batchSize,lr,0.999);
-    cnn.processDataset(cheekyExtraTrainSet, batchSize,lr,0.999);
-    cnn.saveWeights(baseName,epoch);
-    cnn.processDatasetRepeatTest(valSet, batchSize/2, 1);
+    float lr=0.003*exp(-0.1*epoch);
+    for (int i=0;i<3;++i) {
+      cnn.processDataset(trainSet, batchSize,lr,0.999);
+      cnn.saveWeights(baseName,epoch);
+      cnn.processDataset(cheekyExtraTrainSet, batchSize,lr,0.999);
+      cnn.saveWeights(baseName,epoch);
+    }
+    cnn.processDatasetRepeatTest(valSet, batchSize, 1);
   }
 
   // For unlabelled data (but there is overlap between this "test" data and our expanded training set!!!)
