@@ -33,7 +33,9 @@ public:
    SpatiallySparseBatchInterface &output);
   void scaleWeights
   (SpatiallySparseBatchInterface &input,
-   SpatiallySparseBatchInterface &output);
+   SpatiallySparseBatchInterface &output,
+   float& scalingUnderneath,
+   bool topLayer);
   void backwards
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,

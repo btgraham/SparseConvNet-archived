@@ -1,5 +1,9 @@
 //Performs a real convolution, used for the input layer. Other convolutions are implemented using ConvolutionLayer+NetworkInNetworkLayer
 
+//1) can use bz in dMultiply_Input_Weights_Output to access more output.nSpatialSites (4096*4096*32)?
+// by+ty<outputNSpatialSites -> 4096*bz+by+ty<outputNSpatialSites, etc
+
+
 #include "NetworkInNetworkLayer.h"
 #include "ReallyConvolutionalLayer.h"
 #include <iostream>
@@ -10,6 +14,117 @@
 #include "SigmoidLayer.h"
 #include "Regions.h"
 
+//Assume fs <=2*KERNELBLOCKSIZE
+
+// // dMultiply_Input_Weights_Output <<<
+// //  dim3(output.featuresPresent.size()/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
+// //  dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE),0,cnnMemStream->stream>>>
+// //   (input.sub->features.dPtr(),w.dPtr(),b.dPtr(),output.rules.dPtr(),output.sub->features.dPtr(),
+// //    input.featuresPresent.size(),output.featuresPresent.size(), fs, output.nSpatialSites,leaky);
+__global__ void dMultiply_Input_Weights_Output
+(float* inFeatures, float* W, float* B, int* rules, float* outFeatures,
+ int nIn, int nOut,
+ int fs, int outputNSpatialSites,
+ float leaky, float shrink=1
+ ) {
+  __shared__ float As[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
+  __shared__ float Bs[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
+  __shared__ int r[KERNELBLOCKSIZE][2*KERNELBLOCKSIZE];  //Assume fs <=2*KERNELBLOCKSIZE
+  int bx=blockIdx.x*KERNELBLOCKSIZE;
+  int by=blockIdx.y*KERNELBLOCKSIZE;
+  int tx=threadIdx.x;
+  int ty=threadIdx.y;
+  float acc = B[bx+tx];
+  r[ty][tx                ]=(tx<fs and by+ty<outputNSpatialSites)?rules[(by+ty)*fs+tx]:-1;
+  r[ty][tx+KERNELBLOCKSIZE]=(tx+KERNELBLOCKSIZE<fs and by+ty<outputNSpatialSites)?rules[(by+ty)*fs+tx+KERNELBLOCKSIZE]:-1;
+  __syncthreads();
+  for (int k=0;k<nIn*fs;k+=KERNELBLOCKSIZE) {
+    int n=min(KERNELBLOCKSIZE,nIn*fs-k);
+    int f=(k+tx)/nIn;
+    int ff=(k+tx)%nIn;
+    //int r=(tx<n and by+ty<outputNSpatialSites)?rules[(by+ty)*fs+f]:-1; /////
+    //As[ty][tx]=(r>=0)?inFeatures[r*nIn+(ff)]:0; ////////
+    As[ty][tx]=(r[ty][f]>=0)?inFeatures[r[ty][f]*nIn+(ff)]:0;
+    Bs[ty][tx]=(ty<n)?W[(k+ty)*nOut+(bx+tx)]:0;
+    __syncthreads();
+    for (int l=0; l<n; l++)
+      acc+=As[ty][l]*Bs[l][tx];
+    __syncthreads();
+  }
+  acc*=shrink;
+  if (by+ty<outputNSpatialSites)
+    outFeatures[(by+ty)*nOut+(bx+tx)]=(acc>0)?acc:(acc*leaky);
+}
+
+/************************************************************************************/
+// // dMultiply_dOutput_WT_dInput
+// //   <<<
+// //   dim3((input.featuresPresent.size()*fs+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
+// //   dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE)
+// //   ,0,cnnMemStream->stream>>>
+__global__ void dMultiply_dOutput_WT_dInput
+(float* dOutFeatures, float* W, float* dInFeatures, int* rules,
+ int nIn, int nOut, int fs, int outputNSpatialSites) {
+  __shared__ float As[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
+  __shared__ float Bs[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
+  int bx=blockIdx.x*KERNELBLOCKSIZE;
+  int by=blockIdx.y*KERNELBLOCKSIZE;
+  int tx=threadIdx.x;
+  int ty=threadIdx.y;
+  float acc = 0;
+  int n=min(KERNELBLOCKSIZE,nIn*fs-bx);
+  for (int k=0;k<nOut;k+=KERNELBLOCKSIZE) {
+    As[ty][tx]=(by+ty<outputNSpatialSites)?dOutFeatures[(by+ty)*nOut+k+tx]:0;
+    Bs[tx][ty]=(ty<n)?W[(bx+ty)*nOut+k+tx]:0;
+    __syncthreads();
+    for (int l=0; l<n; l++)
+      acc+=As[ty][l]*Bs[l][tx];
+    __syncthreads();
+  }
+  int f=(bx+tx)/nIn;
+  int ff=(bx+tx)%nIn;
+  if (by+ty<outputNSpatialSites && f+tx<nIn*fs) {
+    int r=rules[(by+ty)*fs+f];
+    //dInFeatures[r*nIn+ff]+=acc;
+    atomicAdd(&dInFeatures[r*nIn+ff],acc);
+  }
+}
+/************************************************************************************/
+// // dMultiply_InputT_dOutput_dWeights
+// //   <<<
+// //   dim3(output.featuresPresent.size()/KERNELBLOCKSIZE,
+// //    (input.featuresPresent.size()*fs+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE,
+// //    (output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
+// //   dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE)
+// //   ,0,cnnMemStream->stream>>>
+__global__ void dMultiply_InputT_dOutput_dWeights
+(float* inFeatures,  int* rules, float* dOutFeatures, float* dW,
+ int nIn, int nOut, int fs, int outputNSpatialSites) {
+  __shared__ float As[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
+  __shared__ float Bs[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
+  int bx=blockIdx.x*KERNELBLOCKSIZE;
+  int by=blockIdx.y*KERNELBLOCKSIZE;
+  int tx=threadIdx.x;
+  int ty=threadIdx.y;
+  float acc = 0;
+  int f=(by+ty)/nIn;
+  int ff=(by+ty)%nIn;
+  int k=blockIdx.z*KERNELBLOCKSIZE;
+  {
+    int n=min(KERNELBLOCKSIZE,outputNSpatialSites-k);
+    int r=(tx<n and f<fs)?rules[(k+tx)*fs+f]:-1;
+    As[ty][tx]=(r>=0)?inFeatures[r*nIn+ff]:0;
+    Bs[ty][tx]=(ty<n)?dOutFeatures[(k+ty)*nOut+bx+tx]:0;
+    __syncthreads();
+    for (int l=0; l<n; l++)
+      acc+=As[ty][l]*Bs[l][tx];
+    __syncthreads();
+  }
+  if (f<fs)
+    atomicAdd(&dW[(by+ty)*nOut+bx+tx],acc);
+}
+
+/************************************************************************************/
 //Matrix is (nIn*fs)x(nOut)
 //Shrink to (nInDropout*fs)*(nOut)
 //inFeaturesPresent has length nInDropout
@@ -40,95 +155,6 @@ __global__ void dGradientDescentShrunkMatrix
     d_momentum[ii+jj]=momentum*d_momentum[ii+jj]-learningRate*(1-momentum)*d_delta[i+j];
     d_weights[ii+jj]=d_weights[ii+jj]+d_momentum[ii+jj]*(1+momentum);
   }
-}
-
-__global__ void dMultiply_Input_Weights_Output
-(float* inFeatures, float* W, float* B, int* rules, float* outFeatures,
- int nIn, int nOut,
- int fs, int outputNSpatialSites,
- float leaky, float shrink=1
- ) {
-  __shared__ float As[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
-  __shared__ float Bs[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
-  //  __shared__ int r[KERNELBLOCKSIZE][KERNELBLOCKSIZE];  //Assume fs <=KERNELBLOCKSIZE
-  int bx=blockIdx.x*KERNELBLOCKSIZE;
-  int by=blockIdx.y*KERNELBLOCKSIZE;
-  int tx=threadIdx.x;
-  int ty=threadIdx.y;
-  float acc = B[bx+tx];
-  //r[ty][tx]=(tx<fs and by+ty<outputNSpatialSites)?rules[(by+ty)*fs+tx]:-1;
-  //  __syncthreads();
-  for (int k=0;k<nIn*fs;k+=KERNELBLOCKSIZE) {
-    int n=min(KERNELBLOCKSIZE,nIn*fs-k);
-    int f=(k+tx)/nIn;
-    int ff=(k+tx)%nIn;
-    int r=(tx<n and by+ty<outputNSpatialSites)?rules[(by+ty)*fs+f]:-1; /////
-    As[ty][tx]=(r>=0)?inFeatures[r*nIn+(ff)]:0; ////////
-    //As[ty][tx]=(r[ty][f]>=0)?inFeatures[r[ty][f]*nIn+(ff)]:0;
-    Bs[ty][tx]=(ty<n)?W[(k+ty)*nOut+(bx+tx)]:0;
-    __syncthreads();
-    for (int l=0; l<n; l++)
-      acc+=As[ty][l]*Bs[l][tx];
-    __syncthreads();
-  }
-  acc*=shrink;
-  if (by+ty<outputNSpatialSites)
-    outFeatures[(by+ty)*nOut+(bx+tx)]=(acc>0)?acc:(acc*leaky);
-}
-
-/************************************************************************************/
-__global__ void dMultiply_dOutput_WT_dInput
-(float* dOutFeatures, float* W, float* dInFeatures, int* rules,
- int nIn, int nOut, int fs, int outputNSpatialSites) {
-  __shared__ float As[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
-  __shared__ float Bs[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
-  int bx=blockIdx.x*KERNELBLOCKSIZE;
-  int by=blockIdx.y*KERNELBLOCKSIZE;
-  int tx=threadIdx.x;
-  int ty=threadIdx.y;
-  float acc = 0;
-  int n=min(KERNELBLOCKSIZE,nIn*fs-bx);
-  for (int k=0;k<nOut;k+=KERNELBLOCKSIZE) {
-    As[ty][tx]=(by+ty<outputNSpatialSites)?dOutFeatures[(by+ty)*nOut+k+tx]:0;
-    Bs[ty][tx]=(tx<n)?W[(bx+tx)*nOut+k+ty]:0;
-    __syncthreads();
-    for (int l=0; l<n; l++)
-      acc+=As[ty][l]*Bs[l][tx];
-    __syncthreads();
-  }
-  if (by+ty<outputNSpatialSites && bx+tx<nIn*fs) {
-    int f=(bx+tx)/nIn;
-    int ff=(bx+tx)%nIn;
-    int r=rules[(by+ty)*fs+f];
-    atomicAdd(&dInFeatures[r*nIn+ff],acc);
-  }
-}
-/************************************************************************************/
-__global__ void dMultiply_InputT_dOutput_dWeights
-(float* inFeatures,  int* rules, float* dOutFeatures, float* dW,
- int nIn, int nOut, int fs, int outputNSpatialSites) {
-  __shared__ float As[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
-  __shared__ float Bs[KERNELBLOCKSIZE][KERNELBLOCKSIZE];
-  int bx=blockIdx.x*KERNELBLOCKSIZE;
-  int by=blockIdx.y*KERNELBLOCKSIZE;
-  int tx=threadIdx.x;
-  int ty=threadIdx.y;
-  float acc = 0;
-  int f=(by+ty)/nIn;
-  int ff=(by+ty)%nIn;
-  int k=blockIdx.z*KERNELBLOCKSIZE;
-  {
-    int n=min(KERNELBLOCKSIZE,outputNSpatialSites-k);
-    int r=(tx<n and f<fs)?rules[(k+tx)*fs+f]:-1;
-    As[ty][tx]=(r>=0)?inFeatures[r*nIn+ff]:0;
-    Bs[ty][tx]=(ty<n)?dOutFeatures[(k+ty)*nOut+bx+tx]:0;
-    __syncthreads();
-    for (int l=0; l<n; l++)
-      acc+=As[ty][l]*Bs[l][tx];
-    __syncthreads();
-  }
-  if (f<fs)
-    atomicAdd(&dW[(by+ty)*nOut+bx+tx],acc);
 }
 
 ReallyConvolutionalLayer::ReallyConvolutionalLayer
@@ -217,14 +243,14 @@ void ReallyConvolutionalLayer::forwards
     cudaCheckError();
     dMultiply_Input_Weights_Output
       <<<dim3(output.featuresPresent.size()/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
-      dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE)>>>
+      dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE),0,cnnMemStream->stream>>>
       (input.sub->features.dPtr(),w.dPtr(),b.dPtr(),output.rules.dPtr(),output.sub->features.dPtr(),
        input.featuresPresent.size(),output.featuresPresent.size(), fs, output.nSpatialSites,leaky);
     cudaCheckError();
   } else {
     dMultiply_Input_Weights_Output
       <<<dim3(output.featuresPresent.size()/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
-      dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE)>>>
+      dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE),0,cnnMemStream->stream>>>
       (input.sub->features.dPtr(),W.dPtr(),B.dPtr(),output.rules.dPtr(),output.sub->features.dPtr(),
        input.featuresPresent.size(),output.featuresPresent.size(), fs, output.nSpatialSites,leaky,1.0f-dropout);
     cudaCheckError();
@@ -246,10 +272,11 @@ void ReallyConvolutionalLayer::backwards
   columnSum(output.sub->dfeatures.dPtr(), db.dPtr(), output.nSpatialSites, output.featuresPresent.size());
   cudaCheckError();
   dMultiply_InputT_dOutput_dWeights
-    <<<
-    dim3(output.featuresPresent.size()/KERNELBLOCKSIZE,(input.featuresPresent.size()*fs+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
-    dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE)
-    >>>
+    <<<dim3(output.featuresPresent.size()/KERNELBLOCKSIZE,
+            (input.featuresPresent.size()*fs+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE,
+            (output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
+    dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE),
+    0,cnnMemStream->stream>>>
     (input.sub->features.dPtr(),  output.rules.dPtr(), output.sub->dfeatures.dPtr(), dw.dPtr(),
      input.featuresPresent.size(), output.featuresPresent.size(), fs, output.nSpatialSites);
   multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*fs*output.featuresPresent.size();
@@ -263,19 +290,19 @@ void ReallyConvolutionalLayer::backwards
         <<<
         dim3((input.featuresPresent.size()*fs+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
         dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE)
-        >>>
+        ,0,cnnMemStream->stream>>>
         (output.sub->dfeatures.dPtr(),w.dPtr(),input.sub->dfeatures.dPtr(),output.rules.dPtr(),
          input.featuresPresent.size(),output.featuresPresent.size(),fs,output.nSpatialSites);
       multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*fs*output.featuresPresent.size();
       cudaCheckError();
     }
-    dGradientDescentShrunkMatrix<<<input.featuresPresent.size(),KERNELBLOCKSIZE>>>
+    dGradientDescentShrunkMatrix<<<input.featuresPresent.size(),KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
       (dw.dPtr(), MW.dPtr(), W.dPtr(),
        output.nFeatures, output.featuresPresent.size(),
        input.featuresPresent.dPtr(), output.featuresPresent.dPtr(),
        learningRate,momentum);
 
-    dGradientDescentShrunkVector<<<1,NTHREADS>>>
+    dGradientDescentShrunkVector<<<1,NTHREADS,0,cnnMemStream->stream>>>
       (db.dPtr(), MB.dPtr(), B.dPtr(),
        output.nFeatures, output.featuresPresent.size(),
        output.featuresPresent.dPtr(),
@@ -288,15 +315,15 @@ void ReallyConvolutionalLayer::backwards
         <<<
         dim3((input.featuresPresent.size()*fs+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
         dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE)
-        >>>
+        ,0,cnnMemStream->stream>>>
         (output.sub->dfeatures.dPtr(),W.dPtr(),input.sub->dfeatures.dPtr(),output.rules.dPtr(),
          input.featuresPresent.size(),output.featuresPresent.size(),fs,output.nSpatialSites);
       multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*fs*output.featuresPresent.size();
       cudaCheckError();
     }
-    dGradientDescent<<<nFeaturesIn,KERNELBLOCKSIZE>>>
+    dGradientDescent<<<nFeaturesIn,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
       (dw.dPtr(), MW.dPtr(), W.dPtr(),  nFeaturesOut, learningRate,momentum);
-    dGradientDescent<<<1,KERNELBLOCKSIZE>>>
+    dGradientDescent<<<1,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
       (db.dPtr(), MB.dPtr(), B.dPtr(), nFeaturesOut, learningRate,momentum);
   }
   cudaCheckError();

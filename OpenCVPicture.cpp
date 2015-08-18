@@ -10,10 +10,10 @@ OpenCVPicture::OpenCVPicture(int xSize, int ySize, int nInputFeatures, unsigned 
   Picture(label), backgroundColor(backgroundColor) {
   xOffset=-xSize/2;
   yOffset=-ySize/2;
-  mat.create(xSize,ySize, CV_8UC(nInputFeatures));
+  mat.create(xSize,ySize, CV_32FC(nInputFeatures));
 }
-OpenCVPicture::OpenCVPicture(std::string filename, int scale, unsigned char backgroundColor, int label_) :
-  filename(filename), scale(scale), backgroundColor(backgroundColor) {
+OpenCVPicture::OpenCVPicture(std::string filename, unsigned char backgroundColor, int label_) :
+  filename(filename), backgroundColor(backgroundColor) {
   label=label_;
 }
 
@@ -44,7 +44,7 @@ void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize, float minFill) {
       xOffset=-rng.randint(mat.cols-subsetSize+1)-subsetSize/2;
     else
       xOffset=rng.randint(subsetSize-mat.cols+1)-subsetSize/2;
-    if (mat.cols>=subsetSize)
+    if (mat.rows>=subsetSize)
       yOffset=-rng.randint(mat.rows-subsetSize+1)-subsetSize/2;
     else
       yOffset=rng.randint(subsetSize-mat.rows+1)-subsetSize/2;
@@ -103,26 +103,23 @@ void OpenCVPicture::centerMass() {
   scale2yy=ayy-ay*ay;
   scale2=powf(scale2xx+scale2yy,0.5);
 }
-void OpenCVPicture::loadDataWithoutScaling(int flag) {
-  readImage(filename,mat,flag);
+void OpenCVPicture::loadDataWithoutScaling(int flags) {
+  readImage(filename,mat,flags);
   xOffset=-mat.cols/2;
   yOffset=-mat.rows/2;
 }
-void OpenCVPicture::loadData
-(int scale_) {
-  if (scale_==-1) scale_=scale;
-  if (mat.empty()) {
-    readTransformedImage(filename,mat,scale_,1,0,0,1,backgroundColor);
-    xOffset=-mat.cols/2;
-    yOffset=-mat.rows/2;
-  }
+void OpenCVPicture::loadData (int scale, int flags) {
+  readTransformedImage(filename,mat,scale,flags,1,0,0,1,backgroundColor);
+  xOffset=-mat.cols/2;
+  yOffset=-mat.rows/2;
 }
 std::string OpenCVPicture::identify() {
   return filename;
 }
 
 void OpenCVPicture::codifyInputData(SparseGrid &grid, std::vector<float> &features, int &nSpatialSites, int spatialSize) {
-  loadData();
+  assert(!mat.empty());
+  assert(mat.type()%8==5);
   for  (int i=0; i<mat.channels(); i++)
     features.push_back(0); //Background feature
   grid.backgroundCol=nSpatialSites++;
@@ -130,18 +127,19 @@ void OpenCVPicture::codifyInputData(SparseGrid &grid, std::vector<float> &featur
   int x1=std::min(mat.cols,spatialSize-xOffset-spatialSize/2);
   int y0=std::max(0,-yOffset-spatialSize/2);
   int y1=std::min(mat.rows,spatialSize-yOffset-spatialSize/2);
+  float* matData=((float*)(mat.data));
   for (int x=x0; x<x1; x++) {
     for (int y=y0; y<y1; y++) {
       bool interestingPixel=false; //Check pixel differs from the background color
       for (int i=0; i<mat.channels(); i++)
-        if (std::abs(scaleUCharColor(mat.ptr()[i+x*mat.channels()+y*mat.channels()*mat.cols]))>0.02)
+        if (std::abs(scaleUCharColor(matData[i+x*mat.channels()+y*mat.channels()*mat.cols]))>0.02)
           interestingPixel=true;
       if (interestingPixel) {
         int n=(x+xOffset+spatialSize/2)*spatialSize+(y+yOffset+spatialSize/2); //Determine location in the input field.
         grid.mp[n]=nSpatialSites++;
         for (int i=0; i<mat.channels(); i++) {
           features.push_back
-            (scaleUCharColor(mat.ptr()[i+x*mat.channels()+y*mat.channels()*mat.cols]));
+            (scaleUCharColor(matData[i+x*mat.channels()+y*mat.channels()*mat.cols]));
         }
       }
     }

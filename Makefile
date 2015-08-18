@@ -70,5 +70,7 @@ imagenet2012fmp2: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o im
 	$(NVCC) -o imagenet2012fmp2 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012fmp2.o $(LIBS) $(NVCCFLAGS)
 imagenet2012fmp3: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012fmp3.o
 	$(NVCC) -o imagenet2012fmp3 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012fmp3.o $(LIBS) $(NVCCFLAGS)
+imagenet2012fmp4: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012fmp4.o
+	$(NVCC) -o imagenet2012fmp4 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012fmp4.o $(LIBS) $(NVCCFLAGS)
 imagenet2012alexnetTriangular: $(OBJ) OpenCVTriangularPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012alexnetTriangular.o
 	$(NVCC) -o imagenet2012alexnetTriangular $(OBJ) OpenCVTriangularPicture.o SpatiallySparseDatasetImageNet2012.o imagenet2012alexnetTriangular.o $(LIBS) $(NVCCFLAGS)

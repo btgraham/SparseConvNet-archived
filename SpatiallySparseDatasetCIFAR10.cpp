@@ -13,11 +13,12 @@ void readCIFAR10File(std::vector<Picture*> &characters, const char* filename) {
   while (file.read((char*)&label,1)) {
     OpenCVPicture* character = new OpenCVPicture(32,32,3,128,label);
     unsigned char bitmap[3072];
+    float* matData=((float*)(character->mat.data));
     file.read((char*)bitmap,3072);
     for (int x=0;x<32;x++) {
       for (int y=0;y<32;y++) {
         for (int c=0;c<3;c++) {
-          character->mat.ptr()[y*96+x*3+(2-c)]=bitmap[c*1024+y*32+x];
+          matData[y*96+x*3+(2-c)]=bitmap[c*1024+y*32+x];
         }
       }
     }

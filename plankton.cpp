@@ -7,7 +7,7 @@ int batchSize=50; // Increase/decrease according to GPU memory
 
 Picture* OpenCVPicture::distort(RNG& rng, batchType type) {
   OpenCVPicture* pic=new OpenCVPicture(*this);
-  pic->loadDataWithoutScaling();
+  pic->loadDataWithoutScaling(-1);
   float
     c00=1, c01=0,  //2x2 identity matrix---starting point for calculating affine distortion matrix
     c10=0, c11=1;

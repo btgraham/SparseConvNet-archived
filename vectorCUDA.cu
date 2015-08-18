@@ -86,10 +86,10 @@ template <typename t> int vectorCUDA<t>::size() {
   if (onGPU) return dsize;
   return vec.size();
 }
-template <typename t> float vectorCUDA<t>::meanAbs() {
+template <typename t> float vectorCUDA<t>::meanAbs(float negWeight) {
   float total=0;
   for (int i=0;i<size();i++)
-    total+=fabs(hVector()[i]);
+    total+=(hVector()[i]>0)?hVector()[i]:(-negWeight*hVector()[i]);
   if (total!=total) {
     std::cout << "NaN in vectorCUDA<t>::meanAbs()\n";
     exit(1);

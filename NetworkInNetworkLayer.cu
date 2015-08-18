@@ -138,11 +138,12 @@ void NetworkInNetworkLayer::forwards
   if (batch.type==TRAINBATCH and
       nFeaturesIn+nFeaturesOut>input.featuresPresent.size()+output.featuresPresent.size()) {
     w.resize(input.featuresPresent.size()*output.featuresPresent.size());
-    dShrinkMatrixForDropout<<<input.featuresPresent.size(),KERNELBLOCKSIZE,0,cnnMemStream->stream>>>(W.dPtr(), w.dPtr(),
-                                                                                                     input.featuresPresent.dPtr(),
-                                                                                                     output.featuresPresent.dPtr(),
-                                                                                                     output.nFeatures,
-                                                                                                     output.featuresPresent.size());
+    dShrinkMatrixForDropout<<<input.featuresPresent.size(),KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+      (W.dPtr(), w.dPtr(),
+       input.featuresPresent.dPtr(),
+       output.featuresPresent.dPtr(),
+       output.nFeatures,
+       output.featuresPresent.size());
     cudaCheckError();
     b.resize(output.featuresPresent.size());
     dShrinkVectorForDropout<<<1,NTHREADS,0,cnnMemStream->stream>>>(B.dPtr(), b.dPtr(),
@@ -172,14 +173,23 @@ void NetworkInNetworkLayer::forwards
 }
 void NetworkInNetworkLayer::scaleWeights
 (SpatiallySparseBatchInterface &input,
- SpatiallySparseBatchInterface &output) {
+ SpatiallySparseBatchInterface &output,
+ float& scalingUnderneath,
+ bool topLayer) {
   assert(input.sub->features.size()>0);
   assert(output.sub->features.size()>0); //call after forwards(...)
-  float s=output.sub->features.meanAbs(); std::cout << "out scale " << s << std::endl;
-  W.multiplicativeRescale(powf(s,-0.1));
-  B.multiplicativeRescale(powf(s,-0.1));
-  MW.multiplicativeRescale(powf(s,-0.1));
-  MB.multiplicativeRescale(powf(s,-0.1));
+  float scale=output.sub->features.meanAbs( (fn==VLEAKYRELU) ? 3 : 100 );
+  std::cout << "featureScale:" << scale << std::endl;
+  if (topLayer) {
+    scale=1;
+  } else {
+    scale=powf(scale,-0.1); //0.7978846 = sqrt(2/pi) = mean of the half normal distribution
+  }
+  W.multiplicativeRescale(scale/scalingUnderneath);
+  B.multiplicativeRescale(scale);
+  MW.multiplicativeRescale(scale/scalingUnderneath);
+  MB.multiplicativeRescale(scale);
+  scalingUnderneath=scale;
 }
 void NetworkInNetworkLayer::backwards
 (SpatiallySparseBatch &batch,

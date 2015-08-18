@@ -10,7 +10,7 @@
 void readImage(std::string filename, cv::Mat& mat, int flags=1);
 void writeImage(cv::Mat& mat, int n);
 void writeImage(cv::Mat& mat, std::string filename);
-void readTransformedImage(std::string filename, cv::Mat& dst, float scale,
+void readTransformedImage(std::string filename, cv::Mat& dst, float scale, int flags=1,
                           float c00=1,float c01=0,float c10=0,float c11=1,
                           int backgroundColor=128,
                           int x=0, int X=-1, int y=0, int Y=-1);

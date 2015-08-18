@@ -107,7 +107,7 @@ std::string classList[]={
   "n02815834",  "n09229709",  "n07697313",  "n03888605",  "n03355925",  "n03063599",  "n04116512",  "n04325704",  "n07831146",  "n03255030"
 };
 
-SpatiallySparseDataset ImageNet2012TrainSet(int scale) {
+SpatiallySparseDataset ImageNet2012TrainSet() {
   SpatiallySparseDataset dataset;
   dataset.name="ImageNet2012 train set";
   dataset.type=TRAINBATCH;
@@ -116,24 +116,17 @@ SpatiallySparseDataset ImageNet2012TrainSet(int scale) {
 
   for (int cl=0;cl<1000;cl++) {
     for (auto &file : globVector(std::string("Data/imagenet2012/ILSVRC2012_img_train/")+classList[cl]+"/*.JPEG")) {
-      dataset.pictures.push_back(new OpenCVPicture(file,scale,128,cl));
+      dataset.pictures.push_back(new OpenCVPicture(file,128,cl));
     }
   }
   return dataset;
 }
-SpatiallySparseDataset ImageNet2012ValidationSet(int scale) {
+SpatiallySparseDataset ImageNet2012ValidationSet() {
   SpatiallySparseDataset dataset;
   dataset.name="ImageNet2012 validation set";
   dataset.type=TESTBATCH;
   dataset.nFeatures=3;
   dataset.nClasses=1000;
-
-  // // for (int cl=0;cl<1000;cl++) {
-  // //   for (auto &file : globVector(std::string("Data/imagenet2012/ILSVRC2012_img_val_/*.JPEG")) {
-  // //       OpenCVPicture*  pic = new OpenCVPicture(file,scale,128);
-  // //       dataset.pictures.push_back(OpenCVPicture(file,scale,128,cl));
-  // //     }
-  // //          }
 
   std::string imageFile;
   int cl;
@@ -141,12 +134,12 @@ SpatiallySparseDataset ImageNet2012ValidationSet(int scale) {
   int nWidth, nHeight, nBBoxx, nBBoxX, nBBoxy, nBBoxY;
   while (file >> cl >> imageFile >> nWidth >> nHeight >> nBBoxx >> nBBoxX >> nBBoxy >> nBBoxY) {
     cl--;
-    OpenCVPicture*  pic = new OpenCVPicture(std::string("Data/imagenet2012/")+imageFile,scale,128,cl);
+    OpenCVPicture*  pic = new OpenCVPicture(std::string("Data/imagenet2012/")+imageFile,128,cl);
     dataset.pictures.push_back(pic);
   }
   return dataset;
 }
-SpatiallySparseDataset ImageNet2012TestSet(int scale) {
+SpatiallySparseDataset ImageNet2012TestSet() {
   SpatiallySparseDataset dataset;
   dataset.name="ImageNet2012 train set";
   dataset.type=UNLABELEDBATCH;
@@ -158,7 +151,7 @@ SpatiallySparseDataset ImageNet2012TestSet(int scale) {
   std::ifstream file("Data/imagenet2012/testData.txt");
   int nWidth, nHeight, nBBoxx, nBBoxX, nBBoxy, nBBoxY;
   while (file >> cl >> imageFile >> nWidth >> nHeight >> nBBoxx >> nBBoxX >> nBBoxy >> nBBoxY) {
-    OpenCVPicture*  pic = new OpenCVPicture(std::string("Data/imagenet2012/")+imageFile,scale,128,-1);
+    OpenCVPicture*  pic = new OpenCVPicture(std::string("Data/imagenet2012/")+imageFile,128,-1);
     dataset.pictures.push_back(pic);
   }
   return dataset;

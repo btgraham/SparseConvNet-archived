@@ -1,22 +1,27 @@
 #include "readImageToMat.h"
 
 void readImage(std::string filename, cv::Mat& mat, int flags) {
-  mat = cv::imread(filename, flags);
-  if (mat.empty()) {
+  cv::Mat temp = cv::imread(filename, flags);
+  if (temp.empty()) {
     std::cout << "Error : Image " << filename << " cannot be loaded..." << std::endl;
     exit(EXIT_FAILURE);
   }
+  temp.convertTo(mat,CV_32FC(temp.channels()));
 }
 
 void writeImage(cv::Mat& mat,int n) {
+  cv::Mat temp;
+  mat.convertTo(temp,CV_8UC(mat.channels()));
   std::string filename=std::string("OpenCVwriteImage-")+std::to_string(n)+std::string(".png");
-  cv::imwrite(filename.c_str(),mat);
+  cv::imwrite(filename.c_str(),temp);
 }
 void writeImage(cv::Mat& mat,std::string filename) {
-  cv::imwrite(filename.c_str(),mat);
+  cv::Mat temp;
+  mat.convertTo(temp,CV_8UC(mat.channels()));
+  cv::imwrite(filename.c_str(),temp);
 }
 
-void readTransformedImage(std::string filename, cv::Mat& dst, float scale,
+void readTransformedImage(std::string filename, cv::Mat& dst, float scale, int flags,
                           float c00,float c01,float c10,float c11,
                           int backgroundColor,
                           int x, int X, int y, int Y) {
@@ -24,11 +29,7 @@ void readTransformedImage(std::string filename, cv::Mat& dst, float scale,
   cv::Point2f srcTri[3];
   cv::Point2f dstTri[3];
 
-  src = cv::imread(filename, 1);
-  if (src.empty()) {
-    std::cout << "Error : Image " << filename << " cannot be loaded..." << std::endl;
-    exit(EXIT_FAILURE);
-  }
+  readImage(filename,src,flags);
   if (X<0 || X>src.cols-1) X=src.cols;
   if (Y<0 || Y>src.cols-1) Y=src.rows;
   if (x<0) x=0;
@@ -94,6 +95,7 @@ void cropImage(cv::Mat& src, int X, int Y, int Width, int Height) {
 }
 
 void distortImageColor(cv::Mat& mat, RNG& rng, float sigma1, float sigma2, float sigma3, float sigma4) {
+  assert(mat.type()%8==5); //float
   std::vector<float> delta1(mat.channels());
   std::vector<float> delta2(mat.channels());
   std::vector<float> delta3(mat.channels());
@@ -108,12 +110,11 @@ void distortImageColor(cv::Mat& mat, RNG& rng, float sigma1, float sigma2, float
   for (int y=0;y<mat.rows;++y) {
     for (int x=0;x<mat.cols;++x) {
       for (int i=0;i<mat.channels();++i) {
-        mat.ptr()[j]=std::max(0,std::min(255,
-                                         (int)(mat.ptr()[j]+
-                                               delta1[i]+
-                                               delta2[i]*cos(mat.ptr()[j]*3.1415926535/255)+
-                                               delta3[i]*(x-mat.cols/2)+
-                                               delta4[i]*(y-mat.rows/2))));
+        ((float*)(mat.data))[j]=((float*)(mat.data))[j]+
+          delta1[i]+
+          delta2[i]*cos(((float*)(mat.data))[j]*3.1415926535/255)+
+          delta3[i]*(x-mat.cols/2)+
+          delta4[i]*(y-mat.rows/2);
         ++j;
       }
     }

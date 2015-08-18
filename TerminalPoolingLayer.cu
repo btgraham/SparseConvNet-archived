@@ -14,6 +14,7 @@ void terminalGridPoolingRules
  int &nOutputSpatialSites,
  std::vector<int>& rules) {
   assert(inputGrid.mp.size()<=TERMINAL_POOLING_MAX_ACTIVE_SITES); //Upper bound for ease of kernel memory management
+  //std::cout << inputGrid.mp.size() << std::endl;
   if (inputGrid.mp.size()==0) { //Danger, total loss of information
     rules.push_back(inputGrid.backgroundCol);
   } else {
