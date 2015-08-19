@@ -21,9 +21,10 @@ OpenCVLabeledDataSet::OpenCVLabeledDataSet
   for (auto &kv : classes) {
     for (auto &file : globVector(dataDirectory+kv.first+"/"+wildcard)) {
       OpenCVPicture* pic = new OpenCVPicture(file,backgroundCol,kv.second);
-      if(loadData)
+      if(loadData) {
         pic->loadDataWithoutScaling(flags);
-      nFeatures=pic->mat.channels();
+        nFeatures=pic->mat.channels();
+      }
       pictures.push_back(pic);
     }
   }
@@ -48,9 +49,10 @@ OpenCVUnlabeledDataSet::OpenCVUnlabeledDataSet
   nClasses=classes.size();
   for (auto &file : globVector(dataDirectory+"/"+wildcard)) {
     OpenCVPicture* pic = new OpenCVPicture(file,backgroundCol,0);
-    if(loadData)
+    if(loadData) {
       pic->loadDataWithoutScaling(flags);
-    nFeatures=pic->mat.channels();
+      nFeatures=pic->mat.channels();
+    }
     pictures.push_back(pic);
   }
 }
