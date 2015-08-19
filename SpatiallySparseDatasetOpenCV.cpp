@@ -19,7 +19,7 @@ OpenCVLabeledDataSet::OpenCVLabeledDataSet
   }
   nClasses=classes.size();
   for (auto &kv : classes) {
-    for (auto &file : globVector(dataDirectory+kv.first+"/"+wildcard)) {
+    for (auto &file : globVector(dataDirectory+"/"+kv.first+"/"+wildcard)) {
       OpenCVPicture* pic = new OpenCVPicture(file,backgroundCol,kv.second);
       if(loadData) {
         pic->loadDataWithoutScaling(flags);

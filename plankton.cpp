@@ -54,11 +54,11 @@ public:
 int main() {
   std::string baseName="weights/plankton";
 
-  OpenCVLabeledDataSet trainSet("Data/kagglePlankton/classList","Data/kagglePlankton/train/","*.jpg",TRAINBATCH,255,true,-1);
+  OpenCVLabeledDataSet trainSet("Data/kagglePlankton/classList","Data/kagglePlankton/train","*.jpg",TRAINBATCH,255,true,-1);
   trainSet.summary();
-  OpenCVLabeledDataSet cheekyExtraTrainSet("Data/kagglePlankton/classList","Data/kagglePlankton/testPrivate/","*.jpg",TRAINBATCH,255,true,-1);  //Use the "private test set" as extra training data.
+  OpenCVLabeledDataSet cheekyExtraTrainSet("Data/kagglePlankton/classList","Data/kagglePlankton/testPrivate","*.jpg",TRAINBATCH,255,true,-1);  //Use the "private test set" as extra training data.
   cheekyExtraTrainSet.summary();
-  OpenCVLabeledDataSet valSet("Data/kagglePlankton/classList","Data/kagglePlankton/testPublic/","*.jpg",TESTBATCH,255,true,-1);
+  OpenCVLabeledDataSet valSet("Data/kagglePlankton/classList","Data/kagglePlankton/testPublic","*.jpg",TESTBATCH,255,true,-1);
   valSet.summary();
 
   FractionalSparseConvNet cnn(trainSet.nFeatures,trainSet.nClasses,cudaDevice);
@@ -80,7 +80,7 @@ int main() {
   }
 
   // For unlabelled data (but there is overlap between this "test" data and our expanded training set!!!)
-  // OpenCVUnlabeledDataSet testSet("Data/kagglePlankton/classList","Data/kagglePlankton/test/","*.jpg",255,true,-1);
+  // OpenCVUnlabeledDataSet testSet("Data/kagglePlankton/classList","Data/kagglePlankton/test","*.jpg",255,true,-1);
   // testSet.summary();
   // cnn.processDatasetRepeatTest(testSet, batchSize/2, 24,"plankton.predictions",testSet.header);
 }
