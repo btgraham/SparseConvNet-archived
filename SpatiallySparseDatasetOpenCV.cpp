@@ -1,11 +1,13 @@
-#include "SpatiallySparseDatasetKagglePlankton.h"
+#include "SpatiallySparseDatasetOpenCV.h"
 #include<iostream>
 #include<fstream>
 #include<string>
 #include "utilities.h"
 
-KagglePlanktonLabeledDataSet::KagglePlanktonLabeledDataSet
-(std::string classesListFile, std::string dataDirectory, batchType type_, int backgroundCol) {
+OpenCVLabeledDataSet::OpenCVLabeledDataSet
+(std::string classesListFile, std::string dataDirectory, std::string wildcard,
+ batchType type_, int backgroundCol,
+ bool loadData, int flags) {
   name=dataDirectory;
   type=type_;
   {
@@ -17,18 +19,20 @@ KagglePlanktonLabeledDataSet::KagglePlanktonLabeledDataSet
   }
   nClasses=classes.size();
   for (auto &kv : classes) {
-    for (auto &file : globVector(dataDirectory+kv.first+"/*.jpg")) {
+    for (auto &file : globVector(dataDirectory+kv.first+"/"+wildcard)) {
       OpenCVPicture* pic = new OpenCVPicture(file,backgroundCol,kv.second);
-      pic->loadDataWithoutScaling(-1);
+      if(loadData)
+        pic->loadDataWithoutScaling(flags);
       nFeatures=pic->mat.channels();
-      pic->scale=powf(powf(pic->mat.rows,2)+powf(pic->mat.cols,2),0.5);
       pictures.push_back(pic);
     }
   }
 }
 
-KagglePlanktonUnlabeledDataSet::KagglePlanktonUnlabeledDataSet
-(std::string classesListFile, std::string dataDirectory, int backgroundCol) {
+OpenCVUnlabeledDataSet::OpenCVUnlabeledDataSet
+(std::string classesListFile, std::string dataDirectory, std::string wildcard,
+ int backgroundCol,
+ bool loadData, int flags) {
   name=dataDirectory;
   header="image";
   type=UNLABELEDBATCH;
@@ -42,11 +46,11 @@ KagglePlanktonUnlabeledDataSet::KagglePlanktonUnlabeledDataSet
     }
   }
   nClasses=classes.size();
-  for (auto &file : globVector(std::string(dataDirectory+"*.jpg"))) {
+  for (auto &file : globVector(dataDirectory+"/"+wildcard)) {
     OpenCVPicture* pic = new OpenCVPicture(file,backgroundCol,0);
-    pic->loadDataWithoutScaling(-1);
+    if(loadData)
+      pic->loadDataWithoutScaling(flags);
     nFeatures=pic->mat.channels();
-    pic->scale=powf(powf(pic->mat.rows,2)+powf(pic->mat.cols,2),0.5);
     pictures.push_back(pic);
   }
 }

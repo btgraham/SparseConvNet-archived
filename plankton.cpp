@@ -1,5 +1,5 @@
 #include "SparseConvNet.h"
-#include "SpatiallySparseDatasetKagglePlankton.h"
+#include "SpatiallySparseDatasetOpenCV.h"
 
 int epoch=0;
 int cudaDevice=-1; // PCI bus ID: -1 for default GPU
@@ -7,7 +7,7 @@ int batchSize=50; // Increase/decrease according to GPU memory
 
 Picture* OpenCVPicture::distort(RNG& rng, batchType type) {
   OpenCVPicture* pic=new OpenCVPicture(*this);
-  pic->loadDataWithoutScaling(-1);
+  // pic->loadDataWithoutScaling(-1);
   float
     c00=1, c01=0,  //2x2 identity matrix---starting point for calculating affine distortion matrix
     c10=0, c11=1;
@@ -54,11 +54,11 @@ public:
 int main() {
   std::string baseName="weights/plankton";
 
-  KagglePlanktonLabeledDataSet trainSet("Data/kagglePlankton/classList","Data/kagglePlankton/train/",TRAINBATCH,255);
+  OpenCVLabeledDataSet trainSet("Data/kagglePlankton/classList","Data/kagglePlankton/train/","*.jpg",TRAINBATCH,255,true,-1);
   trainSet.summary();
-  KagglePlanktonLabeledDataSet cheekyExtraTrainSet("Data/kagglePlankton/classList","Data/kagglePlankton/testPrivate/",TRAINBATCH,255);  //Use the "private test set" as extra training data.
+  OpenCVLabeledDataSet cheekyExtraTrainSet("Data/kagglePlankton/classList","Data/kagglePlankton/testPrivate/","*.jpg",TRAINBATCH,255,true,-1);  //Use the "private test set" as extra training data.
   cheekyExtraTrainSet.summary();
-  KagglePlanktonLabeledDataSet valSet("Data/kagglePlankton/classList","Data/kagglePlankton/testPublic/",TESTBATCH,255);
+  OpenCVLabeledDataSet valSet("Data/kagglePlankton/classList","Data/kagglePlankton/testPublic/","*.jpg",TESTBATCH,255,true,-1);
   valSet.summary();
 
   FractionalSparseConvNet cnn(trainSet.nFeatures,trainSet.nClasses,cudaDevice);
@@ -80,7 +80,7 @@ int main() {
   }
 
   // For unlabelled data (but there is overlap between this "test" data and our expanded training set!!!)
-  // KagglePlanktonUnlabeledDataSet testSet("Data/kagglePlankton/classList","Data/kagglePlankton/test/",255);
+  // OpenCVUnlabeledDataSet testSet("Data/kagglePlankton/classList","Data/kagglePlankton/test/","*.jpg",255,true,-1);
   // testSet.summary();
   // cnn.processDatasetRepeatTest(testSet, batchSize/2, 24,"plankton.predictions",testSet.header);
 }

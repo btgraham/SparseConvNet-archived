@@ -51,13 +51,13 @@ imagenet2012triangular: $(OBJ) OpenCVTriangularPicture.o SpatiallySparseDatasetI
 mnist: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetMnist.o mnist.o
 	$(NVCC) -o mnist $(OBJ) OpenCVPicture.o SpatiallySparseDatasetMnist.o mnist.o $(LIBS) $(NVCCFLAGS)
 
-plankton: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton.o
-	$(NVCC) -o plankton $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton.o $(LIBS) $(NVCCFLAGS)
+plankton: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetOpenCV.o plankton.o
+	$(NVCC) -o plankton $(OBJ) OpenCVPicture.o SpatiallySparseDatasetOpenCV.o plankton.o $(LIBS) $(NVCCFLAGS)
 
-plankton_jluo_30july2015: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton_jluo_30july2015.o
-	$(NVCC) -o plankton_jluo_30july2015 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton_jluo_30july2015.o $(LIBS) $(NVCCFLAGS)
-plankton_jluo_30july2015_2: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton_jluo_30july2015_2.o
-	$(NVCC) -o plankton_jluo_30july2015_2 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetKagglePlankton.o plankton_jluo_30july2015_2.o $(LIBS) $(NVCCFLAGS)
+plankton_jluo_30july2015: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetOpenCV.o plankton_jluo_30july2015.o
+	$(NVCC) -o plankton_jluo_30july2015 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetOpenCV.o plankton_jluo_30july2015.o $(LIBS) $(NVCCFLAGS)
+plankton_jluo_30july2015_2: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetOpenCV.o plankton_jluo_30july2015_2.o
+	$(NVCC) -o plankton_jluo_30july2015_2 $(OBJ) OpenCVPicture.o SpatiallySparseDatasetOpenCV.o plankton_jluo_30july2015_2.o $(LIBS) $(NVCCFLAGS)
 
 cifar10indexLearning: $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10indexLearning.o
 	$(NVCC) -o cifar10indexLearning $(OBJ) OpenCVPicture.o SpatiallySparseDatasetCIFAR10.o cifar10indexLearning.o $(LIBS) $(NVCCFLAGS)
