@@ -43,6 +43,7 @@ void SpatiallySparseDataset::subsetOfClasses(std::vector<int> activeClasses) {
 }
 SpatiallySparseDataset SpatiallySparseDataset::subset(int n) {
   SpatiallySparseDataset subset(*this);
+  subset.name+=std::string(" subset");
   subset.shuffle();
   subset.pictures.resize(n);
   return subset;
