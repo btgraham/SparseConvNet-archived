@@ -10,10 +10,10 @@ OpenCVPicture::OpenCVPicture(int xSize, int ySize, int nInputFeatures, unsigned 
   Picture(label), backgroundColor(backgroundColor) {
   xOffset=-xSize/2;
   yOffset=-ySize/2;
-  mat.create(xSize,ySize, CV_8UC(nInputFeatures));
+  mat.create(xSize,ySize, CV_32FC(nInputFeatures));
 }
-OpenCVPicture::OpenCVPicture(std::string filename, int scale, unsigned char backgroundColor, int label_) :
-  filename(filename), scale(scale), backgroundColor(backgroundColor) {
+OpenCVPicture::OpenCVPicture(std::string filename, unsigned char backgroundColor, int label_) :
+  filename(filename), backgroundColor(backgroundColor) {
   label=label_;
 }
 
@@ -22,6 +22,9 @@ OpenCVPicture::~OpenCVPicture() {}
 void OpenCVPicture::jiggle(RNG &rng, int offlineJiggle) {
   xOffset+=rng.randint(offlineJiggle*2+1)-offlineJiggle;
   yOffset+=rng.randint(offlineJiggle*2+1)-offlineJiggle;
+}
+void OpenCVPicture::colorDistortion(RNG &rng, int sigma1, int sigma2, int sigma3, int sigma4) {
+  distortImageColor(mat, rng, sigma1, sigma2, sigma3, sigma4);
 }
 void OpenCVPicture::randomCrop(RNG &rng, int subsetSize) {
   assert(subsetSize<=std::min(mat.rows,mat.cols));
@@ -93,21 +96,18 @@ void OpenCVPicture::loadDataWithoutScaling(int flag) {
   xOffset=-mat.cols/2;
   yOffset=-mat.rows/2;
 }
-void OpenCVPicture::loadData
-(int scale_) {
-  if (scale_==-1) scale_=scale;
-  if (mat.empty()) {
-    readTransformedImage(filename,mat,scale_,1,0,0,1,backgroundColor);
-    xOffset=-mat.cols/2;
-    yOffset=-mat.rows/2;
-  }
+void OpenCVPicture::loadData (int scale, int flags) {
+  readTransformedImage(filename,mat,scale,flags,1,0,0,1,backgroundColor);
+  xOffset=-mat.cols/2;
+  yOffset=-mat.rows/2;
 }
 std::string OpenCVPicture::identify() {
   return filename;
 }
 
 void OpenCVPicture::codifyInputData(SparseGrid &grid, std::vector<float> &features, int &nSpatialSites, int spatialSize) {
-  loadData();
+  assert(!mat.empty());
+  assert(mat.type()%8==5);
   for  (int i=0; i<mat.channels(); i++)
     features.push_back(0); //Background feature
   grid.backgroundCol=nSpatialSites++;

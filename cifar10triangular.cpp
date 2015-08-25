@@ -7,7 +7,6 @@ int batchSize=50;
 
 Picture* OpenCVPicture::distort(RNG& rng, batchType type) {
   OpenCVPicture* pic=new OpenCVPicture(*this);
-  pic->loadData();
   float
     c00=1, c01=0,  //2x2 identity matrix---starting point for calculating affine distortion matrix
     c10=0, c11=1;

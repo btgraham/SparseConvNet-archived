@@ -25,7 +25,6 @@ void OpenCVPicture::jiggle(RNG &rng, int offlineJiggle) {
 }
 void OpenCVPicture::colorDistortion(RNG &rng, int sigma1, int sigma2, int sigma3, int sigma4) {
   distortImageColor(mat, rng, sigma1, sigma2, sigma3, sigma4);
-
 }
 void OpenCVPicture::randomCrop(RNG &rng, int subsetSize) {
   assert(subsetSize<=std::min(mat.rows,mat.cols));
