@@ -24,9 +24,13 @@ static void loadMnistC(std::string filename, std::vector<Picture*> &characters) 
   n2=intToggleEndianness(a);
   f.read((char*)&a,4);
   n3=intToggleEndianness(a);
+  std::vector<unsigned char> bitmap(n2*n3);
   for (int i1=0;i1<n1;i1++) {
+    f.read((char *)&bitmap[0],n2*n3);
     OpenCVPicture* character = new OpenCVPicture(n2,n3,1,0);
-    f.read((char *)character->mat.ptr(),n2*n3);
+    float* matData=((float*)(character->mat.data));
+    for (int i=0;i<n2*n3;i++)
+      matData[i]=bitmap[i];
     characters.push_back(character);
   }
 }
