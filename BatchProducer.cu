@@ -118,7 +118,7 @@ BatchProducer::BatchProducer (SparseConvNetCUDA& cnn,
     rng.vectorShuffle(permutation);
   }
   for (int nThread=0; nThread<NBATCHPRODUCERTHREADS; nThread++)
-    workers.emplace_back(std::thread(std::bind(&BatchProducer::batchProducerThread,this,nThread)));
+    workers.emplace_back(std::thread(&BatchProducer::batchProducerThread,this,nThread));
 }
 BatchProducer::~BatchProducer() {
   if (batchCounter<nBatches) {
