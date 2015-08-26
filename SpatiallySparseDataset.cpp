@@ -41,17 +41,45 @@ void SpatiallySparseDataset::subsetOfClasses(std::vector<int> activeClasses) {
       delete p[i];
   }
 }
+
+//Assume there are at least n of each class in the dataset
+SpatiallySparseDataset SpatiallySparseDataset::balencedSubset(int n) {
+  SpatiallySparseDataset bs;
+  bs.name=name+std::string(" subset");
+  bs.nFeatures=nFeatures;
+  bs.nClasses=nClasses;
+  bs.type=type;
+  shuffle();
+  auto permutation=rng.permutation(pictures.size());
+  std::vector<int> count(nClasses);
+  int classesDone=0;
+  for (int i=0;i<pictures.size() and classesDone<nClasses;i++) {
+    if (count[pictures[permutation[i]]->label]++ < n) {
+      if (count[pictures[permutation[i]]->label]==n)
+        classesDone++;
+      bs.pictures.push_back(pictures[permutation[i]]);
+    }
+  }
+  return bs;
+}
+
 SpatiallySparseDataset SpatiallySparseDataset::subset(int n) {
-  SpatiallySparseDataset subset(*this);
-  subset.name+=std::string(" subset");
-  subset.shuffle();
-  subset.pictures.resize(n);
+  SpatiallySparseDataset subset;
+  subset.name=name+std::string(" subset");
+  subset.nFeatures=nFeatures;
+  subset.nClasses=nClasses;
+  subset.type=type;
+  auto pick=rng.NchooseM(pictures.size(),n);
+  for (auto i: pick) {
+    subset.pictures.push_back(pictures[i]);
+  }
   return subset;
 }
+
+
+
 void SpatiallySparseDataset::shuffle() {
-  auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  std::mt19937 gen(seed);
-  std::shuffle(pictures.begin(), pictures.end(), gen);
+  std::shuffle( pictures.begin(), pictures.end(), rng.gen);
 }
 void SpatiallySparseDataset::repeatSamples(int reps) {
   int s=pictures.size();

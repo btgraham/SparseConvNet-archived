@@ -1,4 +1,5 @@
 #include "SpatiallySparseDatasetImageNet2012.h"
+#include "SpatiallySparseDatasetOpenCV.h"
 #include<iostream>
 #include<fstream>
 #include<string>
@@ -108,17 +109,9 @@ std::string classList[]={
 };
 
 SpatiallySparseDataset ImageNet2012TrainSet() {
+  auto dataset=OpenCVLabeledDataSet("Data/imagenet2012/classList", "Data/imagenet2012/ILSVRC2012_img_train","*.JPEG",TRAINBATCH, 128, false,1);
   SpatiallySparseDataset dataset;
   dataset.name="ImageNet2012 train set";
-  dataset.type=TRAINBATCH;
-  dataset.nFeatures=3;
-  dataset.nClasses=1000;
-
-  for (int cl=0;cl<1000;cl++) {
-    for (auto &file : globVector(std::string("Data/imagenet2012/ILSVRC2012_img_train/")+classList[cl]+"/*.JPEG")) {
-      dataset.pictures.push_back(new OpenCVPicture(file,128,cl));
-    }
-  }
   return dataset;
 }
 SpatiallySparseDataset ImageNet2012ValidationSet() {

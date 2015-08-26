@@ -2,8 +2,11 @@
 #include "Rng.h"
 #include <iostream>
 #include <algorithm>
+#include <chrono>
 
 RNG::RNG() : stdNormal(0,1), uniform01(0,1) {
+  // auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  // std::mt19937 gen(seed);
   timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
   RNGseedGeneratorMutex.lock();

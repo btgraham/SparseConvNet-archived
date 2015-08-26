@@ -31,14 +31,14 @@ Picture* OpenCVPicture::distort(RNG& rng, batchType type) {
   return pic;
 }
 
-class DeepC2Triangular : public SparseConvNet {
+class DeepC2Triangular : public SparseConvTraingLeNet {
 public:
   DeepC2Triangular (int dimension, int l, int k, ActivationFunction fn, int nInputFeatures, int nClasses, float p=0.0f, int cudaDevice=-1, int nTop=1);
 };
 DeepC2Triangular::DeepC2Triangular
 (int dimension, int l, int k, ActivationFunction fn,
  int nInputFeatures, int nClasses, float p, int cudaDevice, int nTop)
-  : SparseConvNet(dimension,nInputFeatures, nClasses, cudaDevice, nTop) {
+  : SparseConvTriangLeNet(dimension,nInputFeatures, nClasses, cudaDevice, nTop) {
   for (int i=0;i<=l;i++) {
     addLeNetLayerMP((i+1)*k,2,1,1,1,fn,p*i*1.0f/l);
     addLeNetLayerMP((i+1)*k,2,1,(i<l)?3:1,(i<l)?2:1,fn,p*i*1.0f/l);

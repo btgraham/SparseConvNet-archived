@@ -2,6 +2,7 @@
 #include<iostream>
 #include<fstream>
 #include<string>
+#include<cassert>
 #include "utilities.h"
 
 OpenCVLabeledDataSet::OpenCVLabeledDataSet
@@ -9,6 +10,8 @@ OpenCVLabeledDataSet::OpenCVLabeledDataSet
  batchType type_, int backgroundCol,
  bool loadData, int flags) {
   name=dataDirectory;
+  if (flags==0) nFeatures=1;
+  if (flags==1) nFeatures=3;
   type=type_;
   {
     std::ifstream f(classesListFile.c_str());
@@ -23,7 +26,7 @@ OpenCVLabeledDataSet::OpenCVLabeledDataSet
       OpenCVPicture* pic = new OpenCVPicture(file,backgroundCol,kv.second);
       if(loadData) {
         pic->loadDataWithoutScaling(flags);
-        nFeatures=pic->mat.channels();
+        assert(nFeatures==pic->mat.channels());
       }
       pictures.push_back(pic);
     }

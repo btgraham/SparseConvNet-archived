@@ -38,8 +38,10 @@ void OpenCVPicture::affineTransform(float c00, float c01, float c10, float c11) 
   yOffset=-mat.rows/2;
 }
 void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize, float minFill) { //subsetSize==spatialSize for codifyInputData
+  assert(minFill>0);
   int fitCtr=100; //Give up after 100 failed attempts to find a good fit
   bool goodFit=false;
+  float* matData=((float*)(mat.data));
   while (!goodFit and fitCtr-- >0) {
     xOffset=-rng.randint(mat.cols-subsetSize/3);
     yOffset=-rng.randint(mat.rows-subsetSize/3);
@@ -50,18 +52,18 @@ void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize, float minFill) { //subse
         int x=X-xOffset-subsetSize/3;
         int y=Y-yOffset-subsetSize/3;
         pointsCtr++;
-        if (0<=x and x<mat.cols and 0<=y and y<mat.rows)
-          interestingPointsCtr+=(mat.ptr()[(pointsCtr%mat.channels())+x*mat.channels()+y*mat.channels()*mat.cols]!=backgroundColor);
+        if (0<=x and x<mat.cols and 0<=y and y<mat.rows) {
+          interestingPointsCtr+=(matData[(pointsCtr%mat.channels())+x*mat.channels()+y*mat.channels()*mat.cols]!=backgroundColor);
+        }
       }
     }
-    assert(pointsCtr>=10);
-    if (interestingPointsCtr>pointsCtr*0.6)
+    if (interestingPointsCtr>pointsCtr*minFill)
       goodFit=true;
   }
   if (!goodFit) {
     std::cout << filename << " " << std::flush;
-    xOffset=-mat.cols/2-16+rng.randint(32);
-    yOffset=-mat.rows/2-16+rng.randint(32);
+    xOffset=-mat.cols/2-16+rng.randint(33);
+    yOffset=-mat.rows/2-16+rng.randint(33);
   }
 }
 void OpenCVPicture::centerMass() {
@@ -111,6 +113,7 @@ void OpenCVPicture::codifyInputData(SparseGrid &grid, std::vector<float> &featur
   for  (int i=0; i<mat.channels(); i++)
     features.push_back(0); //Background feature
   grid.backgroundCol=nSpatialSites++;
+  float* matData=((float*)(mat.data));
   for (int x=0; x<mat.cols; x++) {
     int X=x+xOffset+spatialSize/3;
     for (int y=0; y<mat.rows; y++) {
@@ -118,14 +121,14 @@ void OpenCVPicture::codifyInputData(SparseGrid &grid, std::vector<float> &featur
       if (X>=0 && Y>=0 && X+Y<spatialSize) {
         bool flag=false;
         for (int i=0; i<mat.channels(); i++)
-          if (std::abs(scaleUCharColor(mat.ptr()[i+x*mat.channels()+y*mat.channels()*mat.cols]))>0.02)
+          if (std::abs(scaleUCharColor(matData[i+x*mat.channels()+y*mat.channels()*mat.cols]))>0.02)
             flag=true;
         if (flag) {
           int n=X*spatialSize+Y;
           grid.mp[n]=nSpatialSites++;
           for (int i=0; i<mat.channels(); i++) {
             features.push_back
-              (scaleUCharColor(mat.ptr()[i+x*mat.channels()+y*mat.channels()*mat.cols]));
+              (scaleUCharColor(matData[i+x*mat.channels()+y*mat.channels()*mat.cols]));
           }
         }
       }
