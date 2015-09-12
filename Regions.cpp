@@ -129,7 +129,113 @@ int RandomOverlappingFractionalPoolingRegions::ub3(int i0, int i1, int i2, int i
 
 
 
-void gridRules
+
+
+
+
+void gridRulesNoMin
+(SparseGrid &inputGrid, //Keys 0,1,...,powf(regions.nIn,dimension)-1 represent grid points
+ SparseGrid &outputGrid, //Keys 0,1,...,powf(regions.nOut,dimension)-1 represent grid points
+ PoolingRegions& regions,
+ int& nOutputSpatialSites,
+ std::vector<int>& rules) {
+#ifdef USE_VECTOR_HASH
+  outputGrid.mp.vec.resize(ipow(regions.nOut,regions.dimension),-99);
+#endif
+  switch(regions.dimension) {
+  case 1:
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+      int i0=(iter->first);
+      for (int j0=regions.lb0(i0);j0<=regions.ub0(i0);++j0) {
+        int64_t outKey=j0;
+        int rulesOffset= (i0-regions.tl0(j0));
+        auto f=outputGrid.mp.find(outKey);
+        if (f==outputGrid.mp.end()) {
+          f=outputGrid.mp.insert(std::make_pair(outKey,nOutputSpatialSites++)).first;
+          rules.resize(nOutputSpatialSites*regions.sd,inputGrid.backgroundCol);
+        }
+        rules[f->second*regions.sd+rulesOffset]=iter->second;
+      }
+    }
+    break;
+  case 2:
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+      int i0=((iter->first)/regions.nIn)%regions.nIn;
+      int i1=(iter->first)%regions.nIn;
+      for (int j0=regions.lb0(i0,i1);j0<=regions.ub0(i0,i1);++j0) {
+        for (int j1=regions.lb1(i0,i1);j1<=regions.ub1(i0,i1);++j1) {
+          int64_t outKey=(int64_t)j0*regions.nOut + (int64_t)j1;
+          int rulesOffset= (i0-regions.tl0(j0,j1))*regions.s+(i1-regions.tl1(j0,j1));
+          auto f=outputGrid.mp.find(outKey);
+          if (f==outputGrid.mp.end()) {
+            f=outputGrid.mp.insert(std::make_pair(outKey,nOutputSpatialSites++)).first;
+            rules.resize(nOutputSpatialSites*regions.sd,inputGrid.backgroundCol);
+          }
+          rules[f->second*regions.sd+rulesOffset]=iter->second;
+        }
+      }
+    }
+    break;
+  case 3:
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+      int i0=((iter->first)/regions.nIn/regions.nIn)%regions.nIn;
+      int i1=((iter->first)/regions.nIn)%regions.nIn;
+      int i2=(iter->first)%regions.nIn;
+      for (int j0=regions.lb0(i0,i1,i2);j0<=regions.ub0(i0,i1,i2);++j0) {
+        for (int j1=regions.lb1(i0,i1,i2);j1<=regions.ub1(i0,i1,i2);++j1) {
+          for (int j2=regions.lb2(i0,i1,i2);j2<=regions.ub2(i0,i1,i2);++j2) {
+            int64_t outKey=(int64_t)j0*regions.nOut*regions.nOut + (int64_t)j1*regions.nOut + (int64_t)j2;
+            int rulesOffset=
+              (i0-regions.tl0(j0,j1,j2))*regions.s*regions.s
+              +(i1-regions.tl1(j0,j1,j2))*regions.s
+              +(i2-regions.tl2(j0,j1,j2));
+            auto f=outputGrid.mp.find(outKey);
+            if (f==outputGrid.mp.end()) {
+              f=outputGrid.mp.insert(std::make_pair(outKey,nOutputSpatialSites++)).first;
+              rules.resize(nOutputSpatialSites*regions.sd,inputGrid.backgroundCol);
+            }
+            rules[f->second*regions.sd+rulesOffset]=iter->second;
+          }
+        }
+      }
+    }
+    break;
+  case 4:
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+      int i0=iter->first/regions.nIn/regions.nIn/regions.nIn;
+      int i1=((iter->first)/regions.nIn/regions.nIn)%regions.nIn;
+      int i2=((iter->first)/regions.nIn)%regions.nIn;
+      int i3=(iter->first)%regions.nIn;
+      for (int j0=regions.lb0(i0,i1,i2,i3);j0<=regions.ub0(i0,i1,i2,i3);++j0) {
+        for (int j1=regions.lb1(i0,i1,i2,i3);j1<=regions.ub1(i0,i1,i2,i3);++j1) {
+          for (int j2=regions.lb2(i0,i1,i2,i3);j2<=regions.ub2(i0,i1,i2,i3);++j2) {
+            for (int j3=regions.lb3(i0,i1,i2,i3);j3<=regions.ub3(i0,i1,i2,i3);++j3) {
+              int64_t outKey=(int64_t)j0*regions.nOut*regions.nOut*regions.nOut + (int64_t)j1*regions.nOut*regions.nOut + (int64_t)j2*regions.nOut + (int64_t)j3;
+              int rulesOffset=
+                (i0-regions.tl0(j0,j1,j2,j3))*regions.s*regions.s*regions.s
+                +(i1-regions.tl1(j0,j1,j2,j3))*regions.s*regions.s
+                +(i2-regions.tl2(j0,j1,j2,j3))*regions.s
+                +(i3-regions.tl3(j0,j1,j2,j3));
+              auto f=outputGrid.mp.find(outKey);
+              if (f==outputGrid.mp.end()) {
+                f=outputGrid.mp.insert(std::make_pair(outKey,nOutputSpatialSites++)).first;
+                rules.resize(nOutputSpatialSites*regions.sd,inputGrid.backgroundCol);
+              }
+              rules[f->second*regions.sd+rulesOffset]=iter->second;
+            }
+          }
+        }
+      }
+    }
+    break;
+  }
+  if (outputGrid.mp.size()< ipow(regions.nOut,regions.dimension)) { //Null vector/background needed
+    for (int i=0;i<regions.sd;++i) rules.push_back(inputGrid.backgroundCol);
+    outputGrid.backgroundCol=nOutputSpatialSites++;
+  }
+}
+
+void gridRulesMin
 (SparseGrid &inputGrid, //Keys 0,1,...,powf(regions.nIn,dimension)-1 represent grid points
  SparseGrid &outputGrid, //Keys 0,1,...,powf(regions.nOut,dimension)-1 represent grid points
  PoolingRegions& regions,
@@ -142,7 +248,7 @@ void gridRules
   switch(regions.dimension) {
   case 1:
     for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
-      int i0=(iter->first)%regions.nIn;
+      int i0=(iter->first);
       for (int j0=regions.lb0(i0);j0<=regions.ub0(i0);++j0) {
         int64_t outKey=(int64_t)j0;
         if(outputGrid.mp.find(outKey)==outputGrid.mp.end()) { // Add line to rules
@@ -289,6 +395,21 @@ void gridRules
 }
 
 
+void gridRules
+(SparseGrid &inputGrid, //Keys 0,1,...,powf(regions.nIn,dimension)-1 represent grid points
+ SparseGrid &outputGrid, //Keys 0,1,...,powf(regions.nOut,dimension)-1 represent grid points
+ PoolingRegions& regions,
+ int& nOutputSpatialSites,
+ std::vector<int>& rules,
+ int minActiveInputs) {
+  if (minActiveInputs==1)
+    gridRulesNoMin(inputGrid,outputGrid,regions,nOutputSpatialSites,rules);
+  else
+    gridRulesMin(inputGrid,outputGrid,regions,nOutputSpatialSites,rules,minActiveInputs);
+}
+
+
+
 
 
 
@@ -338,7 +459,129 @@ int RegularPoolingRegionsTriangular::lb3(int i0, int i1, int i2, int i3) {return
 int RegularPoolingRegionsTriangular::ub3(int i0, int i1, int i2, int i3) {return std::min(i3/poolStride,nOut-1);}
 
 
-void gridRulesTriangular
+
+
+
+void gridRulesTriangularNoMin
+(SparseGrid& inputGrid, //Keys 0,1,...,powf(regions.nIn,3)-1 represent grid points (plus paddding to form a square/cube); key -1 represents null/background vector
+ SparseGrid& outputGrid, //Keys 0,1,...,powf(regions.nOut,3)-1 represent grid points (plus paddding to form a square/cube); key -1 represents null/background vector
+ PoolingRegionsTriangular& regions,
+ int& nOutputSpatialSites,
+ std::vector<int>& rules) {
+#ifdef USE_VECTOR_HASH
+  outputGrid.mp.vec.resize(triangleSize(regions.nOut,regions.dimension),-99);
+#endif
+  switch(regions.dimension) {
+  case 1:
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+      int i0=(iter->first);
+      for (int j0=regions.lb0(i0);j0<=regions.ub0(i0);++j0) {
+        int64_t outKey=j0;
+        auto f=outputGrid.mp.find(outKey);
+        if (f==outputGrid.mp.end()) {
+          f=outputGrid.mp.insert(std::make_pair(outKey,nOutputSpatialSites++)).first;
+          rules.resize(nOutputSpatialSites*regions.S,inputGrid.backgroundCol);
+        }
+        int rulesOffset=regions.ord[(i0-regions.tl0(j0))];
+        if (rulesOffset > -1)
+          rules[f->second*regions.S+rulesOffset]=iter->second;
+      }
+    }
+  case 2:
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+      int i0=((iter->first)/regions.nIn)%regions.nIn;
+      int i1=(iter->first)%regions.nIn;
+      for (int j0=regions.lb0(i0,i1);j0<=regions.ub0(i0,i1);++j0) {
+        for (int j1=regions.lb1(i0,i1);j1<=regions.ub1(i0,i1);++j1) {
+          if (j0+j1<regions.nOut) {
+            int64_t outKey=
+              (int64_t)j0*regions.nOut
+              + (int64_t)j1;
+            auto f=outputGrid.mp.find(outKey);
+            if (f==outputGrid.mp.end()) {
+              f=outputGrid.mp.insert(std::make_pair(outKey,nOutputSpatialSites++)).first;
+              rules.resize(nOutputSpatialSites*regions.S,inputGrid.backgroundCol);
+            }
+            int rulesOffset=regions.ord[(i0-regions.tl0(j0,j1))*regions.s
+                                        +(i1-regions.tl1(j0,j1))];
+            if (rulesOffset > -1)
+              rules[f->second*regions.S+rulesOffset]=iter->second;
+          }
+        }
+      }
+    }
+    break;
+  case 3:
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+      int i0=((iter->first)/regions.nIn/regions.nIn)%regions.nIn;
+      int i1=((iter->first)/regions.nIn)%regions.nIn;
+      int i2=(iter->first)%regions.nIn;
+      for (int j0=regions.lb0(i0,i1,i2);j0<=regions.ub0(i0,i1,i2);++j0) {
+        for (int j1=regions.lb1(i0,i1,i2);j1<=regions.ub1(i0,i1,i2);++j1) {
+          for (int j2=regions.lb2(i0,i1,i2);j2<=regions.ub2(i0,i1,i2);++j2) {
+            if (j0+j1+j2<regions.nOut) {
+              int64_t outKey=
+                (int64_t)j0*regions.nOut*regions.nOut
+                + (int64_t)j1*regions.nOut
+                + (int64_t)j2;
+              auto f=outputGrid.mp.find(outKey);
+              if (f==outputGrid.mp.end()) {
+                f=outputGrid.mp.insert(std::make_pair(outKey,nOutputSpatialSites++)).first;
+                rules.resize(nOutputSpatialSites*regions.S,inputGrid.backgroundCol);
+              }
+              int rulesOffset=regions.ord[(i0-regions.tl0(j0,j1,j2))*regions.s*regions.s
+                                          +(i1-regions.tl1(j0,j1,j2))*regions.s
+                                          +(i2-regions.tl2(j0,j1,j2))];
+              if (rulesOffset > -1)
+                rules[f->second*regions.S+rulesOffset]=iter->second;
+            }
+          }
+        }
+      }
+    }
+    break;
+  case 4:
+    for (auto iter = inputGrid.mp.begin();iter != inputGrid.mp.end(); ++iter) {
+      int i0=iter->first/regions.nIn/regions.nIn/regions.nIn;
+      int i1=((iter->first)/regions.nIn/regions.nIn)%regions.nIn;
+      int i2=((iter->first)/regions.nIn)%regions.nIn;
+      int i3=(iter->first)%regions.nIn;
+      for (int j0=regions.lb0(i0,i1,i2,i3);j0<=regions.ub0(i0,i1,i2,i3);++j0) {
+        for (int j1=regions.lb1(i0,i1,i2,i3);j1<=regions.ub1(i0,i1,i2,i3);++j1) {
+          for (int j2=regions.lb2(i0,i1,i2,i3);j2<=regions.ub2(i0,i1,i2,i3);++j2) {
+            for (int j3=regions.lb3(i0,i1,i2,i3);j3<=regions.ub3(i0,i1,i2,i3);++j3) {
+              if (j0+j1+j2+j3<regions.nOut) {
+                int64_t outKey=
+                  (int64_t)j0*regions.nOut*regions.nOut*regions.nOut
+                  + (int64_t)j1*regions.nOut*regions.nOut
+                  + (int64_t)j2*regions.nOut
+                  + (int64_t)j3;
+                auto f=outputGrid.mp.find(outKey);
+                if (f==outputGrid.mp.end()) {
+                  f=outputGrid.mp.insert(std::make_pair(outKey,nOutputSpatialSites++)).first;
+                  rules.resize(nOutputSpatialSites*regions.S,inputGrid.backgroundCol);
+                }
+                int rulesOffset=regions.ord[(i0-regions.tl0(j0,j1,j2,j3))*regions.s*regions.s*regions.s
+                                            +(i1-regions.tl1(j0,j1,j2,j3))*regions.s*regions.s
+                                            +(i2-regions.tl2(j0,j1,j2,j3))*regions.s
+                                            +(i3-regions.tl3(j0,j1,j2,j3))];
+                if (rulesOffset > -1)
+                  rules[f->second*regions.S+rulesOffset]=iter->second;
+              }
+            }
+          }
+        }
+      }
+    }
+    break;
+  }
+  if (outputGrid.mp.size()< triangleSize(regions.nOut,regions.dimension)) { //Null vector/background needed
+    for (int i=0;i<regions.S;++i) rules.push_back(inputGrid.backgroundCol);
+    outputGrid.backgroundCol=nOutputSpatialSites++;
+  }
+}
+
+void gridRulesTriangularMin
 (SparseGrid& inputGrid, //Keys 0,1,...,powf(regions.nIn,3)-1 represent grid points (plus paddding to form a square/cube); key -1 represents null/background vector
  SparseGrid& outputGrid, //Keys 0,1,...,powf(regions.nOut,3)-1 represent grid points (plus paddding to form a square/cube); key -1 represents null/background vector
  PoolingRegionsTriangular& regions,
@@ -511,4 +754,19 @@ void gridRulesTriangular
     for (int i=0;i<regions.S;++i) rules.push_back(inputGrid.backgroundCol);
     outputGrid.backgroundCol=nOutputSpatialSites++;
   }
+}
+
+
+
+void gridRulesTriangular
+(SparseGrid& inputGrid, //Keys 0,1,...,powf(regions.nIn,3)-1 represent grid points (plus paddding to form a square/cube); key -1 represents null/background vector
+ SparseGrid& outputGrid, //Keys 0,1,...,powf(regions.nOut,3)-1 represent grid points (plus paddding to form a square/cube); key -1 represents null/background vector
+ PoolingRegionsTriangular& regions,
+ int& nOutputSpatialSites,
+ std::vector<int>& rules,
+ int minActiveInputs) {
+  if (minActiveInputs==1)
+    gridRulesTriangularNoMin(inputGrid,outputGrid,regions,nOutputSpatialSites,rules);
+  else
+    gridRulesTriangularMin(inputGrid,outputGrid,regions,nOutputSpatialSites,rules,minActiveInputs);
 }

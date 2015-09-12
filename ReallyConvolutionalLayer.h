@@ -1,7 +1,6 @@
 #pragma once
 #include "SpatiallySparseLayer.h"
 
-
 class ReallyConvolutionalLayer : public SpatiallySparseLayer {
 private:
   int fs;
@@ -48,5 +47,10 @@ public:
                  SpatiallySparseBatchInterface &output,
                  float learningRate,
                  float momentum);
+  void scaleWeights
+  (SpatiallySparseBatchInterface &input,
+   SpatiallySparseBatchInterface &output,
+   float& scalingUnderneath,
+   bool topLayer);
   int calculateInputSpatialSize(int outputSpatialSize);
 };

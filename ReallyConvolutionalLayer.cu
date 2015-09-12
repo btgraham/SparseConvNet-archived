@@ -258,6 +258,27 @@ void ReallyConvolutionalLayer::forwards
   multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*fs*output.featuresPresent.size();
   cudaCheckError();
 }
+void ReallyConvolutionalLayer::scaleWeights
+(SpatiallySparseBatchInterface &input,
+ SpatiallySparseBatchInterface &output,
+ float& scalingUnderneath,
+ bool topLayer) {
+  assert(input.sub->features.size()>0);
+  assert(output.sub->features.size()>0); //call after forwards(...)
+  float scale=output.sub->features.meanAbs( (fn==VLEAKYRELU) ? 3 : 100 );
+  std::cout << "featureScale:" << scale << std::endl;
+  if (topLayer) {
+    scale=1;
+  } else {
+    scale=powf(scale,-0.1); //0.7978846 = sqrt(2/pi) = mean of the half normal distribution
+  }
+  W.multiplicativeRescale(scale/scalingUnderneath);
+  B.multiplicativeRescale(scale);
+  MW.multiplicativeRescale(scale/scalingUnderneath);
+  MB.multiplicativeRescale(scale);
+  scalingUnderneath=scale;
+}
+
 void ReallyConvolutionalLayer::backwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,

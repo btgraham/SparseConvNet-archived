@@ -66,7 +66,6 @@ __global__ void dGradientDescentShrunkVector
   }
 }
 
-
 __global__ void dColumnSum
 (float* matrix, float* target, int nRows, int nColumns) {
   int i=blockIdx.x*KERNELBLOCKSIZE+threadIdx.x;
@@ -183,7 +182,7 @@ void NetworkInNetworkLayer::scaleWeights
   if (topLayer) {
     scale=1;
   } else {
-    scale=powf(scale,-0.1); //0.7978846 = sqrt(2/pi) = mean of the half normal distribution
+    scale=powf(scale,-0.1);
   }
   W.multiplicativeRescale(scale/scalingUnderneath);
   B.multiplicativeRescale(scale);

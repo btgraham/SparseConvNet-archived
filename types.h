@@ -8,16 +8,16 @@ const char *batchTypeNames[] ={ "TRAINBATCH", "TESTBATCH", "UNLABELEDBATCH","RES
 extern const char *batchTypeNames[];
 #endif
 
-enum ActivationFunction     {NOSIGMOID,  RELU,    VLEAKYRELU,      LEAKYRELU,   TANH,  SOFTMAX};
+enum ActivationFunction     {NOSIGMOID,  RELU,    VLEAKYRELU,      LEAKYRELU,   TANH,  SOFTMAX,                   PRELU};
 #ifdef TYPES_CPP
-const char *sigmoidNames[] ={ ""       , "ReLU", "VeryLeakyReLU", "LeakyReLU", "tanh", "Softmax Classification"};
+const char *sigmoidNames[] ={ ""       , "ReLU", "VeryLeakyReLU", "LeakyReLU", "tanh", "Softmax Classification", "PReLU"};
 #else
 extern const char *sigmoidNames[];
 #endif
 
-enum OnlineHandwritingEncoding        {Simple, Octogram, LogSignature1, LogSignature2, LogSignature3, LogSignature4, SpaceTime3d, VectorSpaceTime3d};
+enum OnlineHandwritingEncoding        {Simple, Octogram, UndirectedOctogram, LogSignature1, LogSignature2, LogSignature3, LogSignature4, SpaceTime3d, VectorSpaceTime3d};
 #ifdef TYPES_CPP
-int OnlineHandwritingEncodingSize[] = {1,      9,        1+3,           1+6,           1+14,          1+32,          1,           1+2         };
+int OnlineHandwritingEncodingSize[] = {     1,        8,                  4,             3,            6,             14,            32,           1,               1+2};
 #else
 extern int OnlineHandwritingEncodingSize[];
 #endif

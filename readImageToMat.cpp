@@ -106,13 +106,14 @@ void distortImageColor(cv::Mat& mat, RNG& rng, float sigma1, float sigma2, float
     delta3[j]=rng.normal(0,sigma3);
     delta4[j]=rng.normal(0,sigma4);
   }
+  float* matData=((float*)(mat.data));
   int j=0;
   for (int y=0;y<mat.rows;++y) {
     for (int x=0;x<mat.cols;++x) {
       for (int i=0;i<mat.channels();++i) {
-        ((float*)(mat.data))[j]=((float*)(mat.data))[j]+
+        matData[j]=matData[j]+
           delta1[i]+
-          delta2[i]*cos(((float*)(mat.data))[j]*3.1415926535/255)+
+          delta2[i]*(matData[j]/128-1)+
           delta3[i]*(x-mat.cols/2)+
           delta4[i]*(y-mat.rows/2);
         ++j;

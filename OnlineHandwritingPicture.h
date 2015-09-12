@@ -18,4 +18,5 @@ public:
   Picture* distort (RNG& rng, batchType type);
   void codifyInputData(SparseGrid &grid, std::vector<float> &features, int &nSpatialSites, int spatialSize);
   void jiggle(RNG &rng, float alpha);
+  void draw(int spatialSize);
 };

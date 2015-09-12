@@ -20,6 +20,6 @@ public:
   SpatiallySparseDataset extractValidationSet(float p=0.1);
   void subsetOfClasses(std::vector<int> activeClasses);
   SpatiallySparseDataset subset(int n);
-  SpatiallySparseDataset balencedSubset(int n);
+  SpatiallySparseDataset balancedSubset(int n);
   void repeatSamples(int reps); // Make dataset seem n times bigger (i.e. for small datasets to avoid having v. small training epochs)
 };

@@ -10,6 +10,7 @@
 #include "utilities.h"
 #include "SigmoidLayer.h"
 #include "NetworkInNetworkLayer.h"
+#include "NetworkInNetworkPReLULayer.h"
 #include "ConvolutionalLayer.h"
 #include "ReallyConvolutionalLayer.h"
 #include "ConvolutionalTriangularLayer.h"
@@ -27,7 +28,7 @@ SparseConvNetCUDA::SparseConvNetCUDA(int dimension,
                                      int nClasses,
                                      int pciBusID,
                                      int nTop) :
-  dimension(dimension),
+dimension(dimension),
   nInputFeatures(nInputFeatures),
   nClasses(nClasses),
   nTop(nTop) {
@@ -42,11 +43,14 @@ void SparseConvNetCUDA::addLearntLayer(int nFeatures,
                                        float dropout,
                                        float alpha) {
   if (activationFn!=SOFTMAX)
-    nFeatures=max(KERNELBLOCKSIZE,intRound(nFeatures,KERNELBLOCKSIZE));
+    nFeatures=std::max(KERNELBLOCKSIZE,intRound(nFeatures,KERNELBLOCKSIZE));
   if (dropout>0)
     dropout=1-intRound(nFeatures*(1-dropout),KERNELBLOCKSIZE)*1.0f/nFeatures;
   std::cout << layers.size() << ":";
-  layers.push_back(new NetworkInNetworkLayer(nOutputFeatures, nFeatures, dropout, activationFn, alpha));
+  if(activationFn==PRELU)
+    layers.push_back(new NetworkInNetworkPReLULayer(nOutputFeatures, nFeatures, dropout, alpha));
+  else
+    layers.push_back(new NetworkInNetworkLayer(nOutputFeatures, nFeatures, dropout, activationFn, alpha));
   nOutputFeatures=nFeatures;
 }
 void SparseConvNetCUDA::addNetworkInNetworkLayer(int nFeatures,
@@ -61,7 +65,7 @@ void SparseConvNetCUDA::addConvolutionalLayer(int nFeatures,
                                               float dropout,
                                               int minActiveInputs,
                                               float poolingToFollow) {
-  if (layers.size()==100000) { //Use for 0-th layer??
+  if (false and layers.size()==0) { //Use for 0-th layer??
     std::cout << layers.size() << ":";
     layers.push_back(new ReallyConvolutionalLayer(nOutputFeatures, nFeatures, filterSize, filterStride, dimension, activationFn, dropout, minActiveInputs, poolingToFollow));
     nOutputFeatures=nFeatures;
@@ -246,7 +250,7 @@ void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset
       for (int j=0;j<nTop;j++)
         if (predictions[j]==dataset.pictures[i]->label)
           errors--;
-      nll-=log(max(probs[i][dataset.pictures[i]->label]/rep,1.0e-15));
+      nll-=log(std::max(probs[i][dataset.pictures[i]->label]/rep,(float)1.0e-15));
     }
 
     if (!predictionsFilename.empty()) {
@@ -301,8 +305,10 @@ void SparseConvNetCUDA::loadWeights(std::string baseName, int epoch, int firstNl
     std::cout <<"Cannot find " << filename << std::endl;
     exit(EXIT_FAILURE);
   }
-  for (int i=0;i<min((int)layers.size(),firstNlayers);i++)
+  for (int i=0;i<std::min((int)layers.size(),firstNlayers);i++)
     layers[i]->loadWeightsFromStream(f);
+  if (inputNormalizingConstants.size()>0)
+    f.read((char*)&inputNormalizingConstants[0],sizeof(float)*inputNormalizingConstants.size());
   f.close();
 }
 void SparseConvNetCUDA::saveWeights(std::string baseName, int epoch)  {
@@ -312,6 +318,8 @@ void SparseConvNetCUDA::saveWeights(std::string baseName, int epoch)  {
   if (f) {
     for (int i=0;i<layers.size();i++)
       layers[i]->putWeightsToStream(f);
+    if (inputNormalizingConstants.size()>0)
+      f.write((char*)&inputNormalizingConstants[0],sizeof(float)*inputNormalizingConstants.size());
     f.close();
   } else {
     std::cout <<"Cannot write " << filename << std::endl;

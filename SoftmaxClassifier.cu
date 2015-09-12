@@ -14,8 +14,6 @@ __global__ void dDerivativeOfCostWRTpreSoftmaxTopLevelWeights
   }
 }
 
-int outCtr=0;
-
 void SoftmaxClassifier(SpatiallySparseBatchInterface& input, SpatiallySparseBatch& batch, int nTop) {
   //Assume no dropout in the output layer! nClasses:=input.nFeatures.
   assert(batch.batchSize==input.nSpatialSites);

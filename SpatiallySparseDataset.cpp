@@ -43,7 +43,7 @@ void SpatiallySparseDataset::subsetOfClasses(std::vector<int> activeClasses) {
 }
 
 //Assume there are at least n of each class in the dataset
-SpatiallySparseDataset SpatiallySparseDataset::balencedSubset(int n) {
+SpatiallySparseDataset SpatiallySparseDataset::balancedSubset(int n) {
   SpatiallySparseDataset bs;
   bs.name=name+std::string(" subset");
   bs.nFeatures=nFeatures;

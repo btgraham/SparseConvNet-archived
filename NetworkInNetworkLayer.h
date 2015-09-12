@@ -65,4 +65,5 @@ __global__ void dGradientDescentShrunkVector
  int nOut, int nOutDropout,
  int* outFeaturesPresent,
  float learningRate,float momentum);
+void replicateArray(float* src, float* dst, int nRows, int nColumns);
 void columnSum(float* matrix, float* target, int nRows, int nColumns);
