@@ -28,9 +28,14 @@ __global__ void dGradientDescent
  float momentum) {
   int i=blockIdx.x*nOut;
   for(int j=i+threadIdx.x; j<i+nOut; j+=KERNELBLOCKSIZE) {
-    d_weights[j]-=d_momentum[j]*momentum;
-    d_momentum[j]=momentum*d_momentum[j]-learningRate*(1-momentum)*d_delta[j];
-    d_weights[j]=d_weights[j]+d_momentum[j]*(1+momentum);
+    float w=d_weights[j];
+    float m=d_momentum[j];
+    float d=d_delta[j];
+    w-=m*momentum;
+    m=momentum*m-learningRate*(1-momentum)*d;
+    w+=m*(1+momentum);
+    d_weights[j]=w;
+    d_momentum[j]=m;
   }
 }
 
@@ -45,9 +50,14 @@ __global__ void dGradientDescentShrunkMatrix
   for(int j=threadIdx.x; j<nOutDropout; j+=KERNELBLOCKSIZE) {
     int jj=outFeaturesPresent[j];
     //NAG light
-    d_weights[ii+jj]-=d_momentum[ii+jj]*momentum;
-    d_momentum[ii+jj]=momentum*d_momentum[ii+jj]-learningRate*(1-momentum)*d_delta[i+j];
-    d_weights[ii+jj]=d_weights[ii+jj]+d_momentum[ii+jj]*(1+momentum);
+    float w=d_weights[ii+jj];
+    float m=d_momentum[ii+jj];
+    float d=d_delta[i+j];
+    w-=m*momentum;
+    m=momentum*m-learningRate*(1-momentum)*d;
+    w+=m*(1+momentum);
+    d_weights[ii+jj]=w;
+    d_momentum[ii+jj]=m;
   }
 }
 
@@ -60,9 +70,14 @@ __global__ void dGradientDescentShrunkVector
   for(int i=threadIdx.x; i<nOutDropout; i+=NTHREADS) {
     int ii=outFeaturesPresent[i];
     //NAG light
-    d_weights[ii]-=d_momentum[ii]*momentum;
-    d_momentum[ii]=momentum*d_momentum[ii]-learningRate*(1-momentum)*d_delta[i];
-    d_weights[ii]=d_weights[ii]+d_momentum[ii]*(1+momentum);
+    float w=d_weights[ii];
+    float m=d_momentum[ii];
+    float d=d_delta[i];
+    w-=m*momentum;
+    m=momentum*m-learningRate*(1-momentum)*d;
+    w+=m*(1+momentum);
+    d_weights[ii]=w;
+    d_momentum[ii]=m;
   }
 }
 
