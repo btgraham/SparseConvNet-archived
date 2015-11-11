@@ -1,5 +1,5 @@
 #Preprocess training images.
-#Scale 300 seems to be sufficient; 500 and 1000 are overkill
+#Scale 300 seems to be sufficient; 500 and 1000 may be overkill
 import cv2, glob, numpy
 
 def scaleRadius(img,scale):
@@ -9,7 +9,7 @@ def scaleRadius(img,scale):
     return cv2.resize(img,(0,0),fx=s,fy=s)
 
 for scale in [300, 500, 1000]:
-    for f in (glob.glob("train/*.jpeg")+glob.glob("test/*.jpeg")):
+    for f in (glob.glob("train01234/*/*.jpeg")+glob.glob("test*01234/*/*.jpeg")):
         try:
             a=cv2.imread(f)
             a=scaleRadius(a,scale)
@@ -18,4 +18,4 @@ for scale in [300, 500, 1000]:
             aa=cv2.addWeighted(a,4,cv2.GaussianBlur(a,(0,0),scale/30),-4,128)*b+128*(1-b)
             cv2.imwrite(str(scale)+"_"+f,aa)
         except:
-            print f
+            print(f)
