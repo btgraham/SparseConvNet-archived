@@ -271,12 +271,15 @@ void NetworkInNetworkLayer::backwards
 void NetworkInNetworkLayer::loadWeightsFromStream(std::ifstream &f) {
   f.read((char*)&W.hVector()[0],sizeof(float)*W.size());
   f.read((char*)&B.hVector()[0],sizeof(float)*B.size());
-  MW.setZero();
-  MB.setZero();
+  MW.setZero();  //f.read((char*)&MW.hVector()[0],sizeof(float)*MW.size());
+  MB.setZero();  //f.read((char*)&MB.hVector()[0],sizeof(float)*MB.size());
+
 };
 void NetworkInNetworkLayer::putWeightsToStream(std::ofstream &f)  {
   f.write((char*)&W.hVector()[0],sizeof(float)*W.size());
   f.write((char*)&B.hVector()[0],sizeof(float)*B.size());
+  //  f.write((char*)&MW.hVector()[0],sizeof(float)*MW.size());
+  //  f.write((char*)&MB.hVector()[0],sizeof(float)*MB.size());
 };
 int NetworkInNetworkLayer::calculateInputSpatialSize(int outputSpatialSize) {
   return outputSpatialSize;

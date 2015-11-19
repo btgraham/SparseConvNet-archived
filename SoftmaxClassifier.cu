@@ -46,7 +46,7 @@ void SoftmaxClassifier(SpatiallySparseBatchInterface& input, SpatiallySparseBatc
       }
     }
   }
-  //  std::cout <<batch.mistakes << " "<< std::flush;
+  //std::cout <<batch.mistakes << " "<< std::flush;
   input.sub->features.copyToGPUAsync(*cnnMemStream);
   cudaCheckError();
 

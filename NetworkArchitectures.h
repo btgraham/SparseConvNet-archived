@@ -30,3 +30,13 @@ class ROFMPSparseConvNet : public SparseConvNet {
 public:
   ROFMPSparseConvNet(int dimension, int l, int k, float fmpShrink, ActivationFunction fn, int nInputFeatures, int nClasses, float p=0.0f, int cudaDevice=-1, int nTop=1);
 };
+
+class PDFMPSparseConvNet : public SparseConvNet {
+public:
+  PDFMPSparseConvNet(int dimension, int l, int k, float fmpShrink, ActivationFunction fn, int nInputFeatures, int nClasses, float p=0.0f, int cudaDevice=-1, int nTop=1);
+};
+
+class RDFMPSparseConvNet : public SparseConvNet {
+public:
+  RDFMPSparseConvNet(int dimension, int l, int k, float fmpShrink, ActivationFunction fn, int nInputFeatures, int nClasses, float p=0.0f, int cudaDevice=-1, int nTop=1);
+};

@@ -99,6 +99,20 @@ void SparseConvNetCUDA::addLeNetLayerPOFMP(int nFeatures, int filterSize, int fi
     layers.push_back(new PseudorandomOverlappingFractionalMaxPoolingLayer(poolSize,fmpShrink,dimension));
   }
 }
+void SparseConvNetCUDA::addLeNetLayerRDFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout, int minActiveInputs) {
+  addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,minActiveInputs,fmpShrink);
+  if (fmpShrink>1) {
+    std::cout << layers.size() << ":";
+    layers.push_back(new RandomNonOverlappingFractionalMaxPoolingLayer(poolSize,fmpShrink,dimension));
+  }
+}
+void SparseConvNetCUDA::addLeNetLayerPDFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout, int minActiveInputs) {
+  addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,minActiveInputs,fmpShrink);
+  if (fmpShrink>1) {
+    std::cout << layers.size() << ":";
+    layers.push_back(new PseudorandomNonOverlappingFractionalMaxPoolingLayer(poolSize,fmpShrink,dimension));
+  }
+}
 
 void SparseConvNetCUDA::addTriangularConvolutionalLayer(int nFeatures,
                                                         int filterSize,

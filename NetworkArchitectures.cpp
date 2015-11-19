@@ -66,3 +66,23 @@ ROFMPSparseConvNet::ROFMPSparseConvNet(int dimension, int l, int k, float fmpShr
   addLeNetLayerMP(k*(l+3),1,1,1,1,fn,p);
   addSoftmaxLayer();
 }
+
+PDFMPSparseConvNet::PDFMPSparseConvNet(int dimension, int l, int k, float fmpShrink, ActivationFunction fn, int nInputFeatures, int nClasses, float p, int cudaDevice, int nTop) : SparseConvNet(dimension,nInputFeatures, nClasses, cudaDevice,nTop) {
+  for (int i=0;i<l;i++) {
+    addLeNetLayerPDFMP(k*(i+1),2,1,2,fmpShrink,fn,p*i/(l+2));
+  }
+  addLeNetLayerPDFMP(k*(l+1),2,1,2,1.5,fn,p*l/(l+2));
+  addLeNetLayerMP(k*(l+2),2,1,1,1,fn,p*(l+1)/(l+2));
+  addLeNetLayerMP(k*(l+3),1,1,1,1,fn,p);
+  addSoftmaxLayer();
+}
+
+RDFMPSparseConvNet::RDFMPSparseConvNet(int dimension, int l, int k, float fmpShrink, ActivationFunction fn, int nInputFeatures, int nClasses, float p, int cudaDevice, int nTop) : SparseConvNet(dimension,nInputFeatures, nClasses, cudaDevice,nTop) {
+  for (int i=0;i<l;i++) {
+    addLeNetLayerRDFMP(k*(i+1),2,1,2,fmpShrink,fn,p*i/(l+2));
+  }
+  addLeNetLayerRDFMP(k*(l+1),2,1,2,1.5,fn,p*l/(l+2));
+  addLeNetLayerMP(k*(l+2),2,1,1,1,fn,p*(l+1)/(l+2));
+  addLeNetLayerMP(k*(l+3),1,1,1,1,fn,p);
+  addSoftmaxLayer();
+}

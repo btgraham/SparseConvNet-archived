@@ -1,15 +1,17 @@
-//We need a hash table:
+//We need a sparse n-dimensional table
 //We can either use
+
 // a) Google's sparsehash dense_hash_map, or
+// #define USE_GOOGLE_SPARSEHASH
+
 // b) the C++11 std::unordered_map
+// #define USE_UNORDERED_MAP
+
 // c) the C++11 std::unordered_map with tbb::scalable_alloc (or similar) to prevent threads getting in each others way as they access memory to grow the maps,
+// #define USE_UNORDERED_MAP
+
 // d) vectors disguised as a hash map (ok in 2 dimensions)
-
-//#define USE_GOOGLE_SPARSEHASH
-//#define USE_UNORDERED_MAP
-//#define USE_UNORDERED_MAP_TBB
 #define USE_VECTOR_HASH
-
 
 #pragma once
 #include <stdint.h>
@@ -25,7 +27,7 @@ public:
   SparseGrid() {
     backgroundCol=-1; //Indicate that no "null vector" is needed
     mp.set_empty_key(-99); // dense_hash_map needs an empty key that will not be used as a real key
-    mp.set_deleted_key(-98);
+    mp.set_deleted_key(-98); // and another for deleting
     mp.min_load_factor(0.0f);
 
   }

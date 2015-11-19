@@ -22,9 +22,9 @@ void MaxPoolingTriangularLayer::preprocess
   output.nSpatialSites=0;
   output.grids.resize(batch.batchSize);
   output.backpropErrors=input.backpropErrors;
-  RegularPoolingRegionsTriangular regions(inSpatialSize, outSpatialSize,dimension,poolSize, poolStride);
+  RegularTriangularRegions regions(inSpatialSize, outSpatialSize,dimension,poolSize, poolStride);
   for (int item=0;item<batch.batchSize;item++)
-    gridRulesTriangular
+    gridRules
       (input.grids[item],
        output.grids[item],
        regions,

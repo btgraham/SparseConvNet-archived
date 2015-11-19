@@ -30,14 +30,14 @@ void ConvolutionalTriangularLayer::preprocess
   output.nSpatialSites=0;
   output.grids.resize(batch.batchSize);
   output.backpropErrors=input.backpropErrors;
-  RegularPoolingRegionsTriangular regions(inSpatialSize, outSpatialSize,dimension,filterSize, filterStride);
+  RegularTriangularRegions regions(inSpatialSize, outSpatialSize,dimension,filterSize, filterStride);
   for (int item=0;item<batch.batchSize;item++)
-    gridRulesTriangular(input.grids[item],
-                        output.grids[item],
-                        regions,
-                        output.nSpatialSites,
-                        output.rules.hVector(),
-                        minActiveInputs);
+    gridRules(input.grids[item],
+              output.grids[item],
+              regions,
+              output.nSpatialSites,
+              output.rules.hVector(),
+              minActiveInputs);
   output.featuresPresent.copyToCPU();
   output.featuresPresent.resize(input.featuresPresent.size()*fs);
   convolutionFeaturesPresent(input.featuresPresent.hVector(), output.featuresPresent.hVector(), input.nFeatures, input.featuresPresent.size(), fs);

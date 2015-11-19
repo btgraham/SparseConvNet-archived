@@ -49,7 +49,6 @@ SpatiallySparseDataset SpatiallySparseDataset::balancedSubset(int n) {
   bs.nFeatures=nFeatures;
   bs.nClasses=nClasses;
   bs.type=type;
-  shuffle();
   auto permutation=rng.permutation(pictures.size());
   std::vector<int> count(nClasses);
   int classesDone=0;

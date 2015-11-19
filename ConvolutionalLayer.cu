@@ -104,13 +104,14 @@ void ConvolutionalLayer::preprocess
   output.nSpatialSites=0;
   output.grids.resize(batch.batchSize);
   output.backpropErrors=input.backpropErrors;
-  RegularPoolingRegions regions(inSpatialSize, outSpatialSize,dimension,filterSize, filterStride);
+  RegularSquareRegions regions(inSpatialSize, outSpatialSize,dimension,filterSize, filterStride);
   for (int item=0;item<batch.batchSize;item++) {
     gridRules(input.grids[item],
               output.grids[item],
               regions,
               output.nSpatialSites,
               output.rules.hVector(),
+              true,
               minActiveInputs);
   }
   output.featuresPresent.copyToCPU();

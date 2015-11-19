@@ -58,6 +58,31 @@ public:
   int calculateInputSpatialSize(int outputSpatialSize);
 };
 
+class PseudorandomNonOverlappingFractionalMaxPoolingLayer : public SpatiallySparseLayer {
+  int sd;
+public:
+  int inSpatialSize;
+  int outSpatialSize;
+  float fmpShrink;
+  int poolSize;
+  int dimension;
+  RNG rng;
+  PseudorandomNonOverlappingFractionalMaxPoolingLayer(int poolSize, float fmpShrink, int dimension);
+  void preprocess
+  (SpatiallySparseBatch &batch,
+   SpatiallySparseBatchInterface &input,
+   SpatiallySparseBatchInterface &output);
+  void forwards(SpatiallySparseBatch &batch,
+                SpatiallySparseBatchInterface &input,
+                SpatiallySparseBatchInterface &output);
+  void backwards(SpatiallySparseBatch &batch,
+                 SpatiallySparseBatchInterface &input,
+                 SpatiallySparseBatchInterface &output,
+                 float learningRate,
+                 float momentum);
+  int calculateInputSpatialSize(int outputSpatialSize);
+};
+
 class RandomOverlappingFractionalMaxPoolingLayer : public SpatiallySparseLayer {
   int sd;
 public:
@@ -68,6 +93,33 @@ public:
   int dimension;
   RNG rng;
   RandomOverlappingFractionalMaxPoolingLayer(int poolSize, float fmpShrink, int dimension);
+  void preprocess
+  (SpatiallySparseBatch &batch,
+   SpatiallySparseBatchInterface &input,
+   SpatiallySparseBatchInterface &output);
+  void forwards
+  (SpatiallySparseBatch &batch,
+   SpatiallySparseBatchInterface &input,
+   SpatiallySparseBatchInterface &output);
+  void backwards
+  (SpatiallySparseBatch &batch,
+   SpatiallySparseBatchInterface &input,
+   SpatiallySparseBatchInterface &output,
+   float learningRate,
+   float momentum);
+  int calculateInputSpatialSize(int outputSpatialSize);
+};
+
+class RandomNonOverlappingFractionalMaxPoolingLayer : public SpatiallySparseLayer {
+  int sd;
+public:
+  int inSpatialSize;
+  int outSpatialSize;
+  float fmpShrink;
+  int poolSize;
+  int dimension;
+  RNG rng;
+  RandomNonOverlappingFractionalMaxPoolingLayer(int poolSize, float fmpShrink, int dimension);
   void preprocess
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,
