@@ -11,6 +11,7 @@ class SpatiallySparseDataset {
   RNG rng;
 public:
   std::string name;
+  std::string header;
   std::vector<Picture*> pictures;
   int nFeatures;
   int nClasses;

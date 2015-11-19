@@ -86,10 +86,33 @@ template <typename t> int vectorCUDA<t>::size() {
   if (onGPU) return dsize;
   return vec.size();
 }
+__device__ float dsumAbsReturnVal;
+template <typename t> __global__ void dsumAbs(t* d, int n, float negWeight) {  //make async??
+  __shared__ float acc[NTHREADS];
+  acc[threadIdx.x]=0;
+  for (int i=threadIdx.x;i<n;i+=NTHREADS) {
+    float di=d[i];
+    acc[threadIdx.x]+=(di>=0)?di:(-negWeight*di);
+  }
+  __syncthreads();
+  if (threadIdx.x==0) {
+    dsumAbsReturnVal=0;
+    for (int i=0;i<NTHREADS;i++) {
+      dsumAbsReturnVal+=acc[i];
+    }
+  }
+}
 template <typename t> float vectorCUDA<t>::meanAbs(float negWeight) {
-  float total=0;
-  for (int i=0;i<size();i++)
-    total+=(hVector()[i]>0)?hVector()[i]:(-negWeight*hVector()[i]);
+  float total;
+  if (onGPU) {
+    dsumAbs<<<1,NTHREADS>>>(d_vec,dsize,negWeight);
+    cudaCheckError();
+    cudaMemcpyFromSymbol(&total, dsumAbsReturnVal, sizeof(dsumAbsReturnVal), 0, cudaMemcpyDeviceToHost);
+  } else {
+    total=0;
+    for (int i=0;i<size();i++)
+      total+=(hVector()[i]>0)?hVector()[i]:(-negWeight*hVector()[i]);
+  }
   if (total!=total) {
     std::cout << "NaN in vectorCUDA<t>::meanAbs()\n";
     exit(1);

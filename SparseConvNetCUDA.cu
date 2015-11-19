@@ -28,7 +28,7 @@ SparseConvNetCUDA::SparseConvNetCUDA(int dimension,
                                      int nClasses,
                                      int pciBusID,
                                      int nTop) :
-dimension(dimension),
+  dimension(dimension),
   nInputFeatures(nInputFeatures),
   nClasses(nClasses),
   nTop(nTop) {
@@ -222,7 +222,7 @@ float SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset, int bat
             << std::endl;
   return nll;
 }
-void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize, int nReps, std::string predictionsFilename,std::string header,std::string confusionMatrixFilename) {
+void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize, int nReps, std::string predictionsFilename,std::string confusionMatrixFilename) {
   multiplyAddCount=0;
   auto start=std::chrono::system_clock::now();
   std::vector<std::vector<int  > > votes(dataset.pictures.size());
@@ -256,7 +256,8 @@ void SparseConvNetCUDA::processDatasetRepeatTest(SpatiallySparseDataset &dataset
     if (!predictionsFilename.empty()) {
       std::cout << predictionsFilename << std::endl;
       std::ofstream f(predictionsFilename.c_str());
-      f << header << std::endl;
+      if (!dataset.header.empty())
+        f << dataset.header << std::endl;
       for (int i=0;i<dataset.pictures.size();++i) {
         f << dataset.pictures[i]->identify();
         if (dataset.type!=UNLABELEDBATCH)

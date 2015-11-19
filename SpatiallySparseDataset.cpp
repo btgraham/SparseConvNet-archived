@@ -54,11 +54,11 @@ SpatiallySparseDataset SpatiallySparseDataset::balancedSubset(int n) {
   std::vector<int> count(nClasses);
   int classesDone=0;
   for (int i=0;i<pictures.size() and classesDone<nClasses;i++) {
-    if (count[pictures[permutation[i]]->label]++ < n) {
-      if (count[pictures[permutation[i]]->label]==n)
-        classesDone++;
-      bs.pictures.push_back(pictures[permutation[i]]);
-    }
+    auto pic=pictures[permutation[i]];
+    if (count[pic->label]++ < n)
+      bs.pictures.push_back(pic);
+    if (count[pic->label]==n)
+      classesDone++;
   }
   return bs;
 }

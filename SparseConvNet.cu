@@ -37,8 +37,8 @@ float SparseConvNet::processDataset(SpatiallySparseDataset &dataset, int batchSi
   return cnn->processDataset(dataset,batchSize,learningRate,momentum);
 }
 
-void SparseConvNet::processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize, int nReps, std::string predictionsFilename,std::string header,std::string confusionMatrixFilename){
-  cnn->processDatasetRepeatTest(dataset,batchSize,nReps,predictionsFilename,header,confusionMatrixFilename);
+void SparseConvNet::processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize, int nReps, std::string predictionsFilename,std::string confusionMatrixFilename){
+  cnn->processDatasetRepeatTest(dataset,batchSize,nReps,predictionsFilename,confusionMatrixFilename);
 }
 
 float SparseConvNet::processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate, float momentum){
@@ -87,8 +87,8 @@ float SparseConvTriangLeNet::processDataset(SpatiallySparseDataset &dataset, int
   return cnn->processDataset(dataset,batchSize,learningRate, momentum);
 }
 
-void SparseConvTriangLeNet::processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize, int nReps, std::string predictionsFilename,std::string header,std::string confusionMatrixFilename){
-  cnn->processDatasetRepeatTest(dataset,batchSize,nReps,predictionsFilename,header,confusionMatrixFilename);
+void SparseConvTriangLeNet::processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize, int nReps, std::string predictionsFilename,std::string confusionMatrixFilename){
+  cnn->processDatasetRepeatTest(dataset,batchSize,nReps,predictionsFilename,confusionMatrixFilename);
 }
 
 float SparseConvTriangLeNet::processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize, float learningRate,float momentum){

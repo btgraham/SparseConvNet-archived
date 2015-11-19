@@ -10,15 +10,18 @@ OpenCVLabeledDataSet::OpenCVLabeledDataSet
  batchType type_, int backgroundCol,
  bool loadData, int flags) {
   name=dataDirectory;
+  header="image,label";
+  type=type_;
   if (flags==0) nFeatures=1;
   if (flags==1) nFeatures=3;
-  type=type_;
   {
     std::ifstream f(classesListFile.c_str());
     std::string cl;
     int ctr=0;
-    while (f >> cl)
+    while (f >> cl) {
       classes[cl]=ctr++;
+      header+=','+cl;
+    }
   }
   nClasses=classes.size();
   for (auto &kv : classes) {
@@ -40,13 +43,15 @@ OpenCVUnlabeledDataSet::OpenCVUnlabeledDataSet
   name=dataDirectory;
   header="image";
   type=UNLABELEDBATCH;
+  if (flags==0) nFeatures=1;
+  if (flags==1) nFeatures=3;
   {
     std::ifstream f(classesListFile.c_str());
     std::string cl;
     int ctr=0;
     while (f >> cl) {
       classes[cl]=ctr++;
-      header=header+","+cl;
+      header+=","+cl;
     }
   }
   nClasses=classes.size();
@@ -54,7 +59,7 @@ OpenCVUnlabeledDataSet::OpenCVUnlabeledDataSet
     OpenCVPicture* pic = new OpenCVPicture(file,backgroundCol,0);
     if(loadData) {
       pic->loadDataWithoutScaling(flags);
-      nFeatures=pic->mat.channels();
+      assert(nFeatures==pic->mat.channels());
     }
     pictures.push_back(pic);
   }

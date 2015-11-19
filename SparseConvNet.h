@@ -30,7 +30,7 @@ public:
   void addSoftmaxLayer();
   void addIndexLearnerLayer();
   float processDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0, float momentum=0.99);
-  void processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize=100, int nReps=12, std::string predictionsFilename="",std::string header="",std::string confusionMatrixFilename="");
+  void processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize=100, int nReps=12, std::string predictionsFilename="",std::string confusionMatrixFilename="");
   float processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0.0,float momentum=0.99);
   void processDatasetDumpTopLevelFeatures(SpatiallySparseDataset &dataset, int batchSize, int reps=1);
   void loadWeights(std::string baseName, int epoch, int firstNlayers=1000000);
@@ -49,7 +49,7 @@ public:
   void addSoftmaxLayer();
   void addIndexLearnerLayer();
   float processDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0, float momentum=0.99);
-  void processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize=100, int nReps=12, std::string predictionsFilename="",std::string header="",std::string confusionMatrixFilename="");
+  void processDatasetRepeatTest(SpatiallySparseDataset &dataset, int batchSize=100, int nReps=12, std::string predictionsFilename="",std::string confusionMatrixFilename="");
   float processIndexLearnerDataset(SpatiallySparseDataset &dataset, int batchSize=100, float learningRate=0, float momentum=0.99);
   void processDatasetDumpTopLevelFeatures(SpatiallySparseDataset &dataset, int batchSize, int reps=1);
   void loadWeights(std::string baseName, int epoch, int firstNlayers=1000000);
