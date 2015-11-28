@@ -3,7 +3,6 @@
 #include<iostream>
 #include<fstream>
 #include<string>
-#include "utilities.h"
 
 SpatiallySparseDataset ImageNet2012TrainSet() {
   auto dataset=OpenCVLabeledDataSet("Data/imagenet2012/classList", "Data/imagenet2012/ILSVRC2012_img_train","*.JPEG",TRAINBATCH, 128, false,1);

@@ -9,10 +9,10 @@ void SpatiallySparseBatch::reset() {
   sampleNumbers.resize(0);
   for (int i=0;i<interfaces.size();++i)
     interfaces[i].reset();
+  interfaces[0].sub.reset();
   labels.resize(0);
   predictions.resize(0);
   probabilities.resize(0);
   negativeLogLikelihood=0;
   mistakes=0;
-  inputSub.reset();
 }

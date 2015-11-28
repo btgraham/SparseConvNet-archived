@@ -171,17 +171,18 @@ void SparseConvNetCUDA::addIndexLearnerLayer() {
   std::cout << std::endl;
 }
 void SparseConvNetCUDA::processBatch(SpatiallySparseBatch& batch, float learningRate, float momentum, std::ofstream& f, std::ofstream& g) {
+  //std::cout << batch.batchSize << " " << batch.interfaces[0].nSpatialSites << " " << batch.interfaces[0].nSpatialSites << "\n";
   if (batch.type==RESCALEBATCH) {
     float scalingUnderneath=1;
     for (int i=0;i<layers.size();i++) {
-      //batch.interfaces[i+1].sub.reset();
+      batch.interfaces[i+1].sub.reset();
       layers[i]->forwards(batch,batch.interfaces[i],batch.interfaces[i+1]);
       std::cout << i << ":" << batch.interfaces[i].sub.features.size()*sizeof(float)/(1<<20) << "MB ";
       layers[i]->scaleWeights(batch.interfaces[i],batch.interfaces[i+1],scalingUnderneath,i==layers.size()-1);
     }
   } else {
     for (int i=0;i<layers.size();i++) {
-      //batch.interfaces[i+1].sub.reset();
+      batch.interfaces[i+1].sub.reset();
       layers[i]->forwards(batch,batch.interfaces[i],batch.interfaces[i+1]);
     }
   }

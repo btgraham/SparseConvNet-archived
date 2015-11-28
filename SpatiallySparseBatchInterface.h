@@ -16,7 +16,7 @@ public:
 
 class SpatiallySparseBatchInterface {
 public:
-  SpatiallySparseBatchSubInterface sub;
+  SpatiallySparseBatchSubInterface &sub;
   int nFeatures;                           // Features per spatial location
   // Not dropped out features per spatial location
   vectorCUDA<int> featuresPresent;         // For dropout rng.NchooseM(nFeatures,featuresPresent.size());

@@ -31,7 +31,6 @@ void SpatiallySparseBatchInterface::summary() {
   std::cout << "---------------------------------------------------\n";
 }
 void SpatiallySparseBatchInterface::reset() {
-  sub.reset();
   featuresPresent.resize(0);
   featuresPresent.copyToCPU();
   nSpatialSites=0;

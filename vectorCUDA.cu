@@ -16,7 +16,6 @@ template <typename t> vectorCUDA<t>::vectorCUDA(bool onGPU, int dsize) : onGPU(o
 
 template <typename t> vectorCUDA<t>::~vectorCUDA() {
   if (dAllocated>0) {
-    std::cout << "~~~~~~~~~~~~~~~~~~vectorCUDA " << dAllocated <<"\n";
     cudaSafeCall(cudaFree(d_vec));
   }
 }
