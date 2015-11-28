@@ -27,6 +27,7 @@ public:
   void colorDistortion(RNG &rng, int sigma1, int sigma2, int sigma3, int sigma4);
   void loadData  (int scale, int flags=1);
   void loadDataWithoutScaling(int flags=1);
+  void loadDataWithoutScalingRemoveModalColor(int flags=1);
   void randomCrop(RNG &rng, int subsetSize);
   std::string identify();
 };

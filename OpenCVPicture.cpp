@@ -102,16 +102,52 @@ void OpenCVPicture::centerMass() {
   scale2yy=ayy-ay*ay;
   scale2=powf(scale2xx+scale2yy,0.5);
 }
+void OpenCVPicture::loadData (int scale, int flags) {
+  readImage(filename,mat,flags);
+  float s=scale*1.0f/std::min(mat.rows,mat.cols);
+  transformImage(mat, backgroundColor, s, 0, 0, s);
+  xOffset=-mat.cols/2;
+  yOffset=-mat.rows/2;
+}
 void OpenCVPicture::loadDataWithoutScaling(int flags) {
   readImage(filename,mat,flags);
   xOffset=-mat.cols/2;
   yOffset=-mat.rows/2;
 }
-void OpenCVPicture::loadData (int scale, int flags) {
-  readTransformedImage(filename,mat,scale,flags,1,0,0,1,backgroundColor);
+void OpenCVPicture::loadDataWithoutScalingRemoveModalColor(int flags) {
+  cv::Mat temp = cv::imread(filename, flags);
+  if (temp.empty()) {
+    std::cout << "Error : Image " << filename << " cannot be loaded..." << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  std::vector<int> modalColor;
+  for (int i=0;i<temp.channels();++i) {
+    int whereMax=0;
+    int m=0;
+    std::vector<int> counts(256,0);
+    for (int y=0; y<temp.rows; y++) {
+      for (int x=0; x<temp.cols; x++) {
+        int c=temp.ptr()[i+x*temp.channels()+y*mat.channels()*mat.cols];
+        counts[c]++;
+        if (counts[c]>m) {
+          m=counts[c];
+          whereMax=c;
+        }
+      }
+    }
+    modalColor.push_back(whereMax);
+  }
+  temp.convertTo(mat,CV_32FC(temp.channels()));
+  float* matData=((float*)(mat.data));
+  for (int i=0;i<mat.channels();++i)
+    for (int y=0; y<temp.rows; y++)
+      for (int x=0; x<temp.cols; x++)
+        matData[i+x*mat.channels()+y*mat.channels()*mat.cols]-=modalColor[i];
+  backgroundColor=0;
   xOffset=-mat.cols/2;
   yOffset=-mat.rows/2;
 }
+
 std::string OpenCVPicture::identify() {
   return filename;
 }
@@ -131,7 +167,7 @@ void OpenCVPicture::codifyInputData(SparseGrid &grid, std::vector<float> &featur
     for (int y=y0; y<y1; y++) {
       bool interestingPixel=false; //Check pixel differs from the background color
       for (int i=0; i<mat.channels(); i++)
-        if (std::abs(scaleUCharColor(matData[i+x*mat.channels()+y*mat.channels()*mat.cols]))>0.02)
+        if (std::abs(scaleUCharColor(matData[i+x*mat.channels()+y*mat.channels()*mat.cols]))>0.02) //0.02
           interestingPixel=true;
       if (interestingPixel) {
         int n=(x+xOffset+spatialSize/2)*spatialSize+(y+yOffset+spatialSize/2); //Determine location in the input field.

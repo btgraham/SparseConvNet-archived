@@ -99,7 +99,9 @@ void OpenCVPicture::loadDataWithoutScaling(int flag) {
   yOffset=-mat.rows/2;
 }
 void OpenCVPicture::loadData (int scale, int flags) {
-  readTransformedImage(filename,mat,scale,flags,1,0,0,1,backgroundColor);
+  readImage(filename,mat,flags);
+  float s=scale*1.0f/std::min(mat.rows,mat.cols);
+  transformImage(mat, backgroundColor, s, 0, 0, s);
   xOffset=-mat.cols/2;
   yOffset=-mat.rows/2;
 }

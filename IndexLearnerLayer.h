@@ -22,7 +22,7 @@ public:
   int nFeaturesIn;
   int nFeaturesOut;
   float dropout;
-  IndexLearnerLayer(int nFeaturesIn, int nFeaturesOut);
+  IndexLearnerLayer(cudaMemStream& memStream, int nFeaturesIn, int nFeaturesOut);
   void preprocess
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,
@@ -41,4 +41,4 @@ public:
   int calculateInputSpatialSize(int outputSpatialSize);
 };
 
-void IndexLearner(SpatiallySparseBatchInterface& input, SpatiallySparseBatch& batch, int nTop);
+void IndexLearner(SpatiallySparseBatchInterface& input, SpatiallySparseBatch& batch, int nTop, cudaMemStream& memStream);

@@ -6,7 +6,6 @@
 #include <chrono>
 #include <cassert>
 #include <algorithm>
-#include "cudaUtilities.h"
 #include "utilities.h"
 #include "SigmoidLayer.h"
 #include "NetworkInNetworkLayer.h"
@@ -23,21 +22,26 @@
 #include "SpatiallySparseDataset.h"
 
 
-SparseConvNetCUDA::SparseConvNetCUDA(int dimension,
-                                     int nInputFeatures,
-                                     int nClasses,
-                                     int pciBusID,
-                                     int nTop) :
+SparseConvNetCUDA::SparseConvNetCUDA
+(int dimension,
+ int nInputFeatures,
+ int nClasses,
+ int pciBusID,
+ int nTop,
+ int nBatchProducerThreads) :
+  deviceID(initializeGPU(pciBusID)),
   dimension(dimension),
   nInputFeatures(nInputFeatures),
   nClasses(nClasses),
-  nTop(nTop) {
+  nTop(nTop),
+  nBatchProducerThreads(nBatchProducerThreads) {
+  assert(nBatchProducerThreads<=N_MAX_BATCH_PRODUCER_THREADS);
   std::cout << "Sparse CNN - dimension=" << dimension << " nInputFeatures=" << nInputFeatures << " nClasses=" << nClasses << std::endl;
   nOutputFeatures=nInputFeatures;
-  deviceID=initializeGPU(pciBusID);
+  //Set up a pool of SpatiallySparseBatches
+  for (int c=0;c<nBatchProducerThreads;c++)
+    batchPool.emplace_back();
   }
-
-
 void SparseConvNetCUDA::addLearntLayer(int nFeatures,
                                        ActivationFunction activationFn,
                                        float dropout,
@@ -45,12 +49,12 @@ void SparseConvNetCUDA::addLearntLayer(int nFeatures,
   if (activationFn!=SOFTMAX)
     nFeatures=std::max(KERNELBLOCKSIZE,intRound(nFeatures,KERNELBLOCKSIZE));
   if (dropout>0)
-    dropout=1-intRound(nFeatures*(1-dropout),KERNELBLOCKSIZE)*1.0f/nFeatures;
+    dropout=1-(intRound(nFeatures*(1-dropout),KERNELBLOCKSIZE)+0.5f)*1.0f/nFeatures;
   std::cout << layers.size() << ":";
   if(activationFn==PRELU)
-    layers.push_back(new NetworkInNetworkPReLULayer(nOutputFeatures, nFeatures, dropout, alpha));
+    layers.push_back(new NetworkInNetworkPReLULayer(memStream, nOutputFeatures, nFeatures, dropout, alpha));
   else
-    layers.push_back(new NetworkInNetworkLayer(nOutputFeatures, nFeatures, dropout, activationFn, alpha));
+    layers.push_back(new NetworkInNetworkLayer(memStream, nOutputFeatures, nFeatures, dropout, activationFn, alpha));
   nOutputFeatures=nFeatures;
 }
 void SparseConvNetCUDA::addNetworkInNetworkLayer(int nFeatures,
@@ -67,12 +71,12 @@ void SparseConvNetCUDA::addConvolutionalLayer(int nFeatures,
                                               float poolingToFollow) {
   if (false and layers.size()==0) { //Use for 0-th layer??
     std::cout << layers.size() << ":";
-    layers.push_back(new ReallyConvolutionalLayer(nOutputFeatures, nFeatures, filterSize, filterStride, dimension, activationFn, dropout, minActiveInputs, poolingToFollow));
+    layers.push_back(new ReallyConvolutionalLayer(memStream, nOutputFeatures, nFeatures, filterSize, filterStride, dimension, activationFn, dropout, minActiveInputs, poolingToFollow));
     nOutputFeatures=nFeatures;
   } else {
     if (filterSize>1) {
       std::cout << layers.size() << ":";
-      layers.push_back(new ConvolutionalLayer(filterSize, filterStride, dimension, nOutputFeatures, minActiveInputs));
+      layers.push_back(new ConvolutionalLayer(memStream, filterSize, filterStride, dimension, nOutputFeatures, minActiveInputs));
       nOutputFeatures*=ipow(filterSize,dimension);
     }
     addLearntLayer(nFeatures,activationFn,dropout,powf(filterSize*1.0/filterStride/poolingToFollow,2));
@@ -82,35 +86,35 @@ void SparseConvNetCUDA::addLeNetLayerMP(int nFeatures, int filterSize, int filte
   addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,minActiveInputs,poolSize);
   if (poolSize>1) {
     std::cout << layers.size() << ":";
-    layers.push_back(new MaxPoolingLayer(poolSize, poolStride,dimension));
+    layers.push_back(new MaxPoolingLayer(memStream, poolSize, poolStride,dimension));
   }
 }
 void SparseConvNetCUDA::addLeNetLayerROFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout, int minActiveInputs) {
   addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,minActiveInputs,fmpShrink);
   if (fmpShrink>1) {
     std::cout << layers.size() << ":";
-    layers.push_back(new RandomOverlappingFractionalMaxPoolingLayer(poolSize,fmpShrink,dimension));
+    layers.push_back(new RandomOverlappingFractionalMaxPoolingLayer(memStream, poolSize,fmpShrink,dimension));
   }
 }
 void SparseConvNetCUDA::addLeNetLayerPOFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout, int minActiveInputs) {
   addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,minActiveInputs,fmpShrink);
   if (fmpShrink>1) {
     std::cout << layers.size() << ":";
-    layers.push_back(new PseudorandomOverlappingFractionalMaxPoolingLayer(poolSize,fmpShrink,dimension));
+    layers.push_back(new PseudorandomOverlappingFractionalMaxPoolingLayer(memStream, poolSize,fmpShrink,dimension));
   }
 }
 void SparseConvNetCUDA::addLeNetLayerRDFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout, int minActiveInputs) {
   addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,minActiveInputs,fmpShrink);
   if (fmpShrink>1) {
     std::cout << layers.size() << ":";
-    layers.push_back(new RandomNonOverlappingFractionalMaxPoolingLayer(poolSize,fmpShrink,dimension));
+    layers.push_back(new RandomNonOverlappingFractionalMaxPoolingLayer(memStream, poolSize,fmpShrink,dimension));
   }
 }
 void SparseConvNetCUDA::addLeNetLayerPDFMP(int nFeatures, int filterSize, int filterStride, int poolSize, float fmpShrink, ActivationFunction activationFn, float dropout, int minActiveInputs) {
   addConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,minActiveInputs,fmpShrink);
   if (fmpShrink>1) {
     std::cout << layers.size() << ":";
-    layers.push_back(new PseudorandomNonOverlappingFractionalMaxPoolingLayer(poolSize,fmpShrink,dimension));
+    layers.push_back(new PseudorandomNonOverlappingFractionalMaxPoolingLayer(memStream, poolSize,fmpShrink,dimension));
   }
 }
 
@@ -123,7 +127,7 @@ void SparseConvNetCUDA::addTriangularConvolutionalLayer(int nFeatures,
                                                         float poolingToFollow) {
   if (filterSize>1) {
     std::cout << layers.size() << ":";
-    layers.push_back(new ConvolutionalTriangularLayer(filterSize, filterStride, dimension, nOutputFeatures, minActiveInputs));
+    layers.push_back(new ConvolutionalTriangularLayer(memStream, filterSize, filterStride, dimension, nOutputFeatures, minActiveInputs));
     nOutputFeatures*=triangleSize(filterSize,dimension);
   }
   addLearntLayer(nFeatures,activationFn,dropout,powf(filterSize*1.0/filterStride/poolingToFollow,2));
@@ -132,13 +136,13 @@ void SparseConvNetCUDA::addTriangularLeNetLayerMP(int nFeatures, int filterSize,
   addTriangularConvolutionalLayer(nFeatures,filterSize,filterStride,activationFn,dropout,poolSize,minActiveInputs);
   if (poolSize>1) {
     std::cout << layers.size() << ":";
-    layers.push_back(new MaxPoolingTriangularLayer(poolSize, poolStride,dimension));
+    layers.push_back(new MaxPoolingTriangularLayer(memStream, poolSize, poolStride,dimension));
   }
 }
 
 void SparseConvNetCUDA::addTerminalPoolingLayer(int poolSize, int S) {
   std::cout << layers.size() << ":";
-  layers.push_back(new TerminalPoolingLayer(poolSize,S));
+  layers.push_back(new TerminalPoolingLayer(memStream, poolSize,S));
 }
 
 void SparseConvNetCUDA::addSoftmaxLayer() {
@@ -154,7 +158,7 @@ void SparseConvNetCUDA::addSoftmaxLayer() {
 }
 void SparseConvNetCUDA::addIndexLearnerLayer() {
   std::cout << layers.size() << ":";
-  layers.push_back(new IndexLearnerLayer(nOutputFeatures, nClasses));
+  layers.push_back(new IndexLearnerLayer(memStream, nOutputFeatures, nClasses));
   std::cout << "Index Learner " << nOutputFeatures << "-> " << nClasses<<std::endl;
   nOutputFeatures=nClasses; // "nClasses"=trainingSet.pictures.size()
   inputSpatialSize=1;
@@ -170,18 +174,18 @@ void SparseConvNetCUDA::processBatch(SpatiallySparseBatch& batch, float learning
   if (batch.type==RESCALEBATCH) {
     float scalingUnderneath=1;
     for (int i=0;i<layers.size();i++) {
-      layers[i]->sub.reset();
+      //batch.interfaces[i+1].sub.reset();
       layers[i]->forwards(batch,batch.interfaces[i],batch.interfaces[i+1]);
-      std::cout << i << ":" << batch.interfaces[i].sub->features.size()*sizeof(float)/(1<<20) << "MB ";
+      std::cout << i << ":" << batch.interfaces[i].sub.features.size()*sizeof(float)/(1<<20) << "MB ";
       layers[i]->scaleWeights(batch.interfaces[i],batch.interfaces[i+1],scalingUnderneath,i==layers.size()-1);
     }
   } else {
     for (int i=0;i<layers.size();i++) {
-      layers[i]->sub.reset();
+      //batch.interfaces[i+1].sub.reset();
       layers[i]->forwards(batch,batch.interfaces[i],batch.interfaces[i+1]);
     }
   }
-  SoftmaxClassifier(batch.interfaces.back(),batch,nTop);
+  SoftmaxClassifier(batch.interfaces.back(),batch,nTop,memStream);
   if (batch.type==TRAINBATCH)
     for (int i=layers.size()-1; i>=0; i--) {
       layers[i]->backwards(batch,batch.interfaces[i],batch.interfaces[i+1],learningRate,momentum);
@@ -350,14 +354,14 @@ void SparseConvNetCUDA::processIndexLearnerBatch(SpatiallySparseBatch& batch, fl
     for (int i=0;i<batch.batchSize;i++) {
       f << batch.sampleNumbers[i] << " " << batch.labels.hVector()[i];
       for (int j=0;j<batch.interfaces[n-1].nFeatures;j++)
-        f << " " << batch.interfaces[n-1].sub->features.hVector()[i*batch.interfaces[n-1].nFeatures+j];
+        f << " " << batch.interfaces[n-1].sub.features.hVector()[i*batch.interfaces[n-1].nFeatures+j];
       f << std::endl;
     }
   }
   if (batch.type==TRAINBATCH) {
     dynamic_cast<IndexLearnerLayer*>(layers[n-1])->indexLearnerIndices=batch.sampleNumbers;
     layers[n-1]->forwards(batch,batch.interfaces[n-1],batch.interfaces[n]);
-    IndexLearner(batch.interfaces[n],batch,nTop);
+    IndexLearner(batch.interfaces[n],batch,nTop,memStream);
     for (int i=n-1;i>=0;i--)
       layers[i]->backwards(batch,batch.interfaces[i],batch.interfaces[i+1],learningRate,momentum);
   }
@@ -404,7 +408,7 @@ void SparseConvNetCUDA::processBatchDumpTopLevelFeaturess(SpatiallySparseBatch& 
   for (int i=0;i<batch.batchSize;i++) {
     f << batch.sampleNumbers[i] << " " << batch.labels.hVector()[i];
     for (int j=0;j<batch.interfaces[n-1].nFeatures;j++)
-      f << " " << batch.interfaces[n-1].sub->features.hVector()[i*batch.interfaces[n-1].nFeatures+j];
+      f << " " << batch.interfaces[n-1].sub.features.hVector()[i*batch.interfaces[n-1].nFeatures+j];
     f << std::endl;
   }
 }
@@ -430,7 +434,7 @@ void SparseConvNetCUDA::calculateInputRegularizingConstants(SpatiallySparseDatas
   std::vector<float> c(nInputFeatures,0);
   while(SpatiallySparseBatch* batch=bp.nextBatch()) {
     {
-      std::vector<float> &features=batch->interfaces[0].sub->features.hVector();
+      std::vector<float> &features=batch->interfaces[0].sub.features.hVector();
       for (int i=0; i<features.size(); ++i)
         c[i%nInputFeatures]=std::max(c[i%nInputFeatures],std::fabs(features[i]));
     }

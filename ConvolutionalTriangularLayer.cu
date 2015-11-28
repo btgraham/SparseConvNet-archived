@@ -2,14 +2,17 @@
 #include "ConvolutionalLayer.h"
 #include <iostream>
 #include <cassert>
-#include "cudaUtilities.h"
 #include "utilities.h"
 #include "Regions.h"
 
 ConvolutionalTriangularLayer::ConvolutionalTriangularLayer
-(int filterSize, int filterStride, int dimension, int nFeaturesIn, int minActiveInputs)
-  : filterSize(filterSize), filterStride(filterStride), dimension(dimension),
-    nFeaturesIn(nFeaturesIn), minActiveInputs(minActiveInputs) {
+(cudaMemStream& memStream,
+
+ int filterSize, int filterStride, int dimension, int nFeaturesIn, int minActiveInputs)
+  :
+  SpatiallySparseLayer(memStream),
+  filterSize(filterSize), filterStride(filterStride), dimension(dimension),
+  nFeaturesIn(nFeaturesIn), minActiveInputs(minActiveInputs) {
   fs=triangleSize(filterSize, dimension);
   nFeaturesOut=fs*nFeaturesIn;
   std::cout << dimension << "D ConvolutionalTriangularLayer side-length=" << filterSize
@@ -38,7 +41,6 @@ void ConvolutionalTriangularLayer::preprocess
               output.nSpatialSites,
               output.rules.hVector(),
               minActiveInputs);
-  output.featuresPresent.copyToCPU();
   output.featuresPresent.resize(input.featuresPresent.size()*fs);
   convolutionFeaturesPresent(input.featuresPresent.hVector(), output.featuresPresent.hVector(), input.nFeatures, input.featuresPresent.size(), fs);
 
@@ -47,12 +49,13 @@ void ConvolutionalTriangularLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
-  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
-  propForwardToMatrixMultiply(input.sub->features.dPtr(),
-                              output.sub->features.dPtr(),
+  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
+  propForwardToMatrixMultiply(input.sub.features.dPtr(),
+                              output.sub.features.dPtr(),
                               output.rules.dPtr(),
                               output.nSpatialSites*fs,
-                              input.featuresPresent.size());
+                              input.featuresPresent.size(),
+                              memStream);
 }
 void ConvolutionalTriangularLayer::backwards
 (SpatiallySparseBatch &batch,
@@ -61,13 +64,14 @@ void ConvolutionalTriangularLayer::backwards
  float learningRate,
  float momentum) {
   if (input.backpropErrors) {
-    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub->dfeatures.setZero(*cnnMemStream);
-    propBackwardFromMatrixMultiply(input.sub->dfeatures.dPtr(),
-                                   output.sub->dfeatures.dPtr(),
+    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    input.sub.dfeatures.setZero(memStream);
+    propBackwardFromMatrixMultiply(input.sub.dfeatures.dPtr(),
+                                   output.sub.dfeatures.dPtr(),
                                    output.rules.dPtr(),
                                    output.nSpatialSites*fs,
-                                   input.featuresPresent.size());
+                                   input.featuresPresent.size(),
+                                   memStream);
   }
 }
 int ConvolutionalTriangularLayer::calculateInputSpatialSize(int outputSpatialSize) {

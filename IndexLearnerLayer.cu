@@ -1,5 +1,4 @@
 #include "IndexLearnerLayer.h"
-#include "cudaUtilities.h"
 #include "SigmoidLayer.h"
 #include <iostream>
 #include <cassert>
@@ -22,7 +21,10 @@ __global__ void dGradientDescentShrunkMatrixNoMomentum
   }
 }
 
-IndexLearnerLayer::IndexLearnerLayer(int nFeaturesIn, int nFeaturesOut) :
+IndexLearnerLayer::IndexLearnerLayer
+(cudaMemStream& memStream,
+ int nFeaturesIn, int nFeaturesOut) :
+  SpatiallySparseLayer(memStream),
   nFeaturesIn(nFeaturesIn), nFeaturesOut(nFeaturesOut) {
   std::cout << "IndexLearnerLayer" << std::endl;
   float scale=pow(6.0f/(nFeaturesIn+nFeaturesOut),0.5f);
@@ -42,25 +44,26 @@ void IndexLearnerLayer::preprocess
     output.backpropErrors=true;
   }
 }
+
 void IndexLearnerLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
   output.featuresPresent.hVector()=indexLearnerIndices;
-  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
-  output.sub->dfeatures.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub.dfeatures.resize(output.nSpatialSites*output.featuresPresent.size());
   w.resize(input.featuresPresent.size()*output.featuresPresent.size());
-  dShrinkMatrixForDropout<<<input.featuresPresent.size(),KERNELBLOCKSIZE,0,cnnMemStream->stream>>>(W.dPtr(), w.dPtr(),
-                                                                                                   input.featuresPresent.dPtr(),
-                                                                                                   output.featuresPresent.dPtr(),
-                                                                                                   output.nFeatures,
-                                                                                                   output.featuresPresent.size());
+  dShrinkMatrixForDropout<<<input.featuresPresent.size(),KERNELBLOCKSIZE,0,memStream.stream>>>(W.dPtr(), w.dPtr(),
+                                                                                               input.featuresPresent.dPtr(),
+                                                                                               output.featuresPresent.dPtr(),
+                                                                                               output.nFeatures,
+                                                                                               output.featuresPresent.size());
   cudaCheckError();
   d_rowMajorSGEMM_alphaAB_betaC(cublasHandle,
-                                input.sub->features.dPtr(), w.dPtr(), output.sub->features.dPtr(),
+                                input.sub.features.dPtr(), w.dPtr(), output.sub.features.dPtr(),
                                 output.nSpatialSites, input.featuresPresent.size(), output.featuresPresent.size(),
                                 1.0f, 0.0f,__FILE__,__LINE__);
-  applySigmoid(output, output, SOFTMAX);
+  applySigmoid(output, output, SOFTMAX, memStream);
   cudaCheckError();
 }
 void IndexLearnerLayer::backwards
@@ -69,23 +72,23 @@ void IndexLearnerLayer::backwards
  SpatiallySparseBatchInterface &output,
  float learningRate,
  float momentum) {
-  applySigmoidBackProp(output, output, SOFTMAX);
-  input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+  applySigmoidBackProp(output, output, SOFTMAX, memStream);
+  input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
   dw.resize(input.featuresPresent.size()*output.featuresPresent.size());
   d_rowMajorSGEMM_alphaAtB_betaC(cublasHandle,
-                                 input.sub->features.dPtr(), output.sub->dfeatures.dPtr(), dw.dPtr(),
+                                 input.sub.features.dPtr(), output.sub.dfeatures.dPtr(), dw.dPtr(),
                                  input.featuresPresent.size(), output.nSpatialSites, output.featuresPresent.size(),
                                  1.0, 0.0);
   cudaCheckError();
 
   if (input.backpropErrors) {
     d_rowMajorSGEMM_alphaABt_betaC(cublasHandle,
-                                   output.sub->dfeatures.dPtr(), w.dPtr(), input.sub->dfeatures.dPtr(),
+                                   output.sub.dfeatures.dPtr(), w.dPtr(), input.sub.dfeatures.dPtr(),
                                    output.nSpatialSites,output.featuresPresent.size(),input.featuresPresent.size(),
                                    1.0, 0.0);
     cudaCheckError();
   }
-  dGradientDescentShrunkMatrixNoMomentum<<<input.featuresPresent.size(),KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+  dGradientDescentShrunkMatrixNoMomentum<<<input.featuresPresent.size(),KERNELBLOCKSIZE,0,memStream.stream>>>
     (dw.dPtr(), W.dPtr(),
      output.nFeatures, output.featuresPresent.size(),
      input.featuresPresent.dPtr(), output.featuresPresent.dPtr(),
@@ -103,12 +106,12 @@ int IndexLearnerLayer::calculateInputSpatialSize(int outputSpatialSize) {
 }
 
 
-void IndexLearner(SpatiallySparseBatchInterface& input, SpatiallySparseBatch& batch, int nTop) {
+void IndexLearner(SpatiallySparseBatchInterface& input, SpatiallySparseBatch& batch, int nTop, cudaMemStream& memStream) {
   assert(batch.batchSize==input.nSpatialSites);
-  assert(ipow(batch.batchSize,2)==input.sub->features.size());
+  assert(ipow(batch.batchSize,2)==input.sub.features.size());
   assert(batch.type==TRAINBATCH);
 
-  float* probs=&input.sub->features.hVector()[0];
+  float* probs=&input.sub.features.hVector()[0];
   for (int i=0;i<batch.batchSize;++i)
     batch.probabilities.push_back(std::vector<float> (probs+i*batch.batchSize,probs+(i+1)*batch.batchSize));
   for (int i=0;i<batch.batchSize;i++)
@@ -126,9 +129,9 @@ void IndexLearner(SpatiallySparseBatchInterface& input, SpatiallySparseBatch& ba
   //Begin backprop. Top layer: d Cost / d SoftmaxInput
   vectorCUDA<int> labels;
   labels.hVector()=range(batch.batchSize);
-  input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-  dDerivativeOfCostWRTpreSoftmaxTopLevelWeights<<<1,NTHREADS,0,cnnMemStream->stream>>>
-    (batch.batchSize, input.sub->dfeatures.dPtr(), input.sub->features.dPtr(),
+  input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+  dDerivativeOfCostWRTpreSoftmaxTopLevelWeights<<<1,NTHREADS,0,memStream.stream>>>
+    (batch.batchSize, input.sub.dfeatures.dPtr(), input.sub.features.dPtr(),
      labels.dPtr(), batch.batchSize);
   cudaCheckError();
 }

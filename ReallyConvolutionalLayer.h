@@ -25,7 +25,8 @@ public:
   vectorCUDA<float> MB; //momentum
   vectorCUDA<float> b; //shrunk versions
   vectorCUDA<float> db; //For backprop
-  ReallyConvolutionalLayer(int nFeaturesIn,
+  ReallyConvolutionalLayer(cudaMemStream& memStream,
+                           int nFeaturesIn,
                            int nFeaturesOut,
                            int filterSize,
                            int filterStride,

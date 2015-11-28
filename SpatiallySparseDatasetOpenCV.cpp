@@ -3,7 +3,6 @@
 #include<fstream>
 #include<string>
 #include<cassert>
-#include "utilities.h"
 
 OpenCVLabeledDataSet::OpenCVLabeledDataSet
 (std::string classesListFile, std::string dataDirectory, std::string wildcard,

@@ -13,7 +13,8 @@ public:
   int nFeaturesIn;
   int nFeaturesOut;
   int minActiveInputs;
-  ConvolutionalTriangularLayer(int filterSize,
+  ConvolutionalTriangularLayer(cudaMemStream& memStream,
+                               int filterSize,
                                int filterStride,
                                int dimension,
                                int nFeaturesIn,

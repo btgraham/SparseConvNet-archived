@@ -5,7 +5,7 @@
 
 class SpatiallySparseLayer {
 public:
-  SpatiallySparseBatchSubInterface sub;
+  cudaMemStream& memStream;
   virtual void preprocess
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,
@@ -25,6 +25,8 @@ public:
    SpatiallySparseBatchInterface &output,
    float learningRate,
    float momentum) = 0;
+  SpatiallySparseLayer(cudaMemStream& memStream);
+  ~SpatiallySparseLayer();
   virtual void loadWeightsFromStream(std::ifstream &f);
   virtual void putWeightsToStream(std::ofstream &f);
   virtual int calculateInputSpatialSize(int outputSpatialSize) = 0;

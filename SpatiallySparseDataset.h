@@ -5,6 +5,7 @@
 #include <string>
 #include "types.h"
 #include "SpatiallySparseDataset.h"
+#include <glob.h>
 
 
 class SpatiallySparseDataset {
@@ -24,3 +25,5 @@ public:
   SpatiallySparseDataset balancedSubset(int n);
   void repeatSamples(int reps); // Make dataset seem n times bigger (i.e. for small datasets to avoid having v. small training epochs)
 };
+
+std::vector<std::string> globVector(const std::string& pattern);

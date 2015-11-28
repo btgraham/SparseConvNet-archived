@@ -1,5 +1,4 @@
 #include "SoftmaxClassifier.h"
-#include "cudaUtilities.h"
 #include <iostream>
 #include <vector>
 #include <cassert>
@@ -14,22 +13,22 @@ __global__ void dDerivativeOfCostWRTpreSoftmaxTopLevelWeights
   }
 }
 
-void SoftmaxClassifier(SpatiallySparseBatchInterface& input, SpatiallySparseBatch& batch, int nTop) {
+void SoftmaxClassifier(SpatiallySparseBatchInterface& input, SpatiallySparseBatch& batch, int nTop, cudaMemStream& memStream) {
   //Assume no dropout in the output layer! nClasses:=input.nFeatures.
   assert(batch.batchSize==input.nSpatialSites);
   assert(input.nFeatures==input.featuresPresent.size());
 
   if (batch.type==TRAINBATCH) {//Begin backprop. Top layer: d Cost / d SoftmaxInput
-    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    dDerivativeOfCostWRTpreSoftmaxTopLevelWeights<<<1,NTHREADS,0,cnnMemStream->stream>>>
-      (batch.batchSize, input.sub->dfeatures.dPtr(), input.sub->features.dPtr(),
+    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    dDerivativeOfCostWRTpreSoftmaxTopLevelWeights<<<1,NTHREADS,0,memStream.stream>>>
+      (batch.batchSize, input.sub.dfeatures.dPtr(), input.sub.features.dPtr(),
        batch.labels.dPtr(), input.nFeatures);
   }
 
-  input.sub->features.copyToCPUAsync(*cnnMemStream);
-  batch.labels.copyToCPUAsync(*cnnMemStream);
+  input.sub.features.copyToCPUAsync(memStream);
+  batch.labels.copyToCPUAsync(memStream);
 
-  float* probs=&input.sub->features.hVector()[0];
+  float* probs=&input.sub.features.hVector()[0];
   for (int i=0;i<batch.batchSize;++i)
     batch.probabilities.push_back(std::vector<float> (probs+i*input.nFeatures,probs+(i+1)*input.nFeatures));
   for (int i=0;i<batch.batchSize;i++)
@@ -47,9 +46,6 @@ void SoftmaxClassifier(SpatiallySparseBatchInterface& input, SpatiallySparseBatc
     }
   }
   //std::cout <<batch.mistakes << " "<< std::flush;
-  input.sub->features.copyToGPUAsync(*cnnMemStream);
+  input.sub.features.copyToGPUAsync(memStream);
   cudaCheckError();
-
-  // input.sub->features.check();
-  // input.sub->dfeatures.check();
 }

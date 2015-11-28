@@ -9,7 +9,6 @@
 #include <iostream>
 #include <vector>
 #include <cassert>
-#include "cudaUtilities.h"
 #include "utilities.h"
 #include "SigmoidLayer.h"
 #include "Regions.h"
@@ -18,8 +17,8 @@
 
 // // dMultiply_Input_Weights_Output <<<
 // //  dim3(output.featuresPresent.size()/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
-// //  dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE),0,cnnMemStream->stream>>>
-// //   (input.sub->features.dPtr(),w.dPtr(),b.dPtr(),output.rules.dPtr(),output.sub->features.dPtr(),
+// //  dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE),0,memStream.stream>>>
+// //   (input.sub.features.dPtr(),w.dPtr(),b.dPtr(),output.rules.dPtr(),output.sub.features.dPtr(),
 // //    input.featuresPresent.size(),output.featuresPresent.size(), fs, output.nSpatialSites,leaky);
 __global__ void dMultiply_Input_Weights_Output
 (float* inFeatures, float* W, float* B, int* rules, float* outFeatures,
@@ -61,7 +60,7 @@ __global__ void dMultiply_Input_Weights_Output
 // //   <<<
 // //   dim3((input.featuresPresent.size()*fs+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
 // //   dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE)
-// //   ,0,cnnMemStream->stream>>>
+// //   ,0,memStream.stream>>>
 __global__ void dMultiply_dOutput_WT_dInput
 (float* dOutFeatures, float* W, float* dInFeatures, int* rules,
  int nIn, int nOut, int fs, int outputNSpatialSites) {
@@ -96,7 +95,7 @@ __global__ void dMultiply_dOutput_WT_dInput
 // //    (input.featuresPresent.size()*fs+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE,
 // //    (output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
 // //   dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE)
-// //   ,0,cnnMemStream->stream>>>
+// //   ,0,memStream.stream>>>
 __global__ void dMultiply_InputT_dOutput_dWeights
 (float* inFeatures,  int* rules, float* dOutFeatures, float* dW,
  int nIn, int nOut, int fs, int outputNSpatialSites) {
@@ -158,20 +157,23 @@ __global__ void dGradientDescentShrunkMatrix
 }
 
 ReallyConvolutionalLayer::ReallyConvolutionalLayer
-(int nFeaturesIn, int nFeaturesOut, int filterSize, int filterStride, int dimension,
+(cudaMemStream& memStream,
+ int nFeaturesIn, int nFeaturesOut, int filterSize, int filterStride, int dimension,
  ActivationFunction fn, float dropout, int minActiveInputs, float poolingToFollow)
-  : nFeaturesIn(nFeaturesIn),
-    nFeaturesOut(nFeaturesOut),
-    filterSize(filterSize),
-    filterStride(filterStride),
-    dimension(dimension),
-    fn(fn),
-    dropout(dropout),
-    fs(ipow(filterSize,dimension)),
-    W(true,nFeaturesIn*fs*nFeaturesOut),
-    MW(true,nFeaturesIn*fs*nFeaturesOut),
-    B(true,nFeaturesOut),
-    MB(true,nFeaturesOut),
+  :
+  SpatiallySparseLayer(memStream),
+  nFeaturesIn(nFeaturesIn),
+  nFeaturesOut(nFeaturesOut),
+  filterSize(filterSize),
+  filterStride(filterStride),
+  dimension(dimension),
+  fn(fn),
+  dropout(dropout),
+  fs(ipow(filterSize,dimension)),
+  W(true,nFeaturesIn*fs*nFeaturesOut),
+  MW(true,nFeaturesIn*fs*nFeaturesOut),
+  B(true,nFeaturesOut),
+  MB(true,nFeaturesOut),
   minActiveInputs(minActiveInputs) {
   std::cout << "Convolution "
             << filterSize <<"^" <<dimension
@@ -214,7 +216,6 @@ void ReallyConvolutionalLayer::preprocess
               output.rules.hVector(),
               minActiveInputs);
   }
-  output.featuresPresent.copyToCPU();
   int o=nFeaturesOut*(batch.type==TRAINBATCH?(1.0f-dropout):1.0f);
   output.featuresPresent.hVector()=rng.NchooseM(nFeaturesOut,o);
 }
@@ -222,11 +223,11 @@ void ReallyConvolutionalLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
-  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
   if (batch.type==TRAINBATCH and
       nFeaturesIn+nFeaturesOut>input.featuresPresent.size()+output.featuresPresent.size()) {
     w.resize(input.featuresPresent.size()*fs*output.featuresPresent.size());
-    dShrinkMatrixForDropout<<<input.featuresPresent.size()*fs,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+    dShrinkMatrixForDropout<<<input.featuresPresent.size()*fs,KERNELBLOCKSIZE,0,memStream.stream>>>
       (W.dPtr(), w.dPtr(),
        input.featuresPresent.dPtr(),
        output.featuresPresent.dPtr(),
@@ -236,22 +237,22 @@ void ReallyConvolutionalLayer::forwards
        input.featuresPresent.size());
     cudaCheckError();
     b.resize(output.featuresPresent.size());
-    dShrinkVectorForDropout<<<1,NTHREADS,0,cnnMemStream->stream>>>(B.dPtr(), b.dPtr(),
-                                                                   output.featuresPresent.dPtr(),
-                                                                   output.nFeatures,
-                                                                   output.featuresPresent.size());
+    dShrinkVectorForDropout<<<1,NTHREADS,0,memStream.stream>>>(B.dPtr(), b.dPtr(),
+                                                               output.featuresPresent.dPtr(),
+                                                               output.nFeatures,
+                                                               output.featuresPresent.size());
     cudaCheckError();
     dMultiply_Input_Weights_Output
       <<<dim3(output.featuresPresent.size()/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
-      dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE),0,cnnMemStream->stream>>>
-      (input.sub->features.dPtr(),w.dPtr(),b.dPtr(),output.rules.dPtr(),output.sub->features.dPtr(),
+      dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE),0,memStream.stream>>>
+      (input.sub.features.dPtr(),w.dPtr(),b.dPtr(),output.rules.dPtr(),output.sub.features.dPtr(),
        input.featuresPresent.size(),output.featuresPresent.size(), fs, output.nSpatialSites,leaky);
     cudaCheckError();
   } else {
     dMultiply_Input_Weights_Output
       <<<dim3(output.featuresPresent.size()/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
-      dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE),0,cnnMemStream->stream>>>
-      (input.sub->features.dPtr(),W.dPtr(),B.dPtr(),output.rules.dPtr(),output.sub->features.dPtr(),
+      dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE),0,memStream.stream>>>
+      (input.sub.features.dPtr(),W.dPtr(),B.dPtr(),output.rules.dPtr(),output.sub.features.dPtr(),
        input.featuresPresent.size(),output.featuresPresent.size(), fs, output.nSpatialSites,leaky,1.0f-dropout);
     cudaCheckError();
   }
@@ -263,9 +264,9 @@ void ReallyConvolutionalLayer::scaleWeights
  SpatiallySparseBatchInterface &output,
  float& scalingUnderneath,
  bool topLayer) {
-  assert(input.sub->features.size()>0);
-  assert(output.sub->features.size()>0); //call after forwards(...)
-  float scale=output.sub->features.meanAbs( (fn==VLEAKYRELU) ? 3 : 100 );
+  assert(input.sub.features.size()>0);
+  assert(output.sub.features.size()>0); //call after forwards(...)
+  float scale=output.sub.features.meanAbs( (fn==VLEAKYRELU) ? 3 : 100 );
   std::cout << "featureScale:" << scale << std::endl;
   if (topLayer) {
     scale=1;
@@ -285,66 +286,66 @@ void ReallyConvolutionalLayer::backwards
  SpatiallySparseBatchInterface &output,
  float learningRate,
  float momentum) {
-  applySigmoidBackProp(output, output, fn);
+  applySigmoidBackProp(output, output, fn, memStream);
   dw.resize(input.featuresPresent.size()*fs*output.featuresPresent.size());
-  dw.setZero(*cnnMemStream);//////////////////////////////////////////////////////////////////
+  dw.setZero(memStream);//////////////////////////////////////////////////////////////////
   db.resize(output.featuresPresent.size());
-  db.setZero(*cnnMemStream);
-  columnSum(output.sub->dfeatures.dPtr(), db.dPtr(), output.nSpatialSites, output.featuresPresent.size());
+  db.setZero(memStream);
+  columnSum(output.sub.dfeatures.dPtr(), db.dPtr(), output.nSpatialSites, output.featuresPresent.size(),memStream);
   cudaCheckError();
   dMultiply_InputT_dOutput_dWeights
     <<<dim3(output.featuresPresent.size()/KERNELBLOCKSIZE,
             (input.featuresPresent.size()*fs+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE,
             (output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
     dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE),
-    0,cnnMemStream->stream>>>
-    (input.sub->features.dPtr(),  output.rules.dPtr(), output.sub->dfeatures.dPtr(), dw.dPtr(),
+    0,memStream.stream>>>
+    (input.sub.features.dPtr(),  output.rules.dPtr(), output.sub.dfeatures.dPtr(), dw.dPtr(),
      input.featuresPresent.size(), output.featuresPresent.size(), fs, output.nSpatialSites);
   multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*fs*output.featuresPresent.size();
   cudaCheckError();
 
   if (nFeaturesIn+nFeaturesOut>input.featuresPresent.size()+output.featuresPresent.size()) {
     if (input.backpropErrors) {
-      input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-      input.sub->dfeatures.setZero(*cnnMemStream);
+      input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+      input.sub.dfeatures.setZero(memStream);
       dMultiply_dOutput_WT_dInput
         <<<
         dim3((input.featuresPresent.size()*fs+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
         dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE)
-        ,0,cnnMemStream->stream>>>
-        (output.sub->dfeatures.dPtr(),w.dPtr(),input.sub->dfeatures.dPtr(),output.rules.dPtr(),
+        ,0,memStream.stream>>>
+        (output.sub.dfeatures.dPtr(),w.dPtr(),input.sub.dfeatures.dPtr(),output.rules.dPtr(),
          input.featuresPresent.size(),output.featuresPresent.size(),fs,output.nSpatialSites);
       multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*fs*output.featuresPresent.size();
       cudaCheckError();
     }
-    dGradientDescentShrunkMatrix<<<input.featuresPresent.size(),KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+    dGradientDescentShrunkMatrix<<<input.featuresPresent.size(),KERNELBLOCKSIZE,0,memStream.stream>>>
       (dw.dPtr(), MW.dPtr(), W.dPtr(),
        output.nFeatures, output.featuresPresent.size(),
        input.featuresPresent.dPtr(), output.featuresPresent.dPtr(),
        learningRate,momentum);
 
-    dGradientDescentShrunkVector<<<1,NTHREADS,0,cnnMemStream->stream>>>
+    dGradientDescentShrunkVector<<<1,NTHREADS,0,memStream.stream>>>
       (db.dPtr(), MB.dPtr(), B.dPtr(),
        output.nFeatures, output.featuresPresent.size(),
        output.featuresPresent.dPtr(),
        learningRate,momentum);
   } else {
     if (input.backpropErrors) {
-      input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-      input.sub->dfeatures.setZero(*cnnMemStream);
+      input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+      input.sub.dfeatures.setZero(memStream);
       dMultiply_dOutput_WT_dInput
         <<<
         dim3((input.featuresPresent.size()*fs+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE,(output.nSpatialSites+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE),
         dim3(KERNELBLOCKSIZE,KERNELBLOCKSIZE)
-        ,0,cnnMemStream->stream>>>
-        (output.sub->dfeatures.dPtr(),W.dPtr(),input.sub->dfeatures.dPtr(),output.rules.dPtr(),
+        ,0,memStream.stream>>>
+        (output.sub.dfeatures.dPtr(),W.dPtr(),input.sub.dfeatures.dPtr(),output.rules.dPtr(),
          input.featuresPresent.size(),output.featuresPresent.size(),fs,output.nSpatialSites);
       multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*fs*output.featuresPresent.size();
       cudaCheckError();
     }
-    dGradientDescent<<<nFeaturesIn,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+    dGradientDescent<<<nFeaturesIn,KERNELBLOCKSIZE,0,memStream.stream>>>
       (dw.dPtr(), MW.dPtr(), W.dPtr(),  nFeaturesOut, learningRate,momentum);
-    dGradientDescent<<<1,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+    dGradientDescent<<<1,KERNELBLOCKSIZE,0,memStream.stream>>>
       (db.dPtr(), MB.dPtr(), B.dPtr(), nFeaturesOut, learningRate,momentum);
   }
   cudaCheckError();

@@ -1,13 +1,13 @@
 #pragma once
 #include "SpatiallySparseLayer.h"
 
-void applySigmoid(SpatiallySparseBatchInterface& input, SpatiallySparseBatchInterface& output, ActivationFunction fn);
-void applySigmoidBackProp(SpatiallySparseBatchInterface& input, SpatiallySparseBatchInterface& output, ActivationFunction fn);
+void applySigmoid(SpatiallySparseBatchInterface& input, SpatiallySparseBatchInterface& output, ActivationFunction fn, cudaMemStream& memStream);
+void applySigmoidBackProp(SpatiallySparseBatchInterface& input, SpatiallySparseBatchInterface& output, ActivationFunction fn, cudaMemStream& memStream);
 
 class SigmoidLayer : public SpatiallySparseLayer {
 public:
   ActivationFunction fn;
-  SigmoidLayer(ActivationFunction fn);
+  SigmoidLayer(cudaMemStream& memStream, ActivationFunction fn);
   void preprocess
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,

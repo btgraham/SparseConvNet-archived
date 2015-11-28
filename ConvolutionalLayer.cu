@@ -4,7 +4,6 @@
 #include <iostream>
 #include <vector>
 #include <cassert>
-#include "cudaUtilities.h"
 #include "utilities.h"
 #include "Regions.h"
 
@@ -25,10 +24,10 @@ __global__ void dPropForwardToMatrixMultiplyInput
     __syncthreads();
   }
 }
-void propForwardToMatrixMultiply(float* inFeatures, float* outFeatures, int* rules, int count, int nIn) {
+void propForwardToMatrixMultiply(float* inFeatures, float* outFeatures, int* rules, int count, int nIn, cudaMemStream& memStream) {
   assert(count>0);
   int batch=min(1<<12,(count+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE);
-  dPropForwardToMatrixMultiplyInput<<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+  dPropForwardToMatrixMultiplyInput<<<batch,KERNELBLOCKSIZE,0,memStream.stream>>>
     (inFeatures,
      outFeatures,
      rules,
@@ -46,17 +45,17 @@ __global__ void dPropBackwardFromMatrixMultiplyOutput
       int rq=r[q];
       int i=(c+q)*nIn;
       for (int j=threadIdx.x;j<nIn;j+=KERNELBLOCKSIZE) {
-        if (/*d_deltaConvolved[i+j]!=0 and*/ rq>=0)
+        if (rq>=0)
           atomicAdd(&d_deltaGrid[rq+j],d_deltaConvolved[i+j]);
       }
     }
     __syncthreads();
   }
 }
-void propBackwardFromMatrixMultiply(float* inDFeatures, float* outDFeatures, int* rules, int count, int nIn) {
+void propBackwardFromMatrixMultiply(float* inDFeatures, float* outDFeatures, int* rules, int count, int nIn, cudaMemStream& memStream) {
   assert(count>0);
   int batch=min(1<<12,(count+KERNELBLOCKSIZE-1)/KERNELBLOCKSIZE);
-  dPropBackwardFromMatrixMultiplyOutput<<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+  dPropBackwardFromMatrixMultiplyOutput<<<batch,KERNELBLOCKSIZE,0,memStream.stream>>>
     (inDFeatures,
      outDFeatures,
      rules,
@@ -71,11 +70,13 @@ template <typename t> void convolutionFeaturesPresent(std::vector<t>& d_src, std
 }
 template void convolutionFeaturesPresent<int>(std::vector<int>& d_src, std::vector<int>& d_dest, int nf, int nfp, int nCopies);
 
-ConvolutionalLayer::ConvolutionalLayer(int filterSize,
+ConvolutionalLayer::ConvolutionalLayer(cudaMemStream& memStream,
+                                       int filterSize,
                                        int filterStride,
                                        int dimension,
                                        int nFeaturesIn,
                                        int minActiveInputs) :
+  SpatiallySparseLayer(memStream),
   filterSize(filterSize),
   filterStride(filterStride),
   dimension(dimension),
@@ -114,7 +115,6 @@ void ConvolutionalLayer::preprocess
               true,
               minActiveInputs);
   }
-  output.featuresPresent.copyToCPU();
   output.featuresPresent.resize(input.featuresPresent.size()*fs);
   convolutionFeaturesPresent(input.featuresPresent.hVector(), output.featuresPresent.hVector(), input.nFeatures, input.featuresPresent.size(), fs);
 }
@@ -122,12 +122,13 @@ void ConvolutionalLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
-  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
-  propForwardToMatrixMultiply(input.sub->features.dPtr(),
-                              output.sub->features.dPtr(),
+  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
+  propForwardToMatrixMultiply(input.sub.features.dPtr(),
+                              output.sub.features.dPtr(),
                               output.rules.dPtr(),
                               output.nSpatialSites*fs,
-                              input.featuresPresent.size());
+                              input.featuresPresent.size(),
+                              memStream);
 }
 void ConvolutionalLayer::backwards
 (SpatiallySparseBatch &batch,
@@ -136,15 +137,16 @@ void ConvolutionalLayer::backwards
  float learningRate,
  float momentum) {
   if (input.backpropErrors) {
-    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub->dfeatures.setZero(*cnnMemStream);
-    propBackwardFromMatrixMultiply(input.sub->dfeatures.dPtr(),
-                                   output.sub->dfeatures.dPtr(),
+    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    input.sub.dfeatures.setZero(memStream);
+    propBackwardFromMatrixMultiply(input.sub.dfeatures.dPtr(),
+                                   output.sub.dfeatures.dPtr(),
                                    output.rules.dPtr(),
                                    output.nSpatialSites*fs,
-                                   input.featuresPresent.size());
-    // output.sub->features.resize(0);
-    // output.sub->dfeatures.resize(0);
+                                   input.featuresPresent.size(),
+                                   memStream);
+    // output.sub.features.resize(0);
+    // output.sub.dfeatures.resize(0);
     // cudaCheckError();
   }
 }

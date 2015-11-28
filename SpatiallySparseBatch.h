@@ -5,6 +5,7 @@
 #include "types.h"
 
 class SpatiallySparseBatch {
+  SpatiallySparseBatchSubInterface inputSub;
 public:
   SpatiallySparseBatch();
   batchType type;
@@ -17,5 +18,4 @@ public:
   float negativeLogLikelihood;
   int mistakes;
   void reset();
-  SpatiallySparseBatchSubInterface inputSub;
 };

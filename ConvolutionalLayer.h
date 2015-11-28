@@ -13,11 +13,12 @@ public:
   int nFeaturesIn;
   int nFeaturesOut;
   int minActiveInputs;
-  ConvolutionalLayer(int filterSize,
+  ConvolutionalLayer(cudaMemStream& memStream,
+                     int filterSize,
                      int filterStride,
                      int dimension,
                      int nFeaturesIn,
-                     int minActiveInputs=1);
+                     int minActiveInputs=1); //normally 1, <=ipow(filterSize,dimension)
   void preprocess
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,
@@ -35,5 +36,5 @@ public:
 };
 
 template <typename t> void convolutionFeaturesPresent(std::vector<t>& d_src, std::vector<t>& d_dest, int nf, int nfp, int nCopies);
-void propForwardToMatrixMultiply(float* inFeatures, float* outFeatures, int* rules, int count, int nIn);
-void propBackwardFromMatrixMultiply(float* inDFeatures, float* outDFeatures, int* rules, int count, int nIn);
+void propForwardToMatrixMultiply(float* inFeatures, float* outFeatures, int* rules, int count, int nIn, cudaMemStream& memStream);
+void propBackwardFromMatrixMultiply(float* inDFeatures, float* outDFeatures, int* rules, int count, int nIn, cudaMemStream& memStream);

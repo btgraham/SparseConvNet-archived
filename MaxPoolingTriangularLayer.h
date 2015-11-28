@@ -13,7 +13,7 @@ public:
   int poolStride;
   int dimension;
   int S;
-  MaxPoolingTriangularLayer(int poolSize, int poolStride, int dimension);
+  MaxPoolingTriangularLayer(cudaMemStream& memStream, int poolSize, int poolStride, int dimension);
   void preprocess
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,

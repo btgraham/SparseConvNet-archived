@@ -24,7 +24,8 @@ public:
   int nFeaturesIn;
   int nFeaturesOut;
   float dropout;
-  NetworkInNetworkPReLULayer(int nFeaturesIn, int nFeaturesOut,
+  NetworkInNetworkPReLULayer(cudaMemStream& memStream,
+                             int nFeaturesIn, int nFeaturesOut,
                              float dropout=0,
                              float alpha=1//used to determine intialization weights only
                              );

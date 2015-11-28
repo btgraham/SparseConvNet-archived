@@ -189,7 +189,6 @@ void gridRulesNonOverlapping
                 int k=ii0*regions.s
                   +ii1;
                 rules[(nOutputSpatialSites-1)*regions.sd+k]=inputGrid.backgroundCol;
-
               }
             }
 

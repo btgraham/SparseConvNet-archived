@@ -4,7 +4,6 @@
 #include <iostream>
 #include <cassert>
 #include "utilities.h"
-#include "cudaUtilities.h"
 #include "TerminalPoolingLayer.h"
 
 void terminalGridPoolingRules
@@ -41,12 +40,13 @@ __global__ void dTerminalPool(float* g1, float* g2, int* rules, int nOut, int ps
   }
 }
 
-void terminalPool(float* g1, float* g2, int* rules, int count, int ps2, int nOut) {
+void terminalPool(float* g1, float* g2, int* rules, int count, int ps2, int nOut,
+                  cudaMemStream& memStream) {
   int processed=0;
   assert(ps2<=TERMINAL_POOLING_MAX_ACTIVE_SITES);// if ps2>KERNELBLOCKSIZE, i.e. if poolSize>32, allocate more memory in dTerminalPool and dTerminalPoolBackProp
   while (processed<count) {
     int batch=min(32768,count-processed);
-    dTerminalPool<<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>> (g1, g2+processed*nOut, rules+processed*ps2, nOut, ps2);
+    dTerminalPool<<<batch,KERNELBLOCKSIZE,0,memStream.stream>>> (g1, g2+processed*nOut, rules+processed*ps2, nOut, ps2);
     processed+=batch;
   }
   cudaCheckError();
@@ -72,18 +72,21 @@ __global__ void dTerminalPoolBackProp(float* d1, float* d2, int* rules, int nOut
   }
 }
 
-void terminalPoolBackProp(float* d1, float* d2, int* rules, int count, int nOut, int ps2) {
+void terminalPoolBackProp(float* d1, float* d2, int* rules, int count, int nOut, int ps2,
+                          cudaMemStream& memStream) {
   int processed=0;
   while (processed<count) {
     int batch=min(32768,count-processed);
-    dTerminalPoolBackProp<<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>> (d1, d2+processed*nOut, rules+processed*ps2, nOut, ps2);
+    dTerminalPoolBackProp<<<batch,KERNELBLOCKSIZE,0,memStream.stream>>> (d1, d2+processed*nOut, rules+processed*ps2, nOut, ps2);
     processed+=batch;
   }
   cudaCheckError();
 }
 
-TerminalPoolingLayer::TerminalPoolingLayer(int poolSize, int S)
-  : inSpatialSize(poolSize), outSpatialSize(1), poolSize(poolSize), S(S) {
+TerminalPoolingLayer::TerminalPoolingLayer(cudaMemStream& memStream, int poolSize, int S)
+  :
+  SpatiallySparseLayer(memStream),
+  inSpatialSize(poolSize), outSpatialSize(1), poolSize(poolSize), S(S) {
   std::cout << "TerminalPooling " << poolSize << " " << S << std::endl;
 }
 void TerminalPoolingLayer::preprocess
@@ -109,10 +112,15 @@ void TerminalPoolingLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
-  output.sub->poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
-  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub.poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
   cudaCheckError();
-  terminalPool(input.sub->features.dPtr(),output.sub->features.dPtr(),output.rules.dPtr(),output.nSpatialSites,S,output.featuresPresent.size());
+  terminalPool(input.sub.features.dPtr(),
+               output.sub.features.dPtr(),
+               output.rules.dPtr(),
+               output.nSpatialSites,S,
+               output.featuresPresent.size(),
+               memStream);
   cudaCheckError();
 }
 void TerminalPoolingLayer::backwards
@@ -122,12 +130,17 @@ void TerminalPoolingLayer::backwards
  float learningRate,
  float momentum) {
   if (input.backpropErrors) {
-    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub->dfeatures.setZero();
+    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    input.sub.dfeatures.setZero();
     terminalPoolBackProp
-      (input.sub->dfeatures.dPtr(), output.sub->dfeatures.dPtr(), output.rules.dPtr(),output.nSpatialSites, output.featuresPresent.size(),S);
-    // output.sub->features.resize(0);
-    // output.sub->dfeatures.resize(0);
+      (input.sub.dfeatures.dPtr(),
+       output.sub.dfeatures.dPtr(),
+       output.rules.dPtr(),
+       output.nSpatialSites,
+       output.featuresPresent.size(),S,
+       memStream);
+    // output.sub.features.resize(0);
+    // output.sub.dfeatures.resize(0);
     // cudaCheckError();
   }
 }

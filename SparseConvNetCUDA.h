@@ -20,6 +20,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#define N_MAX_BATCH_PRODUCER_THREADS 20
 
 class SparseConvNetCUDA {
 public:
@@ -31,15 +32,23 @@ public:
   int nInputFeatures;
   int nOutputFeatures;
   int deviceID;
+  int nBatchProducerThreads;
+  cudaMemStream memStream;
+  cudaMemStream batchMemStreams[N_MAX_BATCH_PRODUCER_THREADS];
+  std::mutex batchLock[N_MAX_BATCH_PRODUCER_THREADS];
+  std::vector<SpatiallySparseBatch> batchPool;
+  std::vector<SpatiallySparseBatchSubInterface> initialSubInterfaces;
+  std::vector<SpatiallySparseBatchSubInterface> sharedSubInterfaces;
+
   std::vector<float> inputNormalizingConstants;
   SparseConvNetCUDA (int dimension,
                      int nInputFeatures,
                      int nClasses,
                      int pciBusID=-1,
-                     int nTop=1);
+                     int nTop=1,
+                     int nBatchProducerThreads=10);
   void processBatch(SpatiallySparseBatch& batch, float learningRate, float momentum, std::ofstream& f, std::ofstream& g);
   void processIndexLearnerBatch(SpatiallySparseBatch& batch, float learningRate, float momentum, std::ofstream& f);
-
 
 
   void addLearntLayer(int nFeatures,

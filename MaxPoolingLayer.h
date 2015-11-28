@@ -3,11 +3,8 @@
 #include "SpatiallySparseLayer.h"
 #include "Rng.h"
 
-void maxPool(float* g1, float* g2, int* rules, int count, int sd, int nOut, int* d_choice);
-void maxPoolBackProp(float* d1, float* d2, int count, int nOut, int* d_choice);
-
-//TODO: Refactor the different pooling classes somehow
-
+void maxPool(float* g1, float* g2, int* rules, int count, int sd, int nOut, int* d_choice, cudaMemStream& memStream);
+void maxPoolBackProp(float* d1, float* d2, int count, int nOut, int* d_choice, cudaMemStream& memStream);
 
 class MaxPoolingLayer : public SpatiallySparseLayer {
 public:
@@ -17,7 +14,7 @@ public:
   int poolStride;
   int dimension;
   int sd;
-  MaxPoolingLayer(int poolSize, int poolStride, int dimension);
+  MaxPoolingLayer(cudaMemStream& memStream, int poolSize, int poolStride, int dimension);
   void preprocess
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,
@@ -42,7 +39,7 @@ public:
   int poolSize;
   int dimension;
   RNG rng;
-  PseudorandomOverlappingFractionalMaxPoolingLayer(int poolSize, float fmpShrink, int dimension);
+  PseudorandomOverlappingFractionalMaxPoolingLayer(cudaMemStream& memStream, int poolSize, float fmpShrink, int dimension);
   void preprocess
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,
@@ -67,7 +64,7 @@ public:
   int poolSize;
   int dimension;
   RNG rng;
-  PseudorandomNonOverlappingFractionalMaxPoolingLayer(int poolSize, float fmpShrink, int dimension);
+  PseudorandomNonOverlappingFractionalMaxPoolingLayer(cudaMemStream& memStream, int poolSize, float fmpShrink, int dimension);
   void preprocess
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,
@@ -92,7 +89,7 @@ public:
   int poolSize;
   int dimension;
   RNG rng;
-  RandomOverlappingFractionalMaxPoolingLayer(int poolSize, float fmpShrink, int dimension);
+  RandomOverlappingFractionalMaxPoolingLayer(cudaMemStream& memStream, int poolSize, float fmpShrink, int dimension);
   void preprocess
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,
@@ -119,7 +116,7 @@ public:
   int poolSize;
   int dimension;
   RNG rng;
-  RandomNonOverlappingFractionalMaxPoolingLayer(int poolSize, float fmpShrink, int dimension);
+  RandomNonOverlappingFractionalMaxPoolingLayer(cudaMemStream& memStream, int poolSize, float fmpShrink, int dimension);
   void preprocess
   (SpatiallySparseBatch &batch,
    SpatiallySparseBatchInterface &input,

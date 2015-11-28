@@ -10,16 +10,13 @@ public:
   vectorCUDA<float> features;              // In the input layer, this is configured during preprocessing
   vectorCUDA<float> dfeatures;             // For the backwards/backpropagation pass
   vectorCUDA<int> poolingChoices;
-  void reset() {
-    features.resize(0);
-    dfeatures.resize(0);
-    poolingChoices.resize(0);
-  }
+  SpatiallySparseBatchSubInterface();
+  void reset();
 };
 
 class SpatiallySparseBatchInterface {
 public:
-  SpatiallySparseBatchSubInterface* sub;
+  SpatiallySparseBatchSubInterface sub;
   int nFeatures;                           // Features per spatial location
   // Not dropped out features per spatial location
   vectorCUDA<int> featuresPresent;         // For dropout rng.NchooseM(nFeatures,featuresPresent.size());
@@ -34,7 +31,7 @@ public:
   //                                          -1 entry corresponds to null vectors in needed
   // Below used internally for convolution/pooling operation:
   vectorCUDA<int> rules;
-  SpatiallySparseBatchInterface();
+  SpatiallySparseBatchInterface(SpatiallySparseBatchSubInterface& s);
   void summary();
   void reset();
 };

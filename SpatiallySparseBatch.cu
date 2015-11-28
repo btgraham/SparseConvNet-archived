@@ -2,6 +2,7 @@
 #include "utilities.h"
 
 SpatiallySparseBatch::SpatiallySparseBatch() {
+  interfaces.emplace_back(inputSub);
 }
 void SpatiallySparseBatch::reset() {
   batchSize=0;

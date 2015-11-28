@@ -1,6 +1,6 @@
 #include <iostream>
 #include "SigmoidLayer.h"
-#include "cudaUtilities.h"
+#include "utilities.h"
 
 __global__ void dSigmoidReLu
 (float* a, float* b, int nOut) {
@@ -10,11 +10,12 @@ __global__ void dSigmoidReLu
   }
 }
 
-void sigmoidReLU(float* a, float* b, int count, int nOut) {
+void sigmoidReLU(float* a, float* b, int count, int nOut,
+                 cudaMemStream& memStream) {
   int processed=0;
   while (processed<count) {
     int batch=min(32768/4,count-processed);
-    dSigmoidReLu<<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+    dSigmoidReLu<<<batch,KERNELBLOCKSIZE,0,memStream.stream>>>
       (a+processed*nOut, b+processed*nOut, nOut);
     processed+=batch;
   }
@@ -28,11 +29,12 @@ __global__ void dSigmoidBackpropReLu
     da[j]=(a[j]>0)?db[j]:0;
   }
 }
-void sigmoidBackpropReLU(float* a, float* b, float* da, float* db, int count, int nOut) {
+void sigmoidBackpropReLU(float* a, float* b, float* da, float* db, int count, int nOut,
+                         cudaMemStream& memStream) {
   int processed=0;
   while (processed<count) {
     int batch=min(32768/4,count-processed);
-    dSigmoidBackpropReLu<<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+    dSigmoidBackpropReLu<<<batch,KERNELBLOCKSIZE,0,memStream.stream>>>
       (a+processed*nOut, b+processed*nOut, da+processed*nOut, db+processed*nOut, nOut);
     processed+=batch;
   }
@@ -46,11 +48,12 @@ __global__ void dSigmoidTanh
     b[j]=tanhf(a[j]);
   }
 }
-void sigmoidTanh(float* a, float* b, int count, int nOut) {
+void sigmoidTanh(float* a, float* b, int count, int nOut,
+                 cudaMemStream& memStream) {
   int processed=0;
   while (processed<count) {
     int batch=min(32768/4,count-processed);
-    dSigmoidTanh<<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+    dSigmoidTanh<<<batch,KERNELBLOCKSIZE,0,memStream.stream>>>
       (a+processed*nOut, b+processed*nOut, nOut);
     processed+=batch;
   }
@@ -64,11 +67,12 @@ __global__ void dSigmoidBackpropTanh
     da[j]=db[j]*(1+b[j])*(1-b[j]);
   }
 }
-void sigmoidBackpropTanh(float* a, float* b, float* da, float* db, int count, int nOut) {
+void sigmoidBackpropTanh(float* a, float* b, float* da, float* db, int count, int nOut,
+                         cudaMemStream& memStream) {
   int processed=0;
   while (processed<count) {
     int batch=min(32768/4,count-processed);
-    dSigmoidBackpropTanh<<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+    dSigmoidBackpropTanh<<<batch,KERNELBLOCKSIZE,0,memStream.stream>>>
       (a+processed*nOut, b+processed*nOut, da+processed*nOut, db+processed*nOut, nOut);
     processed+=batch;
   }
@@ -83,11 +87,12 @@ __global__ void dSigmoidLeakyReLu
   }
 }
 
-void sigmoidLeakyReLU(float* a, float* b, int count, int nOut, float alpha=0.01) {
+void sigmoidLeakyReLU(float* a, float* b, int count, int nOut, float alpha, //0.01 or 0.3 say
+                      cudaMemStream& memStream) {
   int processed=0;
   while (processed<count) {
     int batch=min(32768,count-processed);
-    dSigmoidLeakyReLu<<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+    dSigmoidLeakyReLu<<<batch,KERNELBLOCKSIZE,0,memStream.stream>>>
       (a+processed*nOut, b+processed*nOut, nOut,alpha);
     processed+=batch;
   }
@@ -103,11 +108,12 @@ __global__ void dSigmoidBackpropLeakyReLu
   }
 }
 
-void sigmoidBackpropLeakyReLU(float* a, float* b, float* da, float* db, int count, int nOut, float alpha=0.01) {
+void sigmoidBackpropLeakyReLU(float* a, float* b, float* da, float* db, int count, int nOut, float alpha,
+                              cudaMemStream& memStream) {
   int processed=0;
   while (processed<count) {
     int batch=min(32768,count-processed);
-    dSigmoidBackpropLeakyReLu<<<batch,KERNELBLOCKSIZE,0,cnnMemStream->stream>>>
+    dSigmoidBackpropLeakyReLu<<<batch,KERNELBLOCKSIZE,0,memStream.stream>>>
       (a+processed*nOut, b+processed*nOut, da+processed*nOut, db+processed*nOut, nOut,alpha);
     processed+=batch;
   }
@@ -139,95 +145,106 @@ __global__ void dSigmoidBackpropSoftmax(float* a, float* b, float* da, float* db
   }
 }
 
-void applySigmoid(SpatiallySparseBatchInterface& input, SpatiallySparseBatchInterface& output, ActivationFunction fn) {
+void applySigmoid(SpatiallySparseBatchInterface& input, SpatiallySparseBatchInterface& output, ActivationFunction fn, cudaMemStream& memStream) {
   switch(fn) {
   case TANH:
     sigmoidTanh
-      (input.sub->features.dPtr(),
-       output.sub->features.dPtr(),
+      (input.sub.features.dPtr(),
+       output.sub.features.dPtr(),
        output.nSpatialSites,
-       output.featuresPresent.size());
+       output.featuresPresent.size(),
+       memStream);
     break;
   case RELU:
     sigmoidReLU
-      (input.sub->features.dPtr(),
-       output.sub->features.dPtr(),
+      (input.sub.features.dPtr(),
+       output.sub.features.dPtr(),
        output.nSpatialSites,
-       output.featuresPresent.size());
+       output.featuresPresent.size(),
+       memStream);
     break;
   case LEAKYRELU:
     sigmoidLeakyReLU
-      (input.sub->features.dPtr(),
-       output.sub->features.dPtr(),
+      (input.sub.features.dPtr(),
+       output.sub.features.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),
-       0.01);
+       0.01,
+       memStream);
     break;
   case VLEAKYRELU:
     sigmoidLeakyReLU
-      (input.sub->features.dPtr(),
-       output.sub->features.dPtr(),
+      (input.sub.features.dPtr(),
+       output.sub.features.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),
-       0.333);
+       0.333,
+       memStream);
     break;
   case SOFTMAX:
-    dSigmoidSoftmax      <<<1,NTHREADS,0,cnnMemStream->stream>>> (input.sub->features.dPtr(),output.sub->features.dPtr(),output.nSpatialSites,output.featuresPresent.size());
+    dSigmoidSoftmax      <<<1,NTHREADS,0,memStream.stream>>> (input.sub.features.dPtr(),output.sub.features.dPtr(),output.nSpatialSites,output.featuresPresent.size());
     break;
   case NOSIGMOID:
     break;
   }
 }
 
-void applySigmoidBackProp(SpatiallySparseBatchInterface& input, SpatiallySparseBatchInterface& output, ActivationFunction fn) {
+void applySigmoidBackProp(SpatiallySparseBatchInterface& input, SpatiallySparseBatchInterface& output, ActivationFunction fn, cudaMemStream& memStream) {
   switch(fn) {
   case TANH:
     sigmoidBackpropTanh
-      (input.sub->features.dPtr(),output.sub->features.dPtr(),
-       input.sub->dfeatures.dPtr(),
-       output.sub->dfeatures.dPtr(),
+      (input.sub.features.dPtr(),output.sub.features.dPtr(),
+       input.sub.dfeatures.dPtr(),
+       output.sub.dfeatures.dPtr(),
        output.nSpatialSites,
-       output.featuresPresent.size());
+       output.featuresPresent.size(),
+       memStream);
     break;
   case RELU:
     sigmoidBackpropReLU
-      (input.sub->features.dPtr(),output.sub->features.dPtr(),
-       input.sub->dfeatures.dPtr(),
-       output.sub->dfeatures.dPtr(),
+      (input.sub.features.dPtr(),output.sub.features.dPtr(),
+       input.sub.dfeatures.dPtr(),
+       output.sub.dfeatures.dPtr(),
        output.nSpatialSites,
-       output.featuresPresent.size());
+       output.featuresPresent.size(),
+       memStream);
     break;
   case LEAKYRELU:
     sigmoidBackpropLeakyReLU
-      (input.sub->features.dPtr(),
-       output.sub->features.dPtr(),
-       input.sub->dfeatures.dPtr(),
-       output.sub->dfeatures.dPtr(),
+      (input.sub.features.dPtr(),
+       output.sub.features.dPtr(),
+       input.sub.dfeatures.dPtr(),
+       output.sub.dfeatures.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),
-       0.01);
+       0.01,
+       memStream);
     break;
   case VLEAKYRELU:
     sigmoidBackpropLeakyReLU
-      (input.sub->features.dPtr(),
-       output.sub->features.dPtr(),
-       input.sub->dfeatures.dPtr(),
-       output.sub->dfeatures.dPtr(),
+      (input.sub.features.dPtr(),
+       output.sub.features.dPtr(),
+       input.sub.dfeatures.dPtr(),
+       output.sub.dfeatures.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),
-       0.333);
+       0.333,
+       memStream);
     break;
   case SOFTMAX:
-    dSigmoidBackpropSoftmax  <<<1,NTHREADS,0,cnnMemStream->stream>>>
-      (input.sub->features.dPtr(),output.sub->features.dPtr(), input.sub->dfeatures.dPtr(),output.sub->dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size());   break;
+    dSigmoidBackpropSoftmax  <<<1,NTHREADS,0,memStream.stream>>>
+      (input.sub.features.dPtr(),output.sub.features.dPtr(), input.sub.dfeatures.dPtr(),output.sub.dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size());   break;
   case NOSIGMOID:
     break;
   }
 }
 
-SigmoidLayer::SigmoidLayer(ActivationFunction fn) : fn(fn) {
+SigmoidLayer::SigmoidLayer(cudaMemStream& memStream,
+                           ActivationFunction fn) :
+  SpatiallySparseLayer(memStream),
+  fn(fn) {
   std::cout << sigmoidNames[fn] << std::endl;
-};
+  };
 void SigmoidLayer::preprocess
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
@@ -242,8 +259,8 @@ void SigmoidLayer::preprocess
 void SigmoidLayer::forwards(SpatiallySparseBatch &batch,
                             SpatiallySparseBatchInterface &input,
                             SpatiallySparseBatchInterface &output) {
-  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
-  applySigmoid(input, output, fn);
+  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
+  applySigmoid(input, output, fn,memStream);
 }
 void SigmoidLayer::backwards(SpatiallySparseBatch &batch,
                              SpatiallySparseBatchInterface &input,
@@ -251,10 +268,10 @@ void SigmoidLayer::backwards(SpatiallySparseBatch &batch,
                              float learningRate,
                              float momentum) {
   if (input.backpropErrors) {
-    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    applySigmoidBackProp(input, output, fn);
-    // output.sub->features.resize(0);
-    // output.sub->dfeatures.resize(0);
+    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    applySigmoidBackProp(input, output, fn,memStream);
+    // output.sub.features.resize(0);
+    // output.sub.dfeatures.resize(0);
     // cudaCheckError();
   }
 }

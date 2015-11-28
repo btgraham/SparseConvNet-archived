@@ -15,10 +15,9 @@ public:
   int batchSize;
   int spatialSize;
   std::vector<int> permutation;
-  SpatiallySparseBatch* nextBatch();
-  void batchProducerThread(int nThread);
   BatchProducer (SparseConvNetCUDA& cnn, SpatiallySparseDataset &dataset, int spatialSize, int batchSize);
   ~BatchProducer();
+  SpatiallySparseBatch* nextBatch();
+  void batchProducerThread(int nThread);
+  void preprocessBatch(int c, int cc, RNG& rng);
 };
-
-void batchProducerResourcesCleanup();

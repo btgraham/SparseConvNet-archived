@@ -1,12 +1,15 @@
 #include <iostream>
 #include <cassert>
 #include "utilities.h"
-#include "cudaUtilities.h"
 #include "MaxPoolingLayer.h"
 #include "MaxPoolingTriangularLayer.h"
 #include "Regions.h"
 
-MaxPoolingTriangularLayer::MaxPoolingTriangularLayer(int poolSize, int poolStride, int dimension) : poolSize(poolSize), poolStride(poolStride), dimension(dimension) {
+MaxPoolingTriangularLayer::MaxPoolingTriangularLayer
+(cudaMemStream& memStream,
+ int poolSize, int poolStride, int dimension) :
+  SpatiallySparseLayer(memStream),
+  poolSize(poolSize), poolStride(poolStride), dimension(dimension) {
   S=triangleSize(poolSize,dimension);
   std::cout << dimension << "D MaxPoolingTriangularLayer side-length=" << poolSize
             << " volume=" << S << " stride " << poolStride << std::endl;
@@ -35,16 +38,17 @@ void MaxPoolingTriangularLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
-  output.sub->poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
-  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub.poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
   cudaCheckError();
-  maxPool(input.sub->features.dPtr(),
-          output.sub->features.dPtr(),
+  maxPool(input.sub.features.dPtr(),
+          output.sub.features.dPtr(),
           output.rules.dPtr(),
           output.nSpatialSites,
           S,
           output.featuresPresent.size(),
-          output.sub->poolingChoices.dPtr());
+          output.sub.poolingChoices.dPtr(),
+          memStream);
   cudaCheckError();
 }
 void MaxPoolingTriangularLayer::backwards
@@ -54,10 +58,11 @@ void MaxPoolingTriangularLayer::backwards
  float learningRate,
  float momentum) {
   if (input.backpropErrors) {
-    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub->dfeatures.setZero(*cnnMemStream);
+    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    input.sub.dfeatures.setZero(memStream);
     maxPoolBackProp
-      (input.sub->dfeatures.dPtr(), output.sub->dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub->poolingChoices.dPtr());
+      (input.sub.dfeatures.dPtr(), output.sub.dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub.poolingChoices.dPtr(),
+       memStream);
   }
 }
 int MaxPoolingTriangularLayer::calculateInputSpatialSize(int outputSpatialSize) {

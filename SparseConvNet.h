@@ -19,8 +19,9 @@ class SparseConvNetCUDA;
 
 class SparseConvNet {
 private:
-  std::unique_ptr<SparseConvNetCUDA> cnn;
 public:
+  std::unique_ptr<SparseConvNetCUDA> cnn;
+
   SparseConvNet(int dimension, int nInputFeatures, int nClasses, int pciBusID=-1, int nTop=1);
   ~SparseConvNet();
   void addLeNetLayerMP(int nFeatures, int filterSize, int filterStride, int poolSize, int poolStride, ActivationFunction activationFn=RELU, float dropout=0.0f, int minActiveInputs=1);
