@@ -37,16 +37,17 @@ public:
   cudaMemStream batchMemStreams[N_MAX_BATCH_PRODUCER_THREADS];
   std::mutex batchLock[N_MAX_BATCH_PRODUCER_THREADS];
   std::vector<SpatiallySparseBatch> batchPool;
-  std::vector<SpatiallySparseBatchSubInterface> initialSubInterfaces;
-  std::vector<SpatiallySparseBatchSubInterface> sharedSubInterfaces;
+  std::vector<SpatiallySparseBatchSubInterface*> initialSubInterfaces;
+  std::vector<SpatiallySparseBatchSubInterface*> sharedSubInterfaces;
 
   std::vector<float> inputNormalizingConstants;
-  SparseConvNetCUDA (int dimension,
-                     int nInputFeatures,
-                     int nClasses,
-                     int pciBusID=-1,
-                     int nTop=1,
-                     int nBatchProducerThreads=10);
+  SparseConvNetCUDA(int dimension,
+                    int nInputFeatures,
+                    int nClasses,
+                    int pciBusID=-1,
+                    int nTop=1,
+                    int nBatchProducerThreads=10);
+  ~SparseConvNetCUDA();
   void processBatch(SpatiallySparseBatch& batch, float learningRate, float momentum, std::ofstream& f, std::ofstream& g);
   void processIndexLearnerBatch(SpatiallySparseBatch& batch, float learningRate, float momentum, std::ofstream& f);
 

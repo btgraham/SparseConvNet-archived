@@ -122,9 +122,9 @@ void ConvolutionalLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
-  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
-  propForwardToMatrixMultiply(input.sub.features.dPtr(),
-                              output.sub.features.dPtr(),
+  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
+  propForwardToMatrixMultiply(input.sub->features.dPtr(),
+                              output.sub->features.dPtr(),
                               output.rules.dPtr(),
                               output.nSpatialSites*fs,
                               input.featuresPresent.size(),
@@ -137,16 +137,16 @@ void ConvolutionalLayer::backwards
  float learningRate,
  float momentum) {
   if (input.backpropErrors) {
-    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub.dfeatures.setZero(memStream);
-    propBackwardFromMatrixMultiply(input.sub.dfeatures.dPtr(),
-                                   output.sub.dfeatures.dPtr(),
+    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    input.sub->dfeatures.setZero(memStream);
+    propBackwardFromMatrixMultiply(input.sub->dfeatures.dPtr(),
+                                   output.sub->dfeatures.dPtr(),
                                    output.rules.dPtr(),
                                    output.nSpatialSites*fs,
                                    input.featuresPresent.size(),
                                    memStream);
-    // output.sub.features.resize(0);
-    // output.sub.dfeatures.resize(0);
+    // output.sub->features.resize(0);
+    // output.sub->dfeatures.resize(0);
     // cudaCheckError();
   }
 }

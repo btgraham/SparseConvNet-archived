@@ -16,22 +16,22 @@ public:
 
 class SpatiallySparseBatchInterface {
 public:
-  SpatiallySparseBatchSubInterface &sub;
+  SpatiallySparseBatchSubInterface* sub;
   int nFeatures;                           // Features per spatial location
-  // Not dropped out features per spatial location
-  vectorCUDA<int> featuresPresent;         // For dropout rng.NchooseM(nFeatures,featuresPresent.size());
+  vectorCUDA<int> featuresPresent;         // Not dropped out features per spatial location
+  //                                          For dropout rng.NchooseM(nFeatures,featuresPresent.size());
   int nSpatialSites;                       // Total active spatial locations within the
   int spatialSize;                         // spatialSize x spatialSize grid
   //                                          batchSize x spatialSize x spatialSize
   //                                          possible locations.
-  bool backpropErrors;                     //Calculate dfeatures? (false until after the first NiN layer)
-  std::vector<SparseGrid> grids;         // batchSize vectors of maps storing info on grids of size spatialSize x spatialSize
+  bool backpropErrors;                     // Calculate dfeatures? (false until after the first NiN layer)
+  std::vector<SparseGrid> grids;           // batchSize vectors of maps storing info on grids of size spatialSize x spatialSize
   //                                          Store locations of nSpatialSites in the
   //                                          spatialSize x spatialSize grids
   //                                          -1 entry corresponds to null vectors in needed
   // Below used internally for convolution/pooling operation:
   vectorCUDA<int> rules;
-  SpatiallySparseBatchInterface(SpatiallySparseBatchSubInterface& s);
+  SpatiallySparseBatchInterface(SpatiallySparseBatchSubInterface* s);
   void summary();
   void reset();
 };

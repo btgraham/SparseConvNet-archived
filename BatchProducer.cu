@@ -13,8 +13,8 @@
 #include <cassert>
 
 BatchProducer::BatchProducer (SparseConvNetCUDA& cnn,
-                              SpatiallySparseDataset &dataset,
-                              int spatialSize, int batchSize) :
+			      SpatiallySparseDataset &dataset,
+			      int spatialSize, int batchSize) :
   cnn(cnn), batchCounter(-1),
   dataset(dataset),
   spatialSize(spatialSize), batchSize(batchSize) {
@@ -25,7 +25,7 @@ BatchProducer::BatchProducer (SparseConvNetCUDA& cnn,
     rng.vectorShuffle(permutation);
   }
   while(cnn.batchPool[0].interfaces.size()<=cnn.layers.size()) {
-    cnn.sharedSubInterfaces.emplace_back();
+    cnn.sharedSubInterfaces.push_back(new SpatiallySparseBatchSubInterface());
     for (int c=0;c<cnn.nBatchProducerThreads;c++) {
       cnn.batchPool[c].interfaces.emplace_back(cnn.sharedSubInterfaces.back());
     }
@@ -50,24 +50,24 @@ void BatchProducer::preprocessBatch(int c, int cc, RNG& rng) {
     cnn.batchPool[cc].labels.hVector().push_back(pic->label);
     pic->codifyInputData
       (cnn.batchPool[cc].interfaces[0].grids.back(),
-       cnn.batchPool[cc].interfaces[0].sub.features.hVector(),
+       cnn.batchPool[cc].interfaces[0].sub->features.hVector(),
        cnn.batchPool[cc].interfaces[0].nSpatialSites,
        cnn.batchPool[cc].interfaces[0].spatialSize);
     if (pic!=dataset.pictures[permutation[i]])
       delete pic;
   }
-  assert(cnn.batchPool[cc].interfaces[0].sub.features.size()
-         ==
-         cnn.batchPool[cc].interfaces[0].nFeatures*cnn.batchPool[cc].interfaces[0].nSpatialSites);
+  assert(cnn.batchPool[cc].interfaces[0].sub->features.size()
+	 ==
+	 cnn.batchPool[cc].interfaces[0].nFeatures*cnn.batchPool[cc].interfaces[0].nSpatialSites);
   if (cnn.inputNormalizingConstants.size()>0) {
-    std::vector<float> &features=cnn.batchPool[cc].interfaces[0].sub.features.hVector();
+    std::vector<float> &features=cnn.batchPool[cc].interfaces[0].sub->features.hVector();
     for (int i=0;i<features.size();++i)
       features[i]*=cnn.inputNormalizingConstants[i%(cnn.batchPool[cc].interfaces[0].nFeatures)];
   }
   for (int i=0; i<cnn.layers.size();i++)
     cnn.layers[i]->preprocess(cnn.batchPool[cc],cnn.batchPool[cc].interfaces[i],cnn.batchPool[cc].interfaces[i+1]);
 
-  cnn.batchPool[cc].interfaces[0].sub.features.copyToGPUAsync(cnn.batchMemStreams[cc]);
+  cnn.batchPool[cc].interfaces[0].sub->features.copyToGPUAsync(cnn.batchMemStreams[cc]);
   cnn.batchPool[cc].labels.copyToGPUAsync(cnn.batchMemStreams[cc]);
   for (int i=0;i<=cnn.layers.size();++i) {
     cnn.batchPool[cc].interfaces[i].featuresPresent.copyToGPUAsync(cnn.batchMemStreams[cc]);
@@ -106,10 +106,10 @@ SpatiallySparseBatch* BatchProducer::nextBatch() {
     for(bool ready=false;not ready;) {
       bool accessible=cnn.batchLock[cc].try_lock();
       if (accessible)
-        if (cnn.batchPool[cc].batchSize==0)
-          cnn.batchLock[cc].unlock();
-        else
-          ready=true;
+	if (cnn.batchPool[cc].batchSize==0)
+	  cnn.batchLock[cc].unlock();
+	else
+	  ready=true;
     }
     return &cnn.batchPool[cc];
   } else {

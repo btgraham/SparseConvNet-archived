@@ -149,24 +149,24 @@ void applySigmoid(SpatiallySparseBatchInterface& input, SpatiallySparseBatchInte
   switch(fn) {
   case TANH:
     sigmoidTanh
-      (input.sub.features.dPtr(),
-       output.sub.features.dPtr(),
+      (input.sub->features.dPtr(),
+       output.sub->features.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),
        memStream);
     break;
   case RELU:
     sigmoidReLU
-      (input.sub.features.dPtr(),
-       output.sub.features.dPtr(),
+      (input.sub->features.dPtr(),
+       output.sub->features.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),
        memStream);
     break;
   case LEAKYRELU:
     sigmoidLeakyReLU
-      (input.sub.features.dPtr(),
-       output.sub.features.dPtr(),
+      (input.sub->features.dPtr(),
+       output.sub->features.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),
        0.01,
@@ -174,15 +174,15 @@ void applySigmoid(SpatiallySparseBatchInterface& input, SpatiallySparseBatchInte
     break;
   case VLEAKYRELU:
     sigmoidLeakyReLU
-      (input.sub.features.dPtr(),
-       output.sub.features.dPtr(),
+      (input.sub->features.dPtr(),
+       output.sub->features.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),
        0.333,
        memStream);
     break;
   case SOFTMAX:
-    dSigmoidSoftmax      <<<1,NTHREADS,0,memStream.stream>>> (input.sub.features.dPtr(),output.sub.features.dPtr(),output.nSpatialSites,output.featuresPresent.size());
+    dSigmoidSoftmax      <<<1,NTHREADS,0,memStream.stream>>> (input.sub->features.dPtr(),output.sub->features.dPtr(),output.nSpatialSites,output.featuresPresent.size());
     break;
   case NOSIGMOID:
     break;
@@ -193,28 +193,28 @@ void applySigmoidBackProp(SpatiallySparseBatchInterface& input, SpatiallySparseB
   switch(fn) {
   case TANH:
     sigmoidBackpropTanh
-      (input.sub.features.dPtr(),output.sub.features.dPtr(),
-       input.sub.dfeatures.dPtr(),
-       output.sub.dfeatures.dPtr(),
+      (input.sub->features.dPtr(),output.sub->features.dPtr(),
+       input.sub->dfeatures.dPtr(),
+       output.sub->dfeatures.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),
        memStream);
     break;
   case RELU:
     sigmoidBackpropReLU
-      (input.sub.features.dPtr(),output.sub.features.dPtr(),
-       input.sub.dfeatures.dPtr(),
-       output.sub.dfeatures.dPtr(),
+      (input.sub->features.dPtr(),output.sub->features.dPtr(),
+       input.sub->dfeatures.dPtr(),
+       output.sub->dfeatures.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),
        memStream);
     break;
   case LEAKYRELU:
     sigmoidBackpropLeakyReLU
-      (input.sub.features.dPtr(),
-       output.sub.features.dPtr(),
-       input.sub.dfeatures.dPtr(),
-       output.sub.dfeatures.dPtr(),
+      (input.sub->features.dPtr(),
+       output.sub->features.dPtr(),
+       input.sub->dfeatures.dPtr(),
+       output.sub->dfeatures.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),
        0.01,
@@ -222,10 +222,10 @@ void applySigmoidBackProp(SpatiallySparseBatchInterface& input, SpatiallySparseB
     break;
   case VLEAKYRELU:
     sigmoidBackpropLeakyReLU
-      (input.sub.features.dPtr(),
-       output.sub.features.dPtr(),
-       input.sub.dfeatures.dPtr(),
-       output.sub.dfeatures.dPtr(),
+      (input.sub->features.dPtr(),
+       output.sub->features.dPtr(),
+       input.sub->dfeatures.dPtr(),
+       output.sub->dfeatures.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),
        0.333,
@@ -233,7 +233,7 @@ void applySigmoidBackProp(SpatiallySparseBatchInterface& input, SpatiallySparseB
     break;
   case SOFTMAX:
     dSigmoidBackpropSoftmax  <<<1,NTHREADS,0,memStream.stream>>>
-      (input.sub.features.dPtr(),output.sub.features.dPtr(), input.sub.dfeatures.dPtr(),output.sub.dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size());   break;
+      (input.sub->features.dPtr(),output.sub->features.dPtr(), input.sub->dfeatures.dPtr(),output.sub->dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size());   break;
   case NOSIGMOID:
     break;
   }
@@ -259,7 +259,7 @@ void SigmoidLayer::preprocess
 void SigmoidLayer::forwards(SpatiallySparseBatch &batch,
                             SpatiallySparseBatchInterface &input,
                             SpatiallySparseBatchInterface &output) {
-  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
   applySigmoid(input, output, fn,memStream);
 }
 void SigmoidLayer::backwards(SpatiallySparseBatch &batch,
@@ -268,11 +268,8 @@ void SigmoidLayer::backwards(SpatiallySparseBatch &batch,
                              float learningRate,
                              float momentum) {
   if (input.backpropErrors) {
-    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
     applySigmoidBackProp(input, output, fn,memStream);
-    // output.sub.features.resize(0);
-    // output.sub.dfeatures.resize(0);
-    // cudaCheckError();
   }
 }
 int SigmoidLayer::calculateInputSpatialSize(int outputSpatialSize) {

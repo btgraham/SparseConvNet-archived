@@ -5,9 +5,9 @@
 #include "types.h"
 
 class SpatiallySparseBatch {
-  SpatiallySparseBatchSubInterface inputSub;
+  SpatiallySparseBatchSubInterface* inputSub;
 public:
-  SpatiallySparseBatch();
+  SpatiallySparseBatch(SpatiallySparseBatchSubInterface* inputSub);
   batchType type;
   int batchSize;
   std::vector<int> sampleNumbers;

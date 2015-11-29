@@ -15,7 +15,7 @@ __global__ void dPReLU
   }
 }
 void PreLU(float* matrix, float* prelu, int nRows, int nColumns,
-           cudaMemStream& memStream) {
+	   cudaMemStream& memStream) {
   assert(nColumns%KERNELBLOCKSIZE==0);
   dPReLU<<<
     dim3(nColumns/KERNELBLOCKSIZE,std::min(1024,nRows)),
@@ -42,7 +42,7 @@ __global__ void dPReLUBackprop
 }
 
 void PReLUBackprop(float* features, float* dfeatures, float* prelu, float* dprelu, int nRows, int nColumns,
-                   cudaMemStream& memStream) {
+		   cudaMemStream& memStream) {
   dPReLUBackprop<<<dim3(nColumns/KERNELBLOCKSIZE,KERNELBLOCKSIZE),KERNELBLOCKSIZE,0,memStream.stream>>>
     (features,dfeatures,prelu,dprelu,nRows,nColumns);
   cudaCheckError();
@@ -103,6 +103,8 @@ NetworkInNetworkPReLULayer::NetworkInNetworkPReLULayer
   B(false,nFeaturesOut), MB(false,nFeaturesOut),
   PReLU(false, nFeaturesOut), MPReLU(false, nFeaturesOut) {
   float scale=pow(6.0f/(nFeaturesIn+nFeaturesOut*alpha),0.5f);
+  W.copyToCPUAsync(memStream);
+  PReLU.copyToCPUAsync(memStream);
   W.setUniform(-scale,scale);
   MW.setZero();
   B.setZero();
@@ -135,7 +137,7 @@ void NetworkInNetworkPReLULayer::forwards
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
   //  std::cerr << output.nFeatures << " " << PReLU.meanAbs() << "\n";
-  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
   if (batch.type==TRAINBATCH and
       nFeaturesIn+nFeaturesOut>input.featuresPresent.size()+output.featuresPresent.size()) {
     w.resize(input.featuresPresent.size()*output.featuresPresent.size());
@@ -148,31 +150,31 @@ void NetworkInNetworkPReLULayer::forwards
     cudaCheckError();
     b.resize(output.featuresPresent.size());
     dShrinkVectorForDropout<<<1,NTHREADS,0,memStream.stream>>>(B.dPtr(), b.dPtr(),
-                                                               output.featuresPresent.dPtr(),
-                                                               output.nFeatures,
-                                                               output.featuresPresent.size());
+							       output.featuresPresent.dPtr(),
+							       output.nFeatures,
+							       output.featuresPresent.size());
     prelu.resize(output.featuresPresent.size());
     dShrinkVectorForDropout<<<1,NTHREADS,0,memStream.stream>>>(PReLU.dPtr(), prelu.dPtr(),
-                                                               output.featuresPresent.dPtr(),
-                                                               output.nFeatures,
-                                                               output.featuresPresent.size());
+							       output.featuresPresent.dPtr(),
+							       output.nFeatures,
+							       output.featuresPresent.size());
     cudaCheckError();
-    replicateArray(b.dPtr(), output.sub.features.dPtr(), output.nSpatialSites, output.featuresPresent.size(), memStream);
+    replicateArray(b.dPtr(), output.sub->features.dPtr(), output.nSpatialSites, output.featuresPresent.size(), memStream);
     cudaCheckError();
     d_rowMajorSGEMM_alphaAB_betaC(cublasHandle,
-                                  input.sub.features.dPtr(), w.dPtr(), output.sub.features.dPtr(),
-                                  output.nSpatialSites, input.featuresPresent.size(), output.featuresPresent.size(),
-                                  1.0f, 1.0f,__FILE__,__LINE__);
+				  input.sub->features.dPtr(), w.dPtr(), output.sub->features.dPtr(),
+				  output.nSpatialSites, input.featuresPresent.size(), output.featuresPresent.size(),
+				  1.0f, 1.0f,__FILE__,__LINE__);
     cudaCheckError();
-    PreLU(output.sub.features.dPtr(), prelu.dPtr(), output.nSpatialSites, output.featuresPresent.size(), memStream);
+    PreLU(output.sub->features.dPtr(), prelu.dPtr(), output.nSpatialSites, output.featuresPresent.size(), memStream);
   } else {
-    replicateArray(B.dPtr(), output.sub.features.dPtr(), output.nSpatialSites, output.featuresPresent.size(), memStream);
+    replicateArray(B.dPtr(), output.sub->features.dPtr(), output.nSpatialSites, output.featuresPresent.size(), memStream);
     d_rowMajorSGEMM_alphaAB_betaC(cublasHandle,
-                                  input.sub.features.dPtr(), W.dPtr(), output.sub.features.dPtr(),
-                                  output.nSpatialSites, input.nFeatures, output.nFeatures,
-                                  1.0f-dropout, 1.0f-dropout,__FILE__,__LINE__);
+				  input.sub->features.dPtr(), W.dPtr(), output.sub->features.dPtr(),
+				  output.nSpatialSites, input.nFeatures, output.nFeatures,
+				  1.0f-dropout, 1.0f-dropout,__FILE__,__LINE__);
     cudaCheckError();
-    PreLU(output.sub.features.dPtr(), PReLU.dPtr(), output.nSpatialSites, output.nFeatures, memStream);
+    PreLU(output.sub->features.dPtr(), PReLU.dPtr(), output.nSpatialSites, output.nFeatures, memStream);
   }
   multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*output.featuresPresent.size();
 }
@@ -181,9 +183,9 @@ void NetworkInNetworkPReLULayer::scaleWeights
  SpatiallySparseBatchInterface &output,
  float& scalingUnderneath,
  bool topLayer) {
-  assert(input.sub.features.size()>0);
-  assert(output.sub.features.size()>0); //call after forwards(...)
-  float scale=output.sub.features.meanAbs(1/initialAlpha);
+  assert(input.sub->features.size()>0);
+  assert(output.sub->features.size()>0); //call after forwards(...)
+  float scale=output.sub->features.meanAbs(1/initialAlpha);
   std::cout << "featureScale:" << scale << std::endl;
   if (topLayer) {
     scale=1;
@@ -207,14 +209,14 @@ void NetworkInNetworkPReLULayer::backwards
   dprelu.resize(output.featuresPresent.size());
   dprelu.setZero(memStream);
   if (output.featuresPresent.size()<output.featuresPresent.size()) {
-    PReLUBackprop(output.sub.features.dPtr(),output.sub.dfeatures.dPtr(), prelu.dPtr(), dprelu.dPtr(), output.nSpatialSites, output.featuresPresent.size(), memStream);
+    PReLUBackprop(output.sub->features.dPtr(),output.sub->dfeatures.dPtr(), prelu.dPtr(), dprelu.dPtr(), output.nSpatialSites, output.featuresPresent.size(), memStream);
     dGradientDescentShrunkVectorKeepPositive<<<1,NTHREADS,0,memStream.stream>>>
       (dprelu.dPtr(), MPReLU.dPtr(), PReLU.dPtr(),
        output.nFeatures, output.featuresPresent.size(),
        output.featuresPresent.dPtr(),
        learningRate,momentum);
   } else {
-    PReLUBackprop(output.sub.features.dPtr(),output.sub.dfeatures.dPtr(), PReLU.dPtr(), dprelu.dPtr(), output.nSpatialSites, output.featuresPresent.size(), memStream);
+    PReLUBackprop(output.sub->features.dPtr(),output.sub->dfeatures.dPtr(), PReLU.dPtr(), dprelu.dPtr(), output.nSpatialSites, output.featuresPresent.size(), memStream);
     dGradientDescentKeepPositive<<<1,KERNELBLOCKSIZE,0,memStream.stream>>>
       (dprelu.dPtr(), MPReLU.dPtr(), PReLU.dPtr(), nFeaturesOut, learningRate,momentum);
   }
@@ -222,25 +224,25 @@ void NetworkInNetworkPReLULayer::backwards
 
 
   d_rowMajorSGEMM_alphaAtB_betaC(cublasHandle,
-                                 input.sub.features.dPtr(), output.sub.dfeatures.dPtr(), dw.dPtr(),
-                                 input.featuresPresent.size(), output.nSpatialSites, output.featuresPresent.size(),
-                                 1.0, 0.0);
+				 input.sub->features.dPtr(), output.sub->dfeatures.dPtr(), dw.dPtr(),
+				 input.featuresPresent.size(), output.nSpatialSites, output.featuresPresent.size(),
+				 1.0, 0.0);
 
   multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*output.featuresPresent.size();
   cudaCheckError();
   db.setZero(memStream);
-  columnSum(output.sub.dfeatures.dPtr(), db.dPtr(), output.nSpatialSites, output.featuresPresent.size(), memStream);
+  columnSum(output.sub->dfeatures.dPtr(), db.dPtr(), output.nSpatialSites, output.featuresPresent.size(), memStream);
 
 
 
 
   if (nFeaturesIn+nFeaturesOut>input.featuresPresent.size()+output.featuresPresent.size()) {
     if (input.backpropErrors) {
-      input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+      input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
       d_rowMajorSGEMM_alphaABt_betaC(cublasHandle,
-                                     output.sub.dfeatures.dPtr(), w.dPtr(), input.sub.dfeatures.dPtr(),
-                                     output.nSpatialSites,output.featuresPresent.size(),input.featuresPresent.size(),
-                                     1.0, 0.0);
+				     output.sub->dfeatures.dPtr(), w.dPtr(), input.sub->dfeatures.dPtr(),
+				     output.nSpatialSites,output.featuresPresent.size(),input.featuresPresent.size(),
+				     1.0, 0.0);
       multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*output.featuresPresent.size();
       cudaCheckError();
     }
@@ -260,11 +262,11 @@ void NetworkInNetworkPReLULayer::backwards
     cudaCheckError();
   } else {
     if (input.backpropErrors) {
-      input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+      input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
       d_rowMajorSGEMM_alphaABt_betaC(cublasHandle,
-                                     output.sub.dfeatures.dPtr(), W.dPtr(), input.sub.dfeatures.dPtr(),
-                                     output.nSpatialSites,nFeaturesOut,nFeaturesIn,
-                                     1.0, 0.0);
+				     output.sub->dfeatures.dPtr(), W.dPtr(), input.sub->dfeatures.dPtr(),
+				     output.nSpatialSites,nFeaturesOut,nFeaturesIn,
+				     1.0, 0.0);
       multiplyAddCount+=(__int128_t)output.nSpatialSites*input.featuresPresent.size()*output.featuresPresent.size();
       cudaCheckError();
     }

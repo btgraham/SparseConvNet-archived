@@ -1,10 +1,8 @@
 #include <iostream>
 #include "SpatiallySparseBatchInterface.h"
 
-SpatiallySparseBatchSubInterface::SpatiallySparseBatchSubInterface() :
-  features(vectorCUDA<float>(true,0)),
-  dfeatures(vectorCUDA<float>(true,0)),
-  poolingChoices(vectorCUDA<int>(true,0)) {
+SpatiallySparseBatchSubInterface::SpatiallySparseBatchSubInterface() {
+  reset();
 }
 
 void SpatiallySparseBatchSubInterface::reset() {
@@ -13,10 +11,11 @@ void SpatiallySparseBatchSubInterface::reset() {
   poolingChoices.resize(0);
 }
 
-SpatiallySparseBatchInterface::SpatiallySparseBatchInterface(SpatiallySparseBatchSubInterface& s) :
+SpatiallySparseBatchInterface::SpatiallySparseBatchInterface(SpatiallySparseBatchSubInterface* s) :
   sub(s),
   rules(false,0),
   featuresPresent(false,0) {
+  reset();
 }
 void SpatiallySparseBatchInterface::summary() {
   std::cout << "---------------------------------------------------\n";
@@ -24,8 +23,8 @@ void SpatiallySparseBatchInterface::summary() {
   std::cout << "featuresPresent.size()" << featuresPresent.size() <<std::endl;
   std::cout << "spatialSize" << spatialSize << std::endl;
   std::cout << "nSpatialSites" << nSpatialSites << std::endl;
-  std::cout << "sub.features.size()" << sub.features.size() << std::endl;
-  std::cout << "sub.dfeatures.size()" << sub.dfeatures.size() << std::endl;
+  std::cout << "sub->features.size()" << sub->features.size() << std::endl;
+  std::cout << "sub->dfeatures.size()" << sub->dfeatures.size() << std::endl;
   std::cout << "grids.size()" << grids.size() << std::endl;
   std::cout << "grids[0].mp.size()" << grids[0].mp.size() << std::endl;
   std::cout << "---------------------------------------------------\n";

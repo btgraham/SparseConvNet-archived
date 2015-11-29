@@ -34,14 +34,22 @@ SparseConvNetCUDA::SparseConvNetCUDA
   nInputFeatures(nInputFeatures),
   nClasses(nClasses),
   nTop(nTop),
-  nBatchProducerThreads(nBatchProducerThreads) {
+  nBatchProducerThreads(nBatchProducerThreads){
   assert(nBatchProducerThreads<=N_MAX_BATCH_PRODUCER_THREADS);
   std::cout << "Sparse CNN - dimension=" << dimension << " nInputFeatures=" << nInputFeatures << " nClasses=" << nClasses << std::endl;
   nOutputFeatures=nInputFeatures;
   //Set up a pool of SpatiallySparseBatches
-  for (int c=0;c<nBatchProducerThreads;c++)
-    batchPool.emplace_back();
+  for (int c=0;c<nBatchProducerThreads;c++) {
+    initialSubInterfaces.push_back(new SpatiallySparseBatchSubInterface());
+    batchPool.emplace_back(initialSubInterfaces.back());
   }
+  }
+SparseConvNetCUDA::~SparseConvNetCUDA() {
+  for (auto p : initialSubInterfaces)
+    delete p;
+  for (auto p : sharedSubInterfaces)
+    delete p;
+}
 void SparseConvNetCUDA::addLearntLayer(int nFeatures,
                                        ActivationFunction activationFn,
                                        float dropout,
@@ -171,18 +179,17 @@ void SparseConvNetCUDA::addIndexLearnerLayer() {
   std::cout << std::endl;
 }
 void SparseConvNetCUDA::processBatch(SpatiallySparseBatch& batch, float learningRate, float momentum, std::ofstream& f, std::ofstream& g) {
-  //std::cout << batch.batchSize << " " << batch.interfaces[0].nSpatialSites << " " << batch.interfaces[0].nSpatialSites << "\n";
   if (batch.type==RESCALEBATCH) {
     float scalingUnderneath=1;
     for (int i=0;i<layers.size();i++) {
-      batch.interfaces[i+1].sub.reset();
+      batch.interfaces[i+1].sub->reset();
       layers[i]->forwards(batch,batch.interfaces[i],batch.interfaces[i+1]);
-      std::cout << i << ":" << batch.interfaces[i].sub.features.size()*sizeof(float)/(1<<20) << "MB ";
+      std::cout << i << ":" << batch.interfaces[i].sub->features.size()*sizeof(float)/(1<<20) << "MB ";
       layers[i]->scaleWeights(batch.interfaces[i],batch.interfaces[i+1],scalingUnderneath,i==layers.size()-1);
     }
   } else {
     for (int i=0;i<layers.size();i++) {
-      batch.interfaces[i+1].sub.reset();
+      batch.interfaces[i+1].sub->reset();
       layers[i]->forwards(batch,batch.interfaces[i],batch.interfaces[i+1]);
     }
   }
@@ -355,7 +362,7 @@ void SparseConvNetCUDA::processIndexLearnerBatch(SpatiallySparseBatch& batch, fl
     for (int i=0;i<batch.batchSize;i++) {
       f << batch.sampleNumbers[i] << " " << batch.labels.hVector()[i];
       for (int j=0;j<batch.interfaces[n-1].nFeatures;j++)
-        f << " " << batch.interfaces[n-1].sub.features.hVector()[i*batch.interfaces[n-1].nFeatures+j];
+        f << " " << batch.interfaces[n-1].sub->features.hVector()[i*batch.interfaces[n-1].nFeatures+j];
       f << std::endl;
     }
   }
@@ -409,7 +416,7 @@ void SparseConvNetCUDA::processBatchDumpTopLevelFeaturess(SpatiallySparseBatch& 
   for (int i=0;i<batch.batchSize;i++) {
     f << batch.sampleNumbers[i] << " " << batch.labels.hVector()[i];
     for (int j=0;j<batch.interfaces[n-1].nFeatures;j++)
-      f << " " << batch.interfaces[n-1].sub.features.hVector()[i*batch.interfaces[n-1].nFeatures+j];
+      f << " " << batch.interfaces[n-1].sub->features.hVector()[i*batch.interfaces[n-1].nFeatures+j];
     f << std::endl;
   }
 }
@@ -435,7 +442,7 @@ void SparseConvNetCUDA::calculateInputRegularizingConstants(SpatiallySparseDatas
   std::vector<float> c(nInputFeatures,0);
   while(SpatiallySparseBatch* batch=bp.nextBatch()) {
     {
-      std::vector<float> &features=batch->interfaces[0].sub.features.hVector();
+      std::vector<float> &features=batch->interfaces[0].sub->features.hVector();
       for (int i=0; i<features.size(); ++i)
         c[i%nInputFeatures]=std::max(c[i%nInputFeatures],std::fabs(features[i]));
     }

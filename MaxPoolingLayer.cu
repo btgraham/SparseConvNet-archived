@@ -142,10 +142,10 @@ void MaxPoolingLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
-  output.sub.poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
-  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
   cudaCheckError();
-  maxPool(input.sub.features.dPtr(),output.sub.features.dPtr(),output.rules.dPtr(),output.nSpatialSites,sd,output.featuresPresent.size(),output.sub.poolingChoices.dPtr(),memStream);
+  maxPool(input.sub->features.dPtr(),output.sub->features.dPtr(),output.rules.dPtr(),output.nSpatialSites,sd,output.featuresPresent.size(),output.sub->poolingChoices.dPtr(),memStream);
   cudaCheckError();
 }
 void MaxPoolingLayer::backwards
@@ -155,10 +155,10 @@ void MaxPoolingLayer::backwards
  float learningRate,
  float momentum) {
   if (input.backpropErrors) {
-    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub.dfeatures.setZero(memStream);
+    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    input.sub->dfeatures.setZero(memStream);
     maxPoolBackProp
-      (input.sub.dfeatures.dPtr(), output.sub.dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub.poolingChoices.dPtr(), memStream);
+      (input.sub->dfeatures.dPtr(), output.sub->dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub->poolingChoices.dPtr(), memStream);
   }
 }
 int MaxPoolingLayer::calculateInputSpatialSize(int outputSpatialSize) {
@@ -203,10 +203,10 @@ void PseudorandomOverlappingFractionalMaxPoolingLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
-  output.sub.poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
-  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
   cudaCheckError();
-  maxPool(input.sub.features.dPtr(),output.sub.features.dPtr(),output.rules.dPtr(),output.nSpatialSites,sd,output.featuresPresent.size(),output.sub.poolingChoices.dPtr(), memStream);
+  maxPool(input.sub->features.dPtr(),output.sub->features.dPtr(),output.rules.dPtr(),output.nSpatialSites,sd,output.featuresPresent.size(),output.sub->poolingChoices.dPtr(), memStream);
   cudaCheckError();
 }
 void PseudorandomOverlappingFractionalMaxPoolingLayer::backwards
@@ -216,10 +216,10 @@ void PseudorandomOverlappingFractionalMaxPoolingLayer::backwards
  float learningRate,
  float momentum) {
   if (input.backpropErrors) {
-    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub.dfeatures.setZero(memStream);
+    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    input.sub->dfeatures.setZero(memStream);
     maxPoolBackProp
-      (input.sub.dfeatures.dPtr(), output.sub.dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub.poolingChoices.dPtr(), memStream);
+      (input.sub->dfeatures.dPtr(), output.sub->dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub->poolingChoices.dPtr(), memStream);
   }
 }
 int PseudorandomOverlappingFractionalMaxPoolingLayer::calculateInputSpatialSize
@@ -265,10 +265,10 @@ void RandomOverlappingFractionalMaxPoolingLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
-  output.sub.poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
-  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
   cudaCheckError();
-  maxPool(input.sub.features.dPtr(),output.sub.features.dPtr(),output.rules.dPtr(),output.nSpatialSites,sd,output.featuresPresent.size(),output.sub.poolingChoices.dPtr(), memStream);
+  maxPool(input.sub->features.dPtr(),output.sub->features.dPtr(),output.rules.dPtr(),output.nSpatialSites,sd,output.featuresPresent.size(),output.sub->poolingChoices.dPtr(), memStream);
   cudaCheckError();
 }
 void RandomOverlappingFractionalMaxPoolingLayer::backwards
@@ -278,10 +278,10 @@ void RandomOverlappingFractionalMaxPoolingLayer::backwards
  float learningRate,
  float momentum) {
   if (input.backpropErrors) {
-    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub.dfeatures.setZero(memStream);
+    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    input.sub->dfeatures.setZero(memStream);
     maxPoolBackProp
-      (input.sub.dfeatures.dPtr(), output.sub.dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub.poolingChoices.dPtr(), memStream);
+      (input.sub->dfeatures.dPtr(), output.sub->dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub->poolingChoices.dPtr(), memStream);
   }
 }
 int RandomOverlappingFractionalMaxPoolingLayer::calculateInputSpatialSize
@@ -348,10 +348,10 @@ void PseudorandomNonOverlappingFractionalMaxPoolingLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
-  output.sub.poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
-  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
   cudaCheckError();
-  maxPool(input.sub.features.dPtr(),output.sub.features.dPtr(),output.rules.dPtr(),output.nSpatialSites,sd,output.featuresPresent.size(),output.sub.poolingChoices.dPtr(), memStream);
+  maxPool(input.sub->features.dPtr(),output.sub->features.dPtr(),output.rules.dPtr(),output.nSpatialSites,sd,output.featuresPresent.size(),output.sub->poolingChoices.dPtr(), memStream);
   cudaCheckError();
 }
 void PseudorandomNonOverlappingFractionalMaxPoolingLayer::backwards
@@ -361,10 +361,10 @@ void PseudorandomNonOverlappingFractionalMaxPoolingLayer::backwards
  float learningRate,
  float momentum) {
   if (input.backpropErrors) {
-    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub.dfeatures.setZero(memStream);
+    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    input.sub->dfeatures.setZero(memStream);
     maxPoolBackProp
-      (input.sub.dfeatures.dPtr(), output.sub.dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub.poolingChoices.dPtr(), memStream);
+      (input.sub->dfeatures.dPtr(), output.sub->dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub->poolingChoices.dPtr(), memStream);
   }
 }
 int PseudorandomNonOverlappingFractionalMaxPoolingLayer::calculateInputSpatialSize
@@ -427,10 +427,10 @@ void RandomNonOverlappingFractionalMaxPoolingLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
-  output.sub.poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
-  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
   cudaCheckError();
-  maxPool(input.sub.features.dPtr(),output.sub.features.dPtr(),output.rules.dPtr(),output.nSpatialSites,sd,output.featuresPresent.size(),output.sub.poolingChoices.dPtr(), memStream);
+  maxPool(input.sub->features.dPtr(),output.sub->features.dPtr(),output.rules.dPtr(),output.nSpatialSites,sd,output.featuresPresent.size(),output.sub->poolingChoices.dPtr(), memStream);
   cudaCheckError();
 }
 void RandomNonOverlappingFractionalMaxPoolingLayer::backwards
@@ -440,10 +440,10 @@ void RandomNonOverlappingFractionalMaxPoolingLayer::backwards
  float learningRate,
  float momentum) {
   if (input.backpropErrors) {
-    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub.dfeatures.setZero(memStream);
+    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    input.sub->dfeatures.setZero(memStream);
     maxPoolBackProp
-      (input.sub.dfeatures.dPtr(), output.sub.dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub.poolingChoices.dPtr(), memStream);
+      (input.sub->dfeatures.dPtr(), output.sub->dfeatures.dPtr(), output.nSpatialSites, output.featuresPresent.size(), output.sub->poolingChoices.dPtr(), memStream);
   }
 }
 int RandomNonOverlappingFractionalMaxPoolingLayer::calculateInputSpatialSize

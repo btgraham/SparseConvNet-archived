@@ -112,11 +112,11 @@ void TerminalPoolingLayer::forwards
 (SpatiallySparseBatch &batch,
  SpatiallySparseBatchInterface &input,
  SpatiallySparseBatchInterface &output) {
-  output.sub.poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
-  output.sub.features.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->poolingChoices.resize(output.nSpatialSites*output.featuresPresent.size());
+  output.sub->features.resize(output.nSpatialSites*output.featuresPresent.size());
   cudaCheckError();
-  terminalPool(input.sub.features.dPtr(),
-               output.sub.features.dPtr(),
+  terminalPool(input.sub->features.dPtr(),
+               output.sub->features.dPtr(),
                output.rules.dPtr(),
                output.nSpatialSites,S,
                output.featuresPresent.size(),
@@ -130,17 +130,17 @@ void TerminalPoolingLayer::backwards
  float learningRate,
  float momentum) {
   if (input.backpropErrors) {
-    input.sub.dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
-    input.sub.dfeatures.setZero();
+    input.sub->dfeatures.resize(input.nSpatialSites*input.featuresPresent.size());
+    input.sub->dfeatures.setZero();
     terminalPoolBackProp
-      (input.sub.dfeatures.dPtr(),
-       output.sub.dfeatures.dPtr(),
+      (input.sub->dfeatures.dPtr(),
+       output.sub->dfeatures.dPtr(),
        output.rules.dPtr(),
        output.nSpatialSites,
        output.featuresPresent.size(),S,
        memStream);
-    // output.sub.features.resize(0);
-    // output.sub.dfeatures.resize(0);
+    // output.sub->features.resize(0);
+    // output.sub->dfeatures.resize(0);
     // cudaCheckError();
   }
 }
