@@ -13,13 +13,14 @@ extern std::mt19937 RNGseedGenerator;
 class RNG {
   std::normal_distribution<> stdNormal;
   std::uniform_real_distribution<> uniform01;
+
 public:
   std::mt19937 gen;
 
   RNG();
   int randint(int n);
-  float uniform(float a=0, float b=1);
-  float normal(float mean=0, float sd=1);
+  float uniform(float a = 0, float b = 1);
+  float normal(float mean = 0, float sd = 1);
   int bernoulli(float p);
   template <typename T> int index(std::vector<T> &v);
   std::vector<int> NchooseM(int n, int m);

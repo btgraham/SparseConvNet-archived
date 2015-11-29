@@ -11,16 +11,15 @@ void SpatiallySparseBatchSubInterface::reset() {
   poolingChoices.resize(0);
 }
 
-SpatiallySparseBatchInterface::SpatiallySparseBatchInterface(SpatiallySparseBatchSubInterface* s) :
-  sub(s),
-  rules(false,0),
-  featuresPresent(false,0) {
+SpatiallySparseBatchInterface::SpatiallySparseBatchInterface(
+    SpatiallySparseBatchSubInterface *s)
+    : sub(s), rules(false, 0), featuresPresent(false, 0) {
   reset();
 }
 void SpatiallySparseBatchInterface::summary() {
   std::cout << "---------------------------------------------------\n";
   std::cout << "nFeatures" << nFeatures << std::endl;
-  std::cout << "featuresPresent.size()" << featuresPresent.size() <<std::endl;
+  std::cout << "featuresPresent.size()" << featuresPresent.size() << std::endl;
   std::cout << "spatialSize" << spatialSize << std::endl;
   std::cout << "nSpatialSites" << nSpatialSites << std::endl;
   std::cout << "sub->features.size()" << sub->features.size() << std::endl;
@@ -32,9 +31,9 @@ void SpatiallySparseBatchInterface::summary() {
 void SpatiallySparseBatchInterface::reset() {
   featuresPresent.resize(0);
   featuresPresent.copyToCPU();
-  nSpatialSites=0;
+  nSpatialSites = 0;
   grids.resize(0);
   rules.resize(0);
   rules.copyToCPU();
-  backpropErrors=false;
+  backpropErrors = false;
 }

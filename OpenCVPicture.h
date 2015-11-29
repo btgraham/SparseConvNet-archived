@@ -2,34 +2,41 @@
 #include "readImageToMat.h"
 #include "Picture.h"
 
-//If filename contain an image filename, then it gets loaded as needed; otherwise mat is used to stores the image
+// If filename contain an image filename, then it gets loaded as needed;
+// otherwise mat is used to stores the image
 
 class OpenCVPicture : public Picture {
   float scaleUCharColor(float col);
+
 public:
-  int xOffset; //Shift to the right
-  int yOffset; //Shift down
+  int xOffset; // Shift to the right
+  int yOffset; // Shift down
   int backgroundColor;
   float scale2;
-  float scale2xx, scale2xy,scale2yy;
+  float scale2xx, scale2xy, scale2yy;
   cv::Mat mat;
   std::string filename;
 
-  OpenCVPicture(int xSize, int ySize, int nInputFeatures, unsigned char backgroundColor,int label_ = -1);
-  OpenCVPicture(std::string filename, unsigned char backgroundColor=128, int label_ = -1);
+  OpenCVPicture(int xSize, int ySize, int nInputFeatures,
+                unsigned char backgroundColor, int label_ = -1);
+  OpenCVPicture(std::string filename, unsigned char backgroundColor = 128,
+                int label_ = -1);
   ~OpenCVPicture();
-  Picture* distort (RNG& rng, batchType type=TRAINBATCH);
+  Picture *distort(RNG &rng, batchType type = TRAINBATCH);
   void affineTransform(float c00, float c01, float c10, float c11);
   void centerMass();
-  void codifyInputData(SparseGrid &grid, std::vector<float> &features, int &nSpatialSites, int spatialSize);
+  void codifyInputData(SparseGrid &grid, std::vector<float> &features,
+                       int &nSpatialSites, int spatialSize);
   void jiggle(RNG &rng, int offlineJiggle);
-  void jiggleFit(RNG &rng, int subsetSize, float minFill=-1);
-  void colorDistortion(RNG &rng, int sigma1, int sigma2, int sigma3, int sigma4);
-  void loadData  (int scale, int flags=1);
-  void loadDataWithoutScaling(int flags=1);
-  void loadDataWithoutScalingRemoveModalColor(int flags=1);
+  void jiggleFit(RNG &rng, int subsetSize, float minFill = -1);
+  void colorDistortion(RNG &rng, int sigma1, int sigma2, int sigma3,
+                       int sigma4);
+  void loadData(int scale, int flags = 1);
+  void loadDataWithoutScaling(int flags = 1);
+  void loadDataWithoutScalingRemoveModalColor(int flags = 1);
   void randomCrop(RNG &rng, int subsetSize);
   std::string identify();
 };
 
-void matrixMul2x2inPlace(float& c00, float& c01, float& c10, float& c11, float a00, float a01, float a10, float a11);
+void matrixMul2x2inPlace(float &c00, float &c01, float &c10, float &c11,
+                         float a00, float a01, float a10, float a11);

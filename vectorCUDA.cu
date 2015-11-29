@@ -5,253 +5,281 @@
 #include <cstring>
 #include <cassert>
 
-template <typename t> vectorCUDA<t>::vectorCUDA(bool onGPU, int dsize) : onGPU(onGPU), dsize(dsize), dAllocated(0) {
-  if (onGPU && dsize>0) {
-    dAllocated=dsize;
-    cudaSafeCall(cudaMalloc((void**) &d_vec, sizeof(t)*dsize));
+template <typename t>
+vectorCUDA<t>::vectorCUDA(bool onGPU, int dsize)
+    : onGPU(onGPU), dsize(dsize), dAllocated(0) {
+  if (onGPU && dsize > 0) {
+    dAllocated = dsize;
+    cudaSafeCall(cudaMalloc((void **)&d_vec, sizeof(t) * dsize));
   } else {
     vec.resize(dsize);
   }
 }
 
 template <typename t> vectorCUDA<t>::~vectorCUDA() {
-  if (dAllocated>0) {
+  if (dAllocated > 0) {
     cudaSafeCall(cudaFree(d_vec));
   }
 }
 
 template <typename t> void vectorCUDA<t>::copyToCPU() {
   if (onGPU) {
-    onGPU=false;
-    if (dsize>0)  {
-      std::cout << "blocking copyToCPU " << dsize << " "  << dAllocated <<"\n";
+    onGPU = false;
+    if (dsize > 0) {
+      std::cout << "blocking copyToCPU " << dsize << " " << dAllocated << "\n";
       vec.resize(dsize);
-      cudaSafeCall(cudaMemcpy(&vec[0],d_vec,sizeof(t)*dsize,cudaMemcpyDeviceToHost));
+      cudaSafeCall(cudaMemcpy(&vec[0], d_vec, sizeof(t) * dsize,
+                              cudaMemcpyDeviceToHost));
     }
   }
 }
 template <typename t> void vectorCUDA<t>::copyToGPU() {
   if (!onGPU) {
-    onGPU=true;
-    dsize=vec.size();
-    if (dsize>dAllocated) {
-      if (dAllocated>0) {
+    onGPU = true;
+    dsize = vec.size();
+    if (dsize > dAllocated) {
+      if (dAllocated > 0) {
         cudaSafeCall(cudaFree(d_vec));
       }
-      dAllocated=dsize;
-      cudaSafeCall(cudaMalloc((void**) &d_vec, sizeof(t)*dAllocated));
+      dAllocated = dsize;
+      cudaSafeCall(cudaMalloc((void **)&d_vec, sizeof(t) * dAllocated));
     }
-    if (dsize>0)  {
-      std::cout << "blocking copyToGPU " << dsize << " "  << dAllocated <<"\n";
-      cudaSafeCall(cudaMemcpy(d_vec,&vec[0],sizeof(t)*dsize,cudaMemcpyHostToDevice));
+    if (dsize > 0) {
+      std::cout << "blocking copyToGPU " << dsize << " " << dAllocated << "\n";
+      cudaSafeCall(cudaMemcpy(d_vec, &vec[0], sizeof(t) * dsize,
+                              cudaMemcpyHostToDevice));
     }
     vec.clear();
   }
 }
 
-template <typename t> void vectorCUDA<t>::copyToGPUAsync(cudaMemStream& memStream) {
+template <typename t>
+void vectorCUDA<t>::copyToGPUAsync(cudaMemStream &memStream) {
   if (!onGPU) {
-    onGPU=true;
-    dsize=vec.size();
-    if (dsize>dAllocated) {
-      if (dAllocated>0) {
+    onGPU = true;
+    dsize = vec.size();
+    if (dsize > dAllocated) {
+      if (dAllocated > 0) {
         cudaSafeCall(cudaFree(d_vec));
       }
-      dAllocated=dsize;
-      cudaSafeCall(cudaMalloc((void**) &d_vec, sizeof(t)*dAllocated));
+      dAllocated = dsize;
+      cudaSafeCall(cudaMalloc((void **)&d_vec, sizeof(t) * dAllocated));
     }
-    if (memStream.pinnedMemorySize<sizeof(t)*dsize) {
-      memStream.pinnedMemorySize=2*sizeof(t)*dsize;
+    if (memStream.pinnedMemorySize < sizeof(t) * dsize) {
+      memStream.pinnedMemorySize = 2 * sizeof(t) * dsize;
       cudaSafeCall(cudaFreeHost(memStream.pinnedMemory));
-      cudaSafeCall(cudaMallocHost(&memStream.pinnedMemory,
-                                  memStream.pinnedMemorySize));
+      cudaSafeCall(
+          cudaMallocHost(&memStream.pinnedMemory, memStream.pinnedMemorySize));
     }
-    if (dsize>0)  {
-      std::memcpy(memStream.pinnedMemory,&vec[0],sizeof(t)*dsize);
-      cudaSafeCall(cudaMemcpyAsync(d_vec,memStream.pinnedMemory,sizeof(t)*dsize,cudaMemcpyHostToDevice,memStream.stream));
+    if (dsize > 0) {
+      std::memcpy(memStream.pinnedMemory, &vec[0], sizeof(t) * dsize);
+      cudaSafeCall(cudaMemcpyAsync(d_vec, memStream.pinnedMemory,
+                                   sizeof(t) * dsize, cudaMemcpyHostToDevice,
+                                   memStream.stream));
       cudaStreamSynchronize(memStream.stream);
     }
     vec.clear();
   }
 }
-template <typename t> void vectorCUDA<t>::copyToCPUAsync(cudaMemStream& memStream) {
+template <typename t>
+void vectorCUDA<t>::copyToCPUAsync(cudaMemStream &memStream) {
   if (onGPU) {
-    onGPU=false;
-    if (memStream.pinnedMemorySize<sizeof(t)*dsize) {
-      memStream.pinnedMemorySize=2*sizeof(t)*dsize;
+    onGPU = false;
+    if (memStream.pinnedMemorySize < sizeof(t) * dsize) {
+      memStream.pinnedMemorySize = 2 * sizeof(t) * dsize;
       cudaSafeCall(cudaFreeHost(memStream.pinnedMemory));
-      cudaSafeCall(cudaMallocHost(&memStream.pinnedMemory,
-                                  memStream.pinnedMemorySize));
+      cudaSafeCall(
+          cudaMallocHost(&memStream.pinnedMemory, memStream.pinnedMemorySize));
     }
-    if (dsize>0)  {
-      cudaSafeCall(cudaMemcpyAsync(memStream.pinnedMemory,d_vec,sizeof(t)*dsize,cudaMemcpyDeviceToHost,memStream.stream));
+    if (dsize > 0) {
+      cudaSafeCall(cudaMemcpyAsync(memStream.pinnedMemory, d_vec,
+                                   sizeof(t) * dsize, cudaMemcpyDeviceToHost,
+                                   memStream.stream));
       vec.resize(dsize);
       cudaStreamSynchronize(memStream.stream);
-      std::memcpy(&vec[0],memStream.pinnedMemory,sizeof(t)*dsize);
+      std::memcpy(&vec[0], memStream.pinnedMemory, sizeof(t) * dsize);
     }
   }
 }
 
-template <typename t> t*& vectorCUDA<t>::dPtr() {
-  if (!onGPU and vec.size()>0)
+template <typename t> t *&vectorCUDA<t>::dPtr() {
+  if (!onGPU and vec.size() > 0)
     std::cout << "dPtr from cpu " << vec.size() << "\n";
   copyToGPU();
   return d_vec;
 }
-template <typename t> std::vector<t>& vectorCUDA<t>::hVector() {
-  if (onGPU and vec.size()>0)
-    std::cout << "hVector from gpu " << dsize << " " << dAllocated <<"\n";
+template <typename t> std::vector<t> &vectorCUDA<t>::hVector() {
+  if (onGPU and vec.size() > 0)
+    std::cout << "hVector from gpu " << dsize << " " << dAllocated << "\n";
   copyToCPU();
   return vec;
 }
 template <typename t> int vectorCUDA<t>::size() {
-  if (onGPU) return dsize;
+  if (onGPU)
+    return dsize;
   return vec.size();
 }
 __device__ float dsumAbsReturnVal;
-template <typename t> __global__ void dsumAbs(t* d, int n, float negWeight) {  //make async??
+template <typename t>
+__global__ void dsumAbs(t *d, int n, float negWeight) { // make async??
   __shared__ float acc[NTHREADS];
-  acc[threadIdx.x]=0;
-  for (int i=threadIdx.x;i<n;i+=NTHREADS) {
-    float di=d[i];
-    acc[threadIdx.x]+=(di>=0)?di:(-negWeight*di);
+  acc[threadIdx.x] = 0;
+  for (int i = threadIdx.x; i < n; i += NTHREADS) {
+    float di = d[i];
+    acc[threadIdx.x] += (di >= 0) ? di : (-negWeight * di);
   }
   __syncthreads();
-  if (threadIdx.x==0) {
-    dsumAbsReturnVal=0;
-    for (int i=0;i<NTHREADS;i++) {
-      dsumAbsReturnVal+=acc[i];
+  if (threadIdx.x == 0) {
+    dsumAbsReturnVal = 0;
+    for (int i = 0; i < NTHREADS; i++) {
+      dsumAbsReturnVal += acc[i];
     }
   }
 }
 template <typename t> float vectorCUDA<t>::meanAbs(float negWeight) {
   float total;
   if (onGPU) {
-    dsumAbs<<<1,NTHREADS>>>(d_vec,dsize,negWeight);
+    dsumAbs << <1, NTHREADS>>> (d_vec, dsize, negWeight);
     cudaCheckError();
-    cudaMemcpyFromSymbol(&total, dsumAbsReturnVal, sizeof(dsumAbsReturnVal), 0, cudaMemcpyDeviceToHost);
+    cudaMemcpyFromSymbol(&total, dsumAbsReturnVal, sizeof(dsumAbsReturnVal), 0,
+                         cudaMemcpyDeviceToHost);
   } else {
-    total=0;
-    for (int i=0;i<size();i++)
-      total+=(hVector()[i]>0)?hVector()[i]:(-negWeight*hVector()[i]);
+    total = 0;
+    for (int i = 0; i < size(); i++)
+      total += (hVector()[i] > 0) ? hVector()[i] : (-negWeight * hVector()[i]);
   }
-  if (total!=total) {
+  if (total != total) {
     std::cout << "NaN in vectorCUDA<t>::meanAbs()\n";
     exit(1);
   }
-  return total/size();
+  return total / size();
 }
-template <typename t> void vectorCUDA<t>::multiplicativeRescale(float multiplier) {
-  for (int i=0;i<size();i++)
-    hVector()[i]*=multiplier;
+template <typename t>
+void vectorCUDA<t>::multiplicativeRescale(float multiplier) {
+  for (int i = 0; i < size(); i++)
+    hVector()[i] *= multiplier;
 }
 template <typename t> void vectorCUDA<t>::setZero() {
   if (onGPU) {
-    cudaSafeCall(cudaMemset(d_vec,  0,sizeof(t)*dsize));
+    cudaSafeCall(cudaMemset(d_vec, 0, sizeof(t) * dsize));
   } else {
-    memset(&vec[0],0,sizeof(t)*vec.size());
+    memset(&vec[0], 0, sizeof(t) * vec.size());
   }
 }
-template <typename t> void vectorCUDA<t>::setZero(cudaMemStream& memStream) {
+template <typename t> void vectorCUDA<t>::setZero(cudaMemStream &memStream) {
   if (onGPU) {
-    cudaSafeCall(cudaMemsetAsync(d_vec,  0,sizeof(t)*dsize, memStream.stream));
+    cudaSafeCall(
+        cudaMemsetAsync(d_vec, 0, sizeof(t) * dsize, memStream.stream));
   } else {
-    memset(&vec[0],0,sizeof(t)*vec.size());
+    memset(&vec[0], 0, sizeof(t) * vec.size());
   }
 }
 template <typename t> void vectorCUDA<t>::setConstant(float a) {
   copyToCPU();
-  for (int i=0;i<vec.size();i++)
-    vec[i]=a;
+  for (int i = 0; i < vec.size(); i++)
+    vec[i] = a;
 }
-template <typename t> void vectorCUDA<t>::setUniform(float a,float b) {
+template <typename t> void vectorCUDA<t>::setUniform(float a, float b) {
   RNG rng;
   copyToCPU();
-  for (int i=0;i<vec.size();i++)
-    vec[i]=rng.uniform(a,b);
+  for (int i = 0; i < vec.size(); i++)
+    vec[i] = rng.uniform(a, b);
 }
 template <typename t> void vectorCUDA<t>::setBernoulli(float p) {
   RNG rng;
   copyToCPU();
-  for (int i=0;i<vec.size();i++)
-    vec[i]=rng.bernoulli(p);
+  for (int i = 0; i < vec.size(); i++)
+    vec[i] = rng.bernoulli(p);
 }
 template <typename t> void vectorCUDA<t>::setNormal(float mean, float sd) {
   RNG rng;
   copyToCPU();
-  for (int i=0;i<vec.size();i++)
-    vec[i]=rng.normal(mean,sd);
+  for (int i = 0; i < vec.size(); i++)
+    vec[i] = rng.normal(mean, sd);
 }
 template <typename t> void vectorCUDA<t>::resize(int n) {
   if (onGPU) {
-    if (dsize!=n) {
-      dsize=n;
-      if (dsize>dAllocated) {
-        if (dAllocated>0) {
+    if (dsize != n) {
+      dsize = n;
+      if (dsize > dAllocated) {
+        if (dAllocated > 0) {
           cudaSafeCall(cudaFree(d_vec));
         }
-        dAllocated=dsize;
-        cudaSafeCall(cudaMalloc((void**) &d_vec, sizeof(t)*dsize));
+        dAllocated = dsize;
+        cudaSafeCall(cudaMalloc((void **)&d_vec, sizeof(t) * dsize));
       }
     }
   } else {
     vec.resize(n);
   }
 }
-template <typename t> void vectorCUDA<t>::printSubset(const char *name, int nCol,int maxPrint) {
+template <typename t>
+void vectorCUDA<t>::printSubset(const char *name, int nCol, int maxPrint) {
   RNG rng;
   copyToCPU();
-  int nRow=vec.size()/nCol;
+  int nRow = vec.size() / nCol;
   std::cout << name << " " << nRow << " " << nCol << std::endl;
-  std::vector<int> rr=rng.NchooseM(nRow,min(maxPrint,nRow));
-  std::vector<int> rc=rng.NchooseM(nCol,min(maxPrint,nCol));
-  for (int i=0;i<rr.size(); i++) {
-    for (int j=0;j<rc.size(); j++) {
+  std::vector<int> rr = rng.NchooseM(nRow, min(maxPrint, nRow));
+  std::vector<int> rc = rng.NchooseM(nCol, min(maxPrint, nCol));
+  for (int i = 0; i < rr.size(); i++) {
+    for (int j = 0; j < rc.size(); j++) {
       std::cout.precision(3);
-      std::cout <<std::scientific<< vec[rr[i]*nCol+rc[j]] << "\t";
-      if (abs(vec[rr[i]*nCol+rc[j]])>1000000) exit(1);
+      std::cout << std::scientific << vec[rr[i] * nCol + rc[j]] << "\t";
+      if (abs(vec[rr[i] * nCol + rc[j]]) > 1000000)
+        exit(1);
     }
     std::cout << std::endl;
   }
-  std::cout << "---------------------------------------"<<std::endl;
+  std::cout << "---------------------------------------" << std::endl;
 }
 
-//Borrowing from http://stackoverflow.com/questions/22734067/checking-if-a-matrix-contains-nans-or-infinite-values-in-cuda
-__global__ void dNanCheck(float* d, int n, bool* result) {
-  for (int i=threadIdx.x; i<n; i+=128)
-    if (isnan(d[i])) *result=false;
+// Borrowing from
+// http://stackoverflow.com/questions/22734067/checking-if-a-matrix-contains-nans-or-infinite-values-in-cuda
+__global__ void dNanCheck(float *d, int n, bool *result) {
+  for (int i = threadIdx.x; i < n; i += 128)
+    if (isnan(d[i]))
+      *result = false;
 }
-template <typename t> void vectorCUDA<t>::check(const char* file, int linenumber) {}
-template <> void vectorCUDA<float>::check(const char* file, int linenumber) {
-  if (onGPU and dsize>0) {
-    if (dsize==0) return;
+template <typename t>
+void vectorCUDA<t>::check(const char *file, int linenumber) {}
+template <> void vectorCUDA<float>::check(const char *file, int linenumber) {
+  if (onGPU and dsize > 0) {
+    if (dsize == 0)
+      return;
     cudaCheckError();
-    bool *d_result, h_result=true;
-    cudaSafeCall(cudaMalloc((void **)&d_result, sizeof (bool)));
-    cudaSafeCall(cudaMemcpy(d_result, &h_result, sizeof(bool), cudaMemcpyHostToDevice));
-    dNanCheck<<<1,128>>>(d_vec, dsize, d_result);
+    bool *d_result, h_result = true;
+    cudaSafeCall(cudaMalloc((void **)&d_result, sizeof(bool)));
+    cudaSafeCall(
+        cudaMemcpy(d_result, &h_result, sizeof(bool), cudaMemcpyHostToDevice));
+    dNanCheck << <1, 128>>> (d_vec, dsize, d_result);
     cudaCheckError();
-    cudaSafeCall(cudaMemcpy(&h_result, d_result, sizeof(bool), cudaMemcpyDeviceToHost));
+    cudaSafeCall(
+        cudaMemcpy(&h_result, d_result, sizeof(bool), cudaMemcpyDeviceToHost));
     cudaSafeCall(cudaFree(d_result));
     if (!h_result) {
-      std::cout <<"GPU NaN " << file <<" " << linenumber << " dsize " << dsize <<"\n";
+      std::cout << "GPU NaN " << file << " " << linenumber << " dsize " << dsize
+                << "\n";
       exit(1);
     }
     cudaCheckError();
   }
   if (!onGPU) {
-    bool result=true;
-    for (int i=0; i<vec.size();++i)
-      if (isnan(vec[i])) result=false;
+    bool result = true;
+    for (int i = 0; i < vec.size(); ++i)
+      if (isnan(vec[i]))
+        result = false;
     if (!result) {
-      std::cout <<"CPU NaN " << file <<" " << linenumber << "\n";
+      std::cout << "CPU NaN " << file << " " << linenumber << "\n";
       exit(1);
     }
   }
 }
 
-template <typename t> void vectorCUDA<t>::summary(const char* file, int linenumber) {
-  std::cout << file << ":" << linenumber << " " << std::boolalpha << onGPU << " " << d_vec << " " <<dsize << " " <<  dAllocated << " " << vec.size() <<"\n";
+template <typename t>
+void vectorCUDA<t>::summary(const char *file, int linenumber) {
+  std::cout << file << ":" << linenumber << " " << std::boolalpha << onGPU
+            << " " << d_vec << " " << dsize << " " << dAllocated << " "
+            << vec.size() << "\n";
 }
 template class vectorCUDA<float>;
 template class vectorCUDA<int>;
