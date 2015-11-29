@@ -1,4 +1,3 @@
-#define UTILITIES_CU
 #include "utilities.h"
 #include <algorithm>
 #include <iostream>
@@ -58,8 +57,7 @@ std::vector<int> vectorTopIndices(std::vector<t> &test, int k) {
 template std::vector<int> vectorTopIndices<float>(std::vector<float> &test,
                                                   int k);
 
-static void cublasError(cublasStatus_t error, const char *file,
-                        int linenumber) {
+void cublasError(cublasStatus_t error, const char *file, int linenumber) {
   switch (error) {
   case CUBLAS_STATUS_SUCCESS:
     break;
@@ -126,9 +124,7 @@ int initializeGPU(int pciBusID) { // pciBusID, or -1 for the first device
               << std::endl;
   }
   assert(deviceID >= 0);
-  cublasError(cublasCreate(&cublasHandle), __FILE__, __LINE__);
   // cudaSafeCall(cudaStreamDestroy(stream));
-  // cublasError(cublasSetStream(cublasHandle, stream));
   // cudaSafeCall(cudaStreamCreate(&stream));
   return deviceID;
 }

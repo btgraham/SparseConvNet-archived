@@ -161,8 +161,8 @@ template class FractionalPoolingRegions<RandomOverlappingFmpTicks>;
 template class FractionalPoolingRegions<RandomNonOverlappingFmpTicks>;
 
 void gridRulesNonOverlapping(
-    SparseGrid &inputGrid, // Keys 0,1,...,powf(regions.nIn,dimension)-1
-                           // represent grid points
+    SparseGrid &inputGrid,  // Keys 0,1,...,powf(regions.nIn,dimension)-1
+                            // represent grid points
     SparseGrid &outputGrid, // Keys 0,1,...,powf(regions.nOut,dimension)-1
                             // represent grid points
     RectangularRegions &regions, int &nOutputSpatialSites,
@@ -340,8 +340,8 @@ void gridRulesNonOverlapping(
 }
 
 void gridRulesOverlappingMin(
-    SparseGrid &inputGrid, // Keys 0,1,...,powf(regions.nIn,dimension)-1
-                           // represent grid points
+    SparseGrid &inputGrid,  // Keys 0,1,...,powf(regions.nIn,dimension)-1
+                            // represent grid points
     SparseGrid &outputGrid, // Keys 0,1,...,powf(regions.nOut,dimension)-1
                             // represent grid points
     RectangularRegions &regions, int &nOutputSpatialSites,
@@ -530,8 +530,8 @@ void gridRulesOverlappingMin(
 }
 
 void gridRulesOverlappingNoMin(
-    SparseGrid &inputGrid, // Keys 0,1,...,powf(regions.nIn,dimension)-1
-                           // represent grid points
+    SparseGrid &inputGrid,  // Keys 0,1,...,powf(regions.nIn,dimension)-1
+                            // represent grid points
     SparseGrid &outputGrid, // Keys 0,1,...,powf(regions.nOut,dimension)-1
                             // represent grid points
     RectangularRegions &regions, int &nOutputSpatialSites,
@@ -656,9 +656,9 @@ void gridRulesOverlappingNoMin(
   }
 }
 
-void gridRules(SparseGrid &inputGrid, // Keys
-                                      // 0,1,...,powf(regions.nIn,dimension)-1
-                                      // represent grid points
+void gridRules(SparseGrid &inputGrid,  // Keys
+                                       // 0,1,...,powf(regions.nIn,dimension)-1
+                                       // represent grid points
                SparseGrid &outputGrid, // Keys
                                        // 0,1,...,powf(regions.nOut,dimension)-1
                                        // represent grid points
@@ -707,9 +707,9 @@ int RegularTriangularRegions::outputR(int i) {
 }
 
 void gridRulesNoMin(
-    SparseGrid &inputGrid, // Keys 0,1,...,powf(regions.nIn,3)-1 represent grid
-                           // points (plus paddding to form a square/cube); key
-                           // -1 represents null/background vector
+    SparseGrid &inputGrid,  // Keys 0,1,...,powf(regions.nIn,3)-1 represent grid
+                            // points (plus paddding to form a square/cube); key
+                            // -1 represents null/background vector
     SparseGrid &outputGrid, // Keys 0,1,...,powf(regions.nOut,3)-1 represent
                             // grid points (plus paddding to form a
                             // square/cube); key -1 represents null/background

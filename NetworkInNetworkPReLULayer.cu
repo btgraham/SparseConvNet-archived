@@ -86,11 +86,12 @@ __global__ void dGradientDescentKeepPositive(float *d_delta, float *d_momentum,
 }
 
 NetworkInNetworkPReLULayer::NetworkInNetworkPReLULayer(
-    cudaMemStream &memStream, int nFeaturesIn, int nFeaturesOut, float dropout,
+    cudaMemStream &memStream, cublasHandle_t &cublasHandle, int nFeaturesIn,
+    int nFeaturesOut, float dropout,
     float alpha // used to determine intialization weights only
     )
-    : SpatiallySparseLayer(memStream), nFeaturesIn(nFeaturesIn),
-      nFeaturesOut(nFeaturesOut), dropout(dropout),
+    : SpatiallySparseLayer(memStream), cublasHandle(cublasHandle),
+      nFeaturesIn(nFeaturesIn), nFeaturesOut(nFeaturesOut), dropout(dropout),
       W(false, nFeaturesIn * nFeaturesOut),
       MW(false, nFeaturesIn * nFeaturesOut), B(false, nFeaturesOut),
       MB(false, nFeaturesOut), PReLU(false, nFeaturesOut),

@@ -5,7 +5,7 @@
 
 class TerminalPoolingLayer : public SpatiallySparseLayer {
 public:
-  int inSpatialSize; //==poolSize.
+  int inSpatialSize;  //==poolSize.
   int outSpatialSize; // 1
   int poolSize;
   int S; // Maximum number of active sites, smaller than

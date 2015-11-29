@@ -7,7 +7,7 @@
 template <typename t> class vectorCUDA {
 private:
   t *d_vec;
-  int dsize; // Current size when on the GPU
+  int dsize;      // Current size when on the GPU
   int dAllocated; // Allocated space on the GPU (>=dsize)
   std::vector<t> vec;
 

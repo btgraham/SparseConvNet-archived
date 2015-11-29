@@ -123,14 +123,15 @@ void replicateArray(float *src, float *dst, int nRows, int nColumns,
 }
 
 NetworkInNetworkLayer::NetworkInNetworkLayer(
-    cudaMemStream &memStream, int nFeaturesIn, int nFeaturesOut, float dropout,
-    ActivationFunction fn,
+    cudaMemStream &memStream, cublasHandle_t &cublasHandle, int nFeaturesIn,
+    int nFeaturesOut, float dropout, ActivationFunction fn,
     float alpha // used to determine intialization weights only
     )
-    : SpatiallySparseLayer(memStream), nFeaturesIn(nFeaturesIn),
-      nFeaturesOut(nFeaturesOut), dropout(dropout), fn(fn),
-      W(true, nFeaturesIn * nFeaturesOut), MW(true, nFeaturesIn * nFeaturesOut),
-      B(true, nFeaturesOut), MB(true, nFeaturesOut) {
+    : SpatiallySparseLayer(memStream), cublasHandle(cublasHandle),
+      nFeaturesIn(nFeaturesIn), nFeaturesOut(nFeaturesOut), dropout(dropout),
+      fn(fn), W(true, nFeaturesIn * nFeaturesOut),
+      MW(true, nFeaturesIn * nFeaturesOut), B(true, nFeaturesOut),
+      MB(true, nFeaturesOut) {
   float scale = pow(6.0f / (nFeaturesIn + nFeaturesOut * alpha), 0.5f);
   W.copyToCPUAsync(memStream);
   W.setUniform(-scale, scale);

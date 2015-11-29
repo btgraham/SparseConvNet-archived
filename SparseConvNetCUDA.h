@@ -25,6 +25,7 @@
 class SparseConvNetCUDA {
 public:
   std::vector<SpatiallySparseLayer *> layers;
+  std::vector<float> inputNormalizingConstants;
   int dimension;
   int nClasses;
   int nTop;
@@ -39,8 +40,8 @@ public:
   std::vector<SpatiallySparseBatch> batchPool;
   std::vector<SpatiallySparseBatchSubInterface *> initialSubInterfaces;
   std::vector<SpatiallySparseBatchSubInterface *> sharedSubInterfaces;
+  cublasHandle_t cublasHandle;
 
-  std::vector<float> inputNormalizingConstants;
   SparseConvNetCUDA(int dimension, int nInputFeatures, int nClasses,
                     int pciBusID = -1, int nTop = 1,
                     int nBatchProducerThreads = 10);

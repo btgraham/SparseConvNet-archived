@@ -189,7 +189,7 @@ void OpenCVPicture::codifyInputData(SparseGrid &grid,
       for (int i = 0; i < mat.channels(); i++)
         if (std::abs(scaleUCharColor(matData[i + x * mat.channels() +
                                              y * mat.channels() * mat.cols])) >
-            0.02) // 0.02
+            0.02)
           interestingPixel = true;
       if (interestingPixel) {
         int n = (x + xOffset + spatialSize / 2) * spatialSize +

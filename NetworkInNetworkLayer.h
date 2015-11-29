@@ -6,23 +6,24 @@
 class NetworkInNetworkLayer : public SpatiallySparseLayer {
 private:
   RNG rng;
+  cublasHandle_t &cublasHandle;
 
 public:
-  vectorCUDA<float> W; // Weights
+  vectorCUDA<float> W;  // Weights
   vectorCUDA<float> MW; // momentum
-  vectorCUDA<float> w; // shrunk versions
+  vectorCUDA<float> w;  // shrunk versions
   vectorCUDA<float> dw; // For backprop
-  vectorCUDA<float> B; // Weights
+  vectorCUDA<float> B;  // Weights
   vectorCUDA<float> MB; // momentum
-  vectorCUDA<float> b; // shrunk versions
+  vectorCUDA<float> b;  // shrunk versions
   vectorCUDA<float> db; // For backprop
   ActivationFunction fn;
   int nFeaturesIn;
   int nFeaturesOut;
   float dropout;
   NetworkInNetworkLayer(
-      cudaMemStream &memStream, int nFeaturesIn, int nFeaturesOut,
-      float dropout = 0, ActivationFunction fn = NOSIGMOID,
+      cudaMemStream &memStream, cublasHandle_t &cublasHandle, int nFeaturesIn,
+      int nFeaturesOut, float dropout = 0, ActivationFunction fn = NOSIGMOID,
       float alpha = 1 // used to determine intialization weights only
       );
   void preprocess(SpatiallySparseBatch &batch,

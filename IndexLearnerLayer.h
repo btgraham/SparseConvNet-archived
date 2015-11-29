@@ -14,9 +14,10 @@
 class IndexLearnerLayer : public SpatiallySparseLayer {
 private:
   RNG rng;
-  vectorCUDA<float> W; // Weights
+  cublasHandle_t &cublasHandle;
+  vectorCUDA<float> W;  // Weights
   vectorCUDA<float> MW; // momentum
-  vectorCUDA<float> w; // shrunk versions
+  vectorCUDA<float> w;  // shrunk versions
   vectorCUDA<float> dw; // For backprop
 public:
   std::vector<int> indexLearnerIndices; // Variable to deliver indices in use
@@ -25,8 +26,8 @@ public:
   int nFeaturesIn;
   int nFeaturesOut;
   float dropout;
-  IndexLearnerLayer(cudaMemStream &memStream, int nFeaturesIn,
-                    int nFeaturesOut);
+  IndexLearnerLayer(cudaMemStream &memStream, cublasHandle_t &cublasHandle,
+                    int nFeaturesIn, int nFeaturesOut);
   void preprocess(SpatiallySparseBatch &batch,
                   SpatiallySparseBatchInterface &input,
                   SpatiallySparseBatchInterface &output);

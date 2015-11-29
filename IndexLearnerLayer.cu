@@ -20,10 +20,11 @@ __global__ void dGradientDescentShrunkMatrixNoMomentum(
   }
 }
 
-IndexLearnerLayer::IndexLearnerLayer(cudaMemStream &memStream, int nFeaturesIn,
-                                     int nFeaturesOut)
-    : SpatiallySparseLayer(memStream), nFeaturesIn(nFeaturesIn),
-      nFeaturesOut(nFeaturesOut) {
+IndexLearnerLayer::IndexLearnerLayer(cudaMemStream &memStream,
+                                     cublasHandle_t &cublasHandle,
+                                     int nFeaturesIn, int nFeaturesOut)
+    : SpatiallySparseLayer(memStream), cublasHandle(cublasHandle),
+      nFeaturesIn(nFeaturesIn), nFeaturesOut(nFeaturesOut) {
   std::cout << "IndexLearnerLayer" << std::endl;
   float scale = pow(6.0f / (nFeaturesIn + nFeaturesOut), 0.5f);
   W.resize(nFeaturesIn * nFeaturesOut);

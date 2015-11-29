@@ -28,7 +28,7 @@ public:
   int backgroundCol;
   SparseGridMap mp;
   SparseGrid() {
-    backgroundCol = -1; // Indicate that no "null vector" is needed
+    backgroundCol = -1;    // Indicate that no "null vector" is needed
     mp.set_empty_key(-99); // dense_hash_map needs an empty key that will not be
                            // used as a real key
     mp.set_deleted_key(-98); // and another for deleting

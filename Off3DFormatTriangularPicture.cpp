@@ -11,7 +11,7 @@ void drawTriangleOFF(SparseGrid &grid, int inputFieldSize,
   float base = powf(u0 * u0 + u1 * u1 + u2 * u2, 0.5);
   u0 /= base;
   u1 /= base;
-  u2 /= base; // scale u to a unit vector
+  u2 /= base;                                 // scale u to a unit vector
   float offset = u0 * v0 + u1 * v1 + u2 * v2; // u dot v
   v0 -= offset * u0;
   v1 -= offset * u1;
@@ -30,9 +30,9 @@ void drawTriangleOFF(SparseGrid &grid, int inputFieldSize,
             p1 = a1 + (b + offset * h / height) * u1 + h * v1,
             p2 = a2 + (b + offset * h / height) * u2 + h * v2;
       int i0 = p0 + 0.25 * inputFieldSize, //(0.25,0.25,0.25) for the pyramid
-                                           //center in cubic coord system,
-                                           //corresponds to
-                                           //(1/2,1/2/sqrt(3),1/sqrt(24))
+          // center in cubic coord system,
+          // corresponds to
+          //(1/2,1/2/sqrt(3),1/sqrt(24))
           i1 = p1 + 0.25 * inputFieldSize, i2 = p2 + 0.25 * inputFieldSize;
       if (i0 >= 0 && i1 >= 0 && i2 >= 0 && i0 + i1 + i2 < inputFieldSize) {
         int n = i0 * inputFieldSize * inputFieldSize + i1 * inputFieldSize + i2;

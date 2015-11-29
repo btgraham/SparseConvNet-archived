@@ -62,7 +62,7 @@ __global__ void dTerminalPoolBackProp(float *d1, float *d2, int *rules,
                                       int nOut, int ps2) {
   __shared__ int r[TERMINAL_POOLING_MAX_ACTIVE_SITES]; // Allocate at least size
                                                        // ps2 !!!!!!!!!!!
-  int i = blockIdx.x * nOut; // for input d2
+  int i = blockIdx.x * nOut;                           // for input d2
   for (int p = threadIdx.x; p < ps2; p += KERNELBLOCKSIZE) {
     r[p] = rules[blockIdx.x * ps2 + p] * nOut; // for output d1
   }

@@ -66,17 +66,11 @@ inline void __cudaCheckError(const char *file, const int line) {
   return;
 }
 
-static void cublasError(cublasStatus_t error, const char *file = 0,
-                        int linenumber = 0);
+void cublasError(cublasStatus_t error, const char *file = 0,
+                 int linenumber = 0);
 
 #define NTHREADS 512
 #define KERNELBLOCKSIZE 32
-
-#ifdef UTILITIES_CU
-cublasHandle_t cublasHandle;
-#else
-extern cublasHandle_t cublasHandle;
-#endif
 
 int intRound(int a, int d);
 int intRoundUp(int a, int d);

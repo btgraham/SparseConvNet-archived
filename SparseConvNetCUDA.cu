@@ -37,12 +37,15 @@ SparseConvNetCUDA::SparseConvNetCUDA(int dimension, int nInputFeatures,
     initialSubInterfaces.push_back(new SpatiallySparseBatchSubInterface());
     batchPool.emplace_back(initialSubInterfaces.back());
   }
+  cublasError(cublasCreate(&cublasHandle), __FILE__, __LINE__);
+  cublasError(cublasSetStream(cublasHandle, memStream.stream));
 }
 SparseConvNetCUDA::~SparseConvNetCUDA() {
   for (auto p : initialSubInterfaces)
     delete p;
   for (auto p : sharedSubInterfaces)
     delete p;
+  cublasError(cublasDestroy(cublasHandle), __FILE__, __LINE__);
 }
 void SparseConvNetCUDA::addLearntLayer(int nFeatures,
                                        ActivationFunction activationFn,
@@ -55,11 +58,12 @@ void SparseConvNetCUDA::addLearntLayer(int nFeatures,
                   1.0f / nFeatures;
   std::cout << layers.size() << ":";
   if (activationFn == PRELU)
-    layers.push_back(new NetworkInNetworkPReLULayer(memStream, nOutputFeatures,
-                                                    nFeatures, dropout, alpha));
+    layers.push_back(new NetworkInNetworkPReLULayer(
+        memStream, cublasHandle, nOutputFeatures, nFeatures, dropout, alpha));
   else
-    layers.push_back(new NetworkInNetworkLayer(
-        memStream, nOutputFeatures, nFeatures, dropout, activationFn, alpha));
+    layers.push_back(new NetworkInNetworkLayer(memStream, cublasHandle,
+                                               nOutputFeatures, nFeatures,
+                                               dropout, activationFn, alpha));
   nOutputFeatures = nFeatures;
 }
 void SparseConvNetCUDA::addNetworkInNetworkLayer(
@@ -202,7 +206,8 @@ void SparseConvNetCUDA::addSoftmaxLayer() {
 }
 void SparseConvNetCUDA::addIndexLearnerLayer() {
   std::cout << layers.size() << ":";
-  layers.push_back(new IndexLearnerLayer(memStream, nOutputFeatures, nClasses));
+  layers.push_back(new IndexLearnerLayer(memStream, cublasHandle,
+                                         nOutputFeatures, nClasses));
   std::cout << "Index Learner " << nOutputFeatures << "-> " << nClasses
             << std::endl;
   nOutputFeatures = nClasses; // "nClasses"=trainingSet.pictures.size()

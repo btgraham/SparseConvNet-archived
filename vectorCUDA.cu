@@ -103,14 +103,10 @@ void vectorCUDA<t>::copyToCPUAsync(cudaMemStream &memStream) {
 }
 
 template <typename t> t *&vectorCUDA<t>::dPtr() {
-  if (!onGPU and vec.size() > 0)
-    std::cout << "dPtr from cpu " << vec.size() << "\n";
   copyToGPU();
   return d_vec;
 }
 template <typename t> std::vector<t> &vectorCUDA<t>::hVector() {
-  if (onGPU and vec.size() > 0)
-    std::cout << "hVector from gpu " << dsize << " " << dAllocated << "\n";
   copyToCPU();
   return vec;
 }
@@ -155,9 +151,19 @@ template <typename t> float vectorCUDA<t>::meanAbs(float negWeight) {
   return total / size();
 }
 template <typename t>
+__global__ void dMultiplicativeRescale(t *d, int n, float multiplier) {
+  for (int i = threadIdx.x; i < n; i += NTHREADS)
+    d[i] *= multiplier;
+}
+template <typename t>
 void vectorCUDA<t>::multiplicativeRescale(float multiplier) {
-  for (int i = 0; i < size(); i++)
-    hVector()[i] *= multiplier;
+  if (onGPU) {
+    dMultiplicativeRescale << <1, NTHREADS>>> (d_vec, dsize, multiplier);
+    cudaCheckError();
+  } else {
+    for (int i = 0; i < size(); i++)
+      hVector()[i] *= multiplier;
+  }
 }
 template <typename t> void vectorCUDA<t>::setZero() {
   if (onGPU) {

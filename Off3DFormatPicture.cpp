@@ -16,7 +16,7 @@ void drawTriangleOFF(SparseGrid &grid, int inputFieldSize,
   float base = powf(u0 * u0 + u1 * u1 + u2 * u2, 0.5);
   u0 /= base;
   u1 /= base;
-  u2 /= base; // scale u to a unit vector
+  u2 /= base;                                 // scale u to a unit vector
   float offset = u0 * v0 + u1 * v1 + u2 * v2; // u dot v
   v0 -= offset * u0;
   v1 -= offset * u1;

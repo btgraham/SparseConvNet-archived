@@ -18,13 +18,13 @@ public:
   int nFeaturesOut;
   float dropout;
   int minActiveInputs;
-  vectorCUDA<float> W; // Weights
+  vectorCUDA<float> W;  // Weights
   vectorCUDA<float> MW; // momentum
-  vectorCUDA<float> w; // shrunk versions
+  vectorCUDA<float> w;  // shrunk versions
   vectorCUDA<float> dw; // For backprop
-  vectorCUDA<float> B; // Weights
+  vectorCUDA<float> B;  // Weights
   vectorCUDA<float> MB; // momentum
-  vectorCUDA<float> b; // shrunk versions
+  vectorCUDA<float> b;  // shrunk versions
   vectorCUDA<float> db; // For backprop
   ReallyConvolutionalLayer(cudaMemStream &memStream, int nFeaturesIn,
                            int nFeaturesOut, int filterSize, int filterStride,
