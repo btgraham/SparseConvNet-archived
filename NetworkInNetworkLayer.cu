@@ -177,10 +177,8 @@ void NetworkInNetworkLayer::forwards(SpatiallySparseBatch &batch,
         (B.dPtr(), b.dPtr(), output.featuresPresent.dPtr(), output.nFeatures,
          output.featuresPresent.size());
     cudaCheckError();
-    std::cout << __FILE__ << ":" << __LINE__ << "\n";
     replicateArray(b.dPtr(), output.sub->features.dPtr(), output.nSpatialSites,
                    output.featuresPresent.size(), memStream);
-    std::cout << __FILE__ << ":" << __LINE__ << "\n";
     cudaCheckError();
     d_rowMajorSGEMM_alphaAB_betaC(
         cublasHandle, input.sub->features.dPtr(), w.dPtr(),
@@ -291,8 +289,6 @@ void NetworkInNetworkLayer::backwards(SpatiallySparseBatch &batch,
         (db.dPtr(), MB.dPtr(), B.dPtr(), nFeaturesOut, learningRate, momentum);
     cudaCheckError();
   }
-  // std::cout << __LINE__ << " "<<input.sub->dfeatures.meanAbs() << "\n";
-  // std::cout << __LINE__ << " "<<W.meanAbs() << "\n";
 }
 void NetworkInNetworkLayer::loadWeightsFromStream(std::ifstream &f) {
   W.copyToCPUAsync(memStream);
