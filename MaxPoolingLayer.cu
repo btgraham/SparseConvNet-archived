@@ -5,16 +5,15 @@
 #include "Regions.h"
 
 // Values of -1 in "rules" used to indicate pooling region is smaller than "ps"
-
-template <int ps>
+// Call with maxPS >= ps
+template <int maxPS>
 __global__ void dMaxPool(float *g1, float *g2, int *rules, int nOut,
-                         int *d_choice) {
-  __shared__ int r[ps];
+                         int *d_choice, int ps) {
+  __shared__ int r[maxPS];
   int i = blockIdx.x * nOut; // for output
   for (int p = threadIdx.x; p < ps; p += KERNELBLOCKSIZE)
     r[p] = rules[blockIdx.x * ps + p] * nOut; // for input
   __syncthreads();
-  ////////////////////////////////////////////////////////////////////////////////////////////
   for (int j = threadIdx.x; j < nOut; j += KERNELBLOCKSIZE) {
     bool notFoundAnyPositive_rp = true;
     float t;
@@ -33,26 +32,6 @@ __global__ void dMaxPool(float *g1, float *g2, int *rules, int nOut,
     d_choice[i + j] = c;
     __syncthreads();
   }
-  ////////////////////////////////////////////////////////////////////////////////////////////
-  // // // for (int j=threadIdx.x;j<nOut;j+=KERNELBLOCKSIZE) {
-  // // //   for (int p=0;p<ps;p++) {
-  // // //     s[p][threadIdx.x]=(r[p]>=0)?g1[r[p]+j]:-10000000;
-  // // //     __syncthreads();
-  // // //   }
-  // // //   bool notFoundAnyPositive_rp=true;
-  // // //   for (int p=0;p<ps;p++)
-  // // //     if (r[p]>=0 and (notFoundAnyPositive_rp or
-  // t[threadIdx.x]<s[p][threadIdx.x])) {
-  // // //       notFoundAnyPositive_rp=false;
-  // // //       c[threadIdx.x]=r[p]+j;
-  // // //       t[threadIdx.x]=s[p][threadIdx.x];
-  // // //     }
-  // // //   __syncthreads();
-  // // //   g2[i+j]=t[threadIdx.x];
-  // // //   d_choice[i+j]=c[threadIdx.x];
-  // // //   __syncthreads();
-  // // // }
-  ////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 void maxPool(float *g1, float *g2, int *rules, int count, int sd, int nOut,
@@ -62,96 +41,30 @@ void maxPool(float *g1, float *g2, int *rules, int count, int sd, int nOut,
   int processed = 0;
   while (processed < count) {
     int batch = min(32768, count - processed);
-    switch (sd) {
-    // List of possible pooling regions:
-    // powers of 2 for square grids,
-    // powers of 3 for cubic grids, also
-    // powers of 4, triangular numbers, tetrahedral numbers, etc
-    case 2:
-      dMaxPool<2> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-          (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 3:
-      dMaxPool<3> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-          (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 4:
-      dMaxPool<4> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-          (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 5:
-      dMaxPool<5> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-          (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 6:
-      dMaxPool<6> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-          (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 8:
+    if (sd <= 8) {
       dMaxPool<8> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
           (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 9:
-      dMaxPool<9> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-          (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 10:
-      dMaxPool<10> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-          (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 15:
-      dMaxPool<15> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-          (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 16:
+           d_choice + processed * nOut, sd);
+    } else if (sd <= 16) {
       dMaxPool<16> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
           (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 20:
-      dMaxPool<20> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
+           d_choice + processed * nOut, sd);
+    } else if (sd <= 32) {
+      dMaxPool<32> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
           (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 25:
-      dMaxPool<25> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
+           d_choice + processed * nOut, sd);
+    } else if (sd <= 64) {
+      dMaxPool<64> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
           (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 27:
-      dMaxPool<27> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
+           d_choice + processed * nOut, sd);
+    } else if (sd <= 1024) {
+      dMaxPool<1024> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
           (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 35:
-      dMaxPool<35> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-          (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 36:
-      dMaxPool<36> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-          (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    case 49:
-      dMaxPool<49> << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-          (g1, g2 + processed * nOut, rules + processed * sd, nOut,
-           d_choice + processed * nOut);
-      break;
-    default:
+           d_choice + processed * nOut, sd);
+    } else {
       std::cout << "Do some copying and pasting in " << __FILE__ << " line "
                 << __LINE__ << " sd=" << sd << std::endl;
       exit(1);
-      break;
     }
     processed += batch;
   }

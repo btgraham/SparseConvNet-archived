@@ -208,7 +208,7 @@ void NetworkInNetworkLayer::scaleWeights(SpatiallySparseBatchInterface &input,
                                          bool topLayer) {
   assert(input.sub->features.size() > 0);
   assert(output.sub->features.size() > 0); // call after forwards(...)
-  float scale = output.sub->features.meanAbs((fn == VLEAKYRELU) ? 3 : 100);
+  float scale = output.sub->features.meanAbs();
   std::cout << "featureScale:" << scale << std::endl;
   if (topLayer) {
     scale = 1;
@@ -290,7 +290,8 @@ void NetworkInNetworkLayer::backwards(SpatiallySparseBatch &batch,
     cudaCheckError();
   }
 }
-void NetworkInNetworkLayer::loadWeightsFromStream(std::ifstream &f) {
+void NetworkInNetworkLayer::loadWeightsFromStream(std::ifstream &f,
+                                                  bool momentum) {
   W.copyToCPUAsync(memStream);
   MW.copyToCPUAsync(memStream);
   B.copyToCPUAsync(memStream);
@@ -298,25 +299,31 @@ void NetworkInNetworkLayer::loadWeightsFromStream(std::ifstream &f) {
 
   f.read((char *)&W.hVector()[0], sizeof(float) * W.size());
   f.read((char *)&B.hVector()[0], sizeof(float) * B.size());
-  MW.setZero(); // f.read((char*)&MW.hVector()[0],sizeof(float)*MW.size());
-  MB.setZero(); // f.read((char*)&MB.hVector()[0],sizeof(float)*MB.size());
+  if (momentum) {
+    f.read((char *)&MW.hVector()[0], sizeof(float) * MW.size());
+    f.read((char *)&MB.hVector()[0], sizeof(float) * MB.size());
+  } else {
+    MW.setZero();
+    MB.setZero();
+  }
 
   W.copyToGPUAsync(memStream);
   MW.copyToGPUAsync(memStream);
   B.copyToGPUAsync(memStream);
   MB.copyToGPUAsync(memStream);
 };
-void NetworkInNetworkLayer::putWeightsToStream(std::ofstream &f) {
+void NetworkInNetworkLayer::putWeightsToStream(std::ofstream &f,
+                                               bool momentum) {
   W.copyToCPUAsync(memStream);
   MW.copyToCPUAsync(memStream);
   B.copyToCPUAsync(memStream);
   MB.copyToCPUAsync(memStream);
-
   f.write((char *)&W.hVector()[0], sizeof(float) * W.size());
   f.write((char *)&B.hVector()[0], sizeof(float) * B.size());
-  //  f.write((char*)&MW.hVector()[0],sizeof(float)*MW.size());
-  //  f.write((char*)&MB.hVector()[0],sizeof(float)*MB.size());
-
+  if (momentum) {
+    f.write((char *)&MW.hVector()[0], sizeof(float) * MW.size());
+    f.write((char *)&MB.hVector()[0], sizeof(float) * MB.size());
+  }
   W.copyToGPUAsync(memStream);
   MW.copyToGPUAsync(memStream);
   B.copyToGPUAsync(memStream);

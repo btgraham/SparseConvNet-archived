@@ -181,16 +181,13 @@ void NetworkInNetworkPReLULayer::forwards(
 void NetworkInNetworkPReLULayer::scaleWeights(
     SpatiallySparseBatchInterface &input, SpatiallySparseBatchInterface &output,
     float &scalingUnderneath, bool topLayer) {
-  assert(input.sub->features.size() > 0);
-  assert(output.sub->features.size() > 0); // call after forwards(...)
-  float scale = output.sub->features.meanAbs(1 / initialAlpha);
+  assert(output.sub->features.size() > 0 && "call after forwards(...)");
+  float scale = output.sub->features.meanAbs();
   std::cout << "featureScale:" << scale << std::endl;
   if (topLayer) {
     scale = 1;
   } else {
-    scale = powf(
-        scale,
-        -0.1); // 0.7978846 = sqrt(2/pi) = mean of the half normal distribution
+    scale = powf(scale, -0.1);
   }
   W.multiplicativeRescale(scale / scalingUnderneath);
   B.multiplicativeRescale(scale);
@@ -286,7 +283,8 @@ void NetworkInNetworkPReLULayer::backwards(
     cudaCheckError();
   }
 }
-void NetworkInNetworkPReLULayer::loadWeightsFromStream(std::ifstream &f) {
+void NetworkInNetworkPReLULayer::loadWeightsFromStream(std::ifstream &f,
+                                                       bool momentum) {
   W.copyToCPUAsync(memStream);
   MW.copyToCPUAsync(memStream);
   B.copyToCPUAsync(memStream);
@@ -297,10 +295,15 @@ void NetworkInNetworkPReLULayer::loadWeightsFromStream(std::ifstream &f) {
   f.read((char *)&W.hVector()[0], sizeof(float) * W.size());
   f.read((char *)&B.hVector()[0], sizeof(float) * B.size());
   f.read((char *)&PReLU.hVector()[0], sizeof(float) * PReLU.size());
-  MW.setZero(); // f.read((char*)&MW.hVector()[0],sizeof(float)*MW.size());
-  MB.setZero(); // f.read((char*)&MB.hVector()[0],sizeof(float)*MB.size());
-  MPReLU
-      .setZero(); // f.read((char*)&MPReLU.hVector()[0],sizeof(float)*MPReLU.size());
+  if (momentum) {
+    f.read((char *)&MW.hVector()[0], sizeof(float) * MW.size());
+    f.read((char *)&MB.hVector()[0], sizeof(float) * MB.size());
+    f.read((char *)&MPReLU.hVector()[0], sizeof(float) * MPReLU.size());
+  } else {
+    MW.setZero();
+    MB.setZero();
+    MPReLU.setZero();
+  }
 
   W.copyToGPUAsync(memStream);
   MW.copyToGPUAsync(memStream);
@@ -309,21 +312,22 @@ void NetworkInNetworkPReLULayer::loadWeightsFromStream(std::ifstream &f) {
   PReLU.copyToGPUAsync(memStream);
   MPReLU.copyToGPUAsync(memStream);
 }
-void NetworkInNetworkPReLULayer::putWeightsToStream(std::ofstream &f) {
+void NetworkInNetworkPReLULayer::putWeightsToStream(std::ofstream &f,
+                                                    bool momentum) {
   W.copyToCPUAsync(memStream);
   MW.copyToCPUAsync(memStream);
   B.copyToCPUAsync(memStream);
   MB.copyToCPUAsync(memStream);
   PReLU.copyToCPUAsync(memStream);
   MPReLU.copyToCPUAsync(memStream);
-
   f.write((char *)&W.hVector()[0], sizeof(float) * W.size());
   f.write((char *)&B.hVector()[0], sizeof(float) * B.size());
   f.write((char *)&PReLU.hVector()[0], sizeof(float) * PReLU.size());
-  //  f.write((char*)&MW.hVector()[0],sizeof(float)*MW.size());
-  //  f.write((char*)&MB.hVector()[0],sizeof(float)*MB.size());
-  //  f.write((char*)&MPReLU.hVector()[0],sizeof(float)*MPReLU.size());
-
+  if (momentum) {
+    f.write((char *)&MW.hVector()[0], sizeof(float) * MW.size());
+    f.write((char *)&MB.hVector()[0], sizeof(float) * MB.size());
+    f.write((char *)&MPReLU.hVector()[0], sizeof(float) * MPReLU.size());
+  }
   W.copyToGPUAsync(memStream);
   MW.copyToGPUAsync(memStream);
   B.copyToGPUAsync(memStream);

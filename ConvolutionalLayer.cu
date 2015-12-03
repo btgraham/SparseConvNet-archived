@@ -144,9 +144,6 @@ void ConvolutionalLayer::backwards(SpatiallySparseBatch &batch,
         input.sub->dfeatures.dPtr(), output.sub->dfeatures.dPtr(),
         output.rules.dPtr(), output.nSpatialSites * fs,
         input.featuresPresent.size(), memStream);
-    // output.sub->features.resize(0);
-    // output.sub->dfeatures.resize(0);
-    // cudaCheckError();
   }
 }
 int ConvolutionalLayer::calculateInputSpatialSize(int outputSpatialSize) {

@@ -18,6 +18,7 @@ BatchProducer::BatchProducer(SparseConvNetCUDA &cnn,
                              int batchSize)
     : cnn(cnn), batchCounter(-1), dataset(dataset), spatialSize(spatialSize),
       batchSize(batchSize) {
+  assert(batchSize > 0);
   nBatches = (dataset.pictures.size() + batchSize - 1) / batchSize;
   permutation = range(dataset.pictures.size());
   if (dataset.type == TRAINBATCH) {

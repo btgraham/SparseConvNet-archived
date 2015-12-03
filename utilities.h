@@ -53,14 +53,14 @@ inline void __cudaCheckError(const char *file, const int line) {
     exit(-1);
   }
 
-  // More careful checking. However, this will affect performance. Comment away
-  // if needed.
-  err = cudaDeviceSynchronize();
-  if (cudaSuccess != err) {
-    std::cout << "cudaCheckError() failed at " << file << ":" << line << " "
-              << cudaGetErrorString(err) << "\n" << std::flush;
-    exit(-1);
-  }
+// More careful checking. However, this will affect performance. Comment away
+// if needed.
+// err = cudaDeviceSynchronize();
+// if (cudaSuccess != err) {
+//   std::cout << "cudaCheckError() failed at " << file << ":" << line << " "
+//             << cudaGetErrorString(err) << "\n" << std::flush;
+//   exit(-1);
+// }
 #endif
 
   return;

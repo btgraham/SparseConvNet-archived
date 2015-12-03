@@ -38,8 +38,8 @@ public:
                  SpatiallySparseBatchInterface &input,
                  SpatiallySparseBatchInterface &output, float learningRate,
                  float momentum);
-  void loadWeightsFromStream(std::ifstream &f);
-  void putWeightsToStream(std::ofstream &f);
+  void loadWeightsFromStream(std::ifstream &f, bool momentum);
+  void putWeightsToStream(std::ofstream &f, bool momentum);
   int calculateInputSpatialSize(int outputSpatialSize);
 };
 

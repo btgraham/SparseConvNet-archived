@@ -7,9 +7,10 @@
 // It contains the larger vectors that can mostly stay on the GPU
 class SpatiallySparseBatchSubInterface {
 public:
-  vectorCUDA<float>
-      features; // In the input layer, this is configured during preprocessing
-  vectorCUDA<float> dfeatures; // For the backwards/backpropagation pass
+  // In the input layer, this is configured during preprocessing
+  vectorCUDA<float> features;
+  // For the backwards/backpropagation pass
+  vectorCUDA<float> dfeatures;
   vectorCUDA<int> poolingChoices;
   SpatiallySparseBatchSubInterface();
   void reset();

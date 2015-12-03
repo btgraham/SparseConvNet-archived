@@ -3,6 +3,16 @@
 #include <fstream>
 #include <string>
 #include <cassert>
+#include <thread>
+
+void loadDataThread(std::vector<Picture *> *pictures, int flags, int k, int n) {
+  for (; k < pictures->size(); k += n) {
+    OpenCVPicture *pic = dynamic_cast<OpenCVPicture *>(pictures->at(k));
+    // pic->loadDataWithoutScaling(flags);
+    pic->loadDataWithoutScalingRemoveModalColor();
+    std::cout << "!" << std::flush;
+  }
+}
 
 OpenCVLabeledDataSet::OpenCVLabeledDataSet(std::string classesListFile,
                                            std::string dataDirectory,
@@ -30,12 +40,16 @@ OpenCVLabeledDataSet::OpenCVLabeledDataSet(std::string classesListFile,
     for (auto &file :
          globVector(dataDirectory + "/" + kv.first + "/" + wildcard)) {
       OpenCVPicture *pic = new OpenCVPicture(file, backgroundCol, kv.second);
-      if (loadData) {
-        pic->loadDataWithoutScaling(flags);
-        assert(nFeatures == pic->mat.channels());
-      }
       pictures.push_back(pic);
     }
+  }
+  if (loadData) {
+    std::vector<std::thread> workers;
+    int nThreads = 4;
+    for (int nThread = 0; nThread < nThreads; ++nThread)
+      workers.emplace_back(loadDataThread, &pictures, flags, nThread, nThreads);
+    for (int nThread = 0; nThread < nThreads; ++nThread)
+      workers[nThread].join();
   }
 }
 
@@ -63,10 +77,14 @@ OpenCVUnlabeledDataSet::OpenCVUnlabeledDataSet(std::string classesListFile,
   nClasses = classes.size();
   for (auto &file : globVector(dataDirectory + "/" + wildcard)) {
     OpenCVPicture *pic = new OpenCVPicture(file, backgroundCol, 0);
-    if (loadData) {
-      pic->loadDataWithoutScaling(flags);
-      assert(nFeatures == pic->mat.channels());
-    }
     pictures.push_back(pic);
+  }
+  if (loadData) {
+    std::vector<std::thread> workers;
+    int nThreads = 4;
+    for (int nThread = 0; nThread < nThreads; ++nThread)
+      workers.emplace_back(loadDataThread, &pictures, flags, nThread, nThreads);
+    for (int nThread = 0; nThread < nThreads; ++nThread)
+      workers[nThread].join();
   }
 }

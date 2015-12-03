@@ -7,5 +7,7 @@ void SpatiallySparseLayer::scaleWeights(SpatiallySparseBatchInterface &input,
 SpatiallySparseLayer::SpatiallySparseLayer(cudaMemStream &memStream)
     : memStream(memStream){};
 SpatiallySparseLayer::~SpatiallySparseLayer(){};
-void SpatiallySparseLayer::loadWeightsFromStream(std::ifstream &f){};
-void SpatiallySparseLayer::putWeightsToStream(std::ofstream &f){};
+void SpatiallySparseLayer::loadWeightsFromStream(std::ifstream &f,
+                                                 bool momentum){};
+void SpatiallySparseLayer::putWeightsToStream(std::ofstream &f,
+                                              bool momentum){};

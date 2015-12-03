@@ -22,7 +22,7 @@ public:
   t *&dPtr();
   std::vector<t> &hVector();
   int size();
-  float meanAbs(float negWeight = 1);
+  float meanAbs();
   void multiplicativeRescale(float multiplier);
   void setZero();
   void setZero(cudaMemStream &memStream);

@@ -286,7 +286,7 @@ void ReallyConvolutionalLayer::scaleWeights(
     float &scalingUnderneath, bool topLayer) {
   assert(input.sub->features.size() > 0);
   assert(output.sub->features.size() > 0); // call after forwards(...)
-  float scale = output.sub->features.meanAbs((fn == VLEAKYRELU) ? 3 : 100);
+  float scale = output.sub->features.meanAbs();
   std::cout << "featureScale:" << scale << std::endl;
   if (topLayer) {
     scale = 1;

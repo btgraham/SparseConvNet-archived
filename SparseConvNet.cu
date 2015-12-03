@@ -87,13 +87,14 @@ void SparseConvNet::processDatasetDumpTopLevelFeatures(
   cnn->processDatasetDumpTopLevelFeatures(dataset, batchSize, reps);
 }
 
-void SparseConvNet::loadWeights(std::string baseName, int epoch,
+void SparseConvNet::loadWeights(std::string baseName, int epoch, bool momentum,
                                 int firstNlayers) {
-  cnn->loadWeights(baseName, epoch, firstNlayers);
+  cnn->loadWeights(baseName, epoch, momentum, firstNlayers);
 }
 
-void SparseConvNet::saveWeights(std::string baseName, int epoch) {
-  cnn->saveWeights(baseName, epoch);
+void SparseConvNet::saveWeights(std::string baseName, int epoch,
+                                bool momentum) {
+  cnn->saveWeights(baseName, epoch, momentum);
 }
 
 void SparseConvNet::calculateInputRegularizingConstants(
@@ -156,12 +157,13 @@ void SparseConvTriangLeNet::processDatasetDumpTopLevelFeatures(
 }
 
 void SparseConvTriangLeNet::loadWeights(std::string baseName, int epoch,
-                                        int firstNlayers) {
-  cnn->loadWeights(baseName, epoch, firstNlayers);
+                                        bool momentum, int firstNlayers) {
+  cnn->loadWeights(baseName, epoch, momentum, firstNlayers);
 }
 
-void SparseConvTriangLeNet::saveWeights(std::string baseName, int epoch) {
-  cnn->saveWeights(baseName, epoch);
+void SparseConvTriangLeNet::saveWeights(std::string baseName, int epoch,
+                                        bool momentum) {
+  cnn->saveWeights(baseName, epoch, momentum);
 }
 
 void SparseConvTriangLeNet::calculateInputRegularizingConstants(

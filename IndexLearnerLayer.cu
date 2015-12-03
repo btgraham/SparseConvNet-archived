@@ -97,10 +97,10 @@ void IndexLearnerLayer::backwards(SpatiallySparseBatch &batch,
        learningRate, momentum);
   cudaCheckError();
 }
-void IndexLearnerLayer::loadWeightsFromStream(std::ifstream &f) {
+void IndexLearnerLayer::loadWeightsFromStream(std::ifstream &f, bool momentum) {
   f.read((char *)&W.hVector()[0], sizeof(float) * W.size());
 };
-void IndexLearnerLayer::putWeightsToStream(std::ofstream &f) {
+void IndexLearnerLayer::putWeightsToStream(std::ofstream &f, bool momentum) {
   f.write((char *)&W.hVector()[0], sizeof(float) * W.size());
 };
 int IndexLearnerLayer::calculateInputSpatialSize(int outputSpatialSize) {

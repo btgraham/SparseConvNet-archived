@@ -21,7 +21,7 @@ public:
                          float learningRate, float momentum) = 0;
   SpatiallySparseLayer(cudaMemStream &memStream);
   ~SpatiallySparseLayer();
-  virtual void loadWeightsFromStream(std::ifstream &f);
-  virtual void putWeightsToStream(std::ofstream &f);
+  virtual void loadWeightsFromStream(std::ifstream &f, bool momentum);
+  virtual void putWeightsToStream(std::ofstream &f, bool momentum);
   virtual int calculateInputSpatialSize(int outputSpatialSize) = 0;
 };
