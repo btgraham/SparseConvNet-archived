@@ -52,7 +52,7 @@ void SoftmaxClassifier(SpatiallySparseBatchInterface &input,
       }
     }
   }
-  // std::cout <<batch.mistakes << "mistakes "<< std::flush;
+  // std::cout << (int)batch.negativeLogLikelihood << " " << std::flush;
   input.sub->features.copyToGPUAsync(memStream);
   cudaCheckError();
 }

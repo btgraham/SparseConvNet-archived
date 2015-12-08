@@ -87,7 +87,7 @@ void distortImageColor(cv::Mat &mat, RNG &rng, float sigma1, float sigma2,
     for (int x = 0; x < mat.cols; ++x) {
       for (int i = 0; i < mat.channels(); ++i) {
         matData[j] =
-            matData[j] + delta1[i] + delta2[i] * (matData[j] / 128 - 1) +
+            matData[j] + delta1[i] + delta2[i] * sin(matData[j] * 0.01231997f) +
             delta3[i] * (x - mat.cols / 2) + delta4[i] * (y - mat.rows / 2);
         ++j;
       }

@@ -91,7 +91,7 @@ RandomOverlappingFmpTicks::RandomOverlappingFmpTicks(int nIn, int nOut,
   outputL.resize(nIn, nOut);
   outputR.resize(nIn, 0);
   for (int i = 0; i < nOut; i++) {
-    for (int j = inputL[i]; j < inputL[i + 1]; j++) {
+    for (int j = inputL[i]; j < inputR[i]; j++) {
       outputL[j] = std::min(outputL[j], i);
       outputR[j] = std::max(outputR[j], i + 1);
     }
@@ -108,19 +108,17 @@ RandomNonOverlappingFmpTicks::RandomNonOverlappingFmpTicks(int nIn, int nOut,
   inc.resize(nOut * (alpha + 1) - nIn, alpha);
   inc.resize(nOut, alpha + 1);
   rng.vectorShuffle(inc);
-  inputL.resize(1, 0);
+  inputL.push_back(0);
+  inputR.push_back(inc[0]);
   for (int i = 0; i < nOut - 1; i++) {
     inputL.push_back(inputL.back() + inc[i]);
-    inputR.push_back(inputR.back() + inc[i]);
+    inputR.push_back(inputR.back() + inc[i + 1]);
   }
-  inputR.push_back(inc.back());
   assert(inputR.back() == nIn);
-  outputL.resize(nIn, nOut);
-  outputR.resize(nIn, 0);
   for (int i = 0; i < nOut; i++) {
-    for (int j = inputL[i]; j < inputL[i + 1]; j++) {
-      outputL[j] = std::min(outputL[j], i);
-      outputR[j] = std::max(outputR[j], i + 1);
+    for (int j = inputL[i]; j < inputR[i]; j++) {
+      outputL.push_back(i);
+      outputR.push_back(i + 1);
     }
   }
 }

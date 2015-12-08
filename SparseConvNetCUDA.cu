@@ -56,6 +56,8 @@ void SparseConvNetCUDA::addLearntLayer(int nFeatures,
     dropout = 1 -
               (intRound(nFeatures * (1 - dropout), KERNELBLOCKSIZE) + 0.01f) *
                   1.0f / nFeatures;
+  if (dropout < 0)
+    dropout = 0;
   std::cout << layers.size() << ":";
   if (activationFn == PRELU)
     layers.push_back(new NetworkInNetworkPReLULayer(

@@ -92,8 +92,8 @@ public:
                                    float momentum = 0.99);
   void processDatasetDumpTopLevelFeatures(SpatiallySparseDataset &dataset,
                                           int batchSize, int reps = 1);
-  void loadWeights(std::string baseName, int epoch, bool momentum,
+  void loadWeights(std::string baseName, int epoch, bool momentum = false,
                    int firstNlayers = 1000000);
-  void saveWeights(std::string baseName, int epoch, bool momentum);
+  void saveWeights(std::string baseName, int epoch, bool momentum = false);
   void calculateInputRegularizingConstants(SpatiallySparseDataset dataset);
 };
