@@ -68,8 +68,8 @@ void cropImage(cv::Mat &src, int X, int Y, int Width, int Height) {
   src = src(cv::Rect(X, Y, Width, Height)).clone();
 }
 
-void distortImageColor(cv::Mat &mat, RNG &rng, float sigma1, float sigma2,
-                       float sigma3, float sigma4) {
+void distortImageColor(cv::Mat &mat, RNG &rng, int backgroundColor,
+                       float sigma1, float sigma2, float sigma3, float sigma4) {
   assert(mat.type() % 8 == 5); // float
   std::vector<float> delta1(mat.channels());
   std::vector<float> delta2(mat.channels());
@@ -86,9 +86,10 @@ void distortImageColor(cv::Mat &mat, RNG &rng, float sigma1, float sigma2,
   for (int y = 0; y < mat.rows; ++y) {
     for (int x = 0; x < mat.cols; ++x) {
       for (int i = 0; i < mat.channels(); ++i) {
-        matData[j] =
-            matData[j] + delta1[i] + delta2[i] * sin(matData[j] * 0.01231997f) +
-            delta3[i] * (x - mat.cols / 2) + delta4[i] * (y - mat.rows / 2);
+        matData[j] = matData[j] + delta1[i] +
+                     delta2[i] * (matData[j] - backgroundColor) +
+                     delta3[i] * (x - mat.cols / 2) +
+                     delta4[i] * (y - mat.rows / 2);
         ++j;
       }
     }
