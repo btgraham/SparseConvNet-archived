@@ -8,7 +8,7 @@ int batchSize = 50;
 Picture *OpenCVPicture::distort(RNG &rng, batchType type) {
   OpenCVPicture *pic = new OpenCVPicture(*this);
 
-  if (epoch <= 800 and type == TRAINBATCH) {
+  if (epoch <= 400 and type == TRAINBATCH) {
     pic->colorDistortion(rng, 25, 0.15, 2.4, 2.4);
     // 2x2 identity matrix:
     // Generate an affine distortion matrix
@@ -46,9 +46,9 @@ int main() {
       0.0f /*dropout multiplier in the range [0,0.5] */, cudaDevice);
   if (epoch > 0)
     cnn.loadWeights(baseName, epoch);
-  for (epoch++; epoch <= 810; epoch++) {
+  for (epoch++; epoch <= 410; epoch++) {
     std::cout << "epoch: " << epoch << " " << std::flush;
-    cnn.processDataset(trainSet, batchSize, 3e-3 * exp(-epoch * 5e-3), 0.99);
+    cnn.processDataset(trainSet, batchSize, 3e-3 * exp(-epoch * 1e-2), 0.99);
     if (epoch % 10 == 0)
       cnn.saveWeights(baseName, epoch);
     if (epoch % 100 == 0)
