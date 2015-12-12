@@ -172,9 +172,9 @@ void PseudorandomOverlappingFractionalMaxPoolingLayer::preprocess(
   output.nSpatialSites = 0;
   output.grids.resize(batch.batchSize);
   output.backpropErrors = input.backpropErrors;
-  FractionalPoolingRegions<PseudorandomOverlappingFmpTicks> regions(
-      inSpatialSize, outSpatialSize, dimension, poolSize, rng);
   for (int item = 0; item < batch.batchSize; item++) {
+    FractionalPoolingRegions<PseudorandomOverlappingFmpTicks> regions(
+        inSpatialSize, outSpatialSize, dimension, poolSize, rng);
     gridRules(input.grids[item], output.grids[item], regions,
               output.nSpatialSites, output.rules.hVector(), true);
   }
@@ -235,11 +235,12 @@ void RandomOverlappingFractionalMaxPoolingLayer::preprocess(
   output.nSpatialSites = 0;
   output.grids.resize(batch.batchSize);
   output.backpropErrors = input.backpropErrors;
-  FractionalPoolingRegions<RandomOverlappingFmpTicks> regions(
-      inSpatialSize, outSpatialSize, dimension, poolSize, rng);
-  for (int item = 0; item < batch.batchSize; item++)
+  for (int item = 0; item < batch.batchSize; item++) {
+    FractionalPoolingRegions<RandomOverlappingFmpTicks> regions(
+        inSpatialSize, outSpatialSize, dimension, poolSize, rng);
     gridRules(input.grids[item], output.grids[item], regions,
               output.nSpatialSites, output.rules.hVector(), true);
+  }
 }
 void RandomOverlappingFractionalMaxPoolingLayer::forwards(
     SpatiallySparseBatch &batch, SpatiallySparseBatchInterface &input,
@@ -296,9 +297,9 @@ void PseudorandomNonOverlappingFractionalMaxPoolingLayer::preprocess(
   output.nSpatialSites = 0;
   output.grids.resize(batch.batchSize);
   output.backpropErrors = input.backpropErrors;
-  FractionalPoolingRegions<PseudorandomNonOverlappingFmpTicks> regions(
-      inSpatialSize, outSpatialSize, dimension, poolSize, rng);
   for (int item = 0; item < batch.batchSize; item++) {
+    FractionalPoolingRegions<PseudorandomNonOverlappingFmpTicks> regions(
+        inSpatialSize, outSpatialSize, dimension, poolSize, rng);
     gridRules(input.grids[item], output.grids[item], regions,
               output.nSpatialSites, output.rules.hVector(), false);
   }
@@ -359,11 +360,12 @@ void RandomNonOverlappingFractionalMaxPoolingLayer::preprocess(
   output.nSpatialSites = 0;
   output.grids.resize(batch.batchSize);
   output.backpropErrors = input.backpropErrors;
-  FractionalPoolingRegions<RandomNonOverlappingFmpTicks> regions(
-      inSpatialSize, outSpatialSize, dimension, poolSize, rng);
-  for (int item = 0; item < batch.batchSize; item++)
+  for (int item = 0; item < batch.batchSize; item++) {
+    FractionalPoolingRegions<RandomNonOverlappingFmpTicks> regions(
+        inSpatialSize, outSpatialSize, dimension, poolSize, rng);
     gridRules(input.grids[item], output.grids[item], regions,
               output.nSpatialSites, output.rules.hVector(), false);
+  }
 }
 void RandomNonOverlappingFractionalMaxPoolingLayer::forwards(
     SpatiallySparseBatch &batch, SpatiallySparseBatchInterface &input,

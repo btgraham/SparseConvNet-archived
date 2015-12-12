@@ -23,8 +23,7 @@ __global__ void dPropForwardToMatrixMultiplyInput(float *d_features,
       int rq = r[q];
       int i = (c + q) * nIn;
       for (int j = threadIdx.x; j < nIn; j += KERNELBLOCKSIZE) {
-        d_convolved[i + j] = (rq >= 0) ? d_features[rq + j]
-                                       : 0; // If padding is used, check rq!=-1
+        d_convolved[i + j] = d_features[rq + j];
       }
     }
     __syncthreads();

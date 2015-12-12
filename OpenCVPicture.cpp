@@ -27,7 +27,35 @@ void OpenCVPicture::jiggle(RNG &rng, int offlineJiggle) {
 }
 void OpenCVPicture::colorDistortion(RNG &rng, int sigma1, int sigma2,
                                     int sigma3, int sigma4) {
-  distortImageColor(mat, rng, backgroundColor, sigma1, sigma2, sigma3, sigma4);
+  // Call as a final preprocessing step, after any affine transforms and
+  // jiggling.
+  assert(mat.type() % 8 == 5); // float
+  std::vector<float> delta1(mat.channels());
+  std::vector<float> delta2(mat.channels());
+  std::vector<float> delta3(mat.channels());
+  std::vector<float> delta4(mat.channels());
+  for (int j = 0; j < mat.channels(); j++) {
+    delta1[j] = rng.normal(0, sigma1);
+    delta2[j] = rng.normal(0, sigma2);
+    delta3[j] = rng.normal(0, sigma3);
+    delta4[j] = rng.normal(0, sigma4);
+  }
+  float *matData = ((float *)(mat.data));
+  for (int x = 0; x < mat.cols; x++) {
+    for (int y = 0; y < mat.rows; y++) {
+      int j = x * mat.channels() + y * mat.channels() * mat.cols;
+      bool interestingPixel = false;
+      for (int i = 0; i < mat.channels(); i++)
+        if (std::abs(matData[i + j] - backgroundColor) > 2)
+          interestingPixel = true;
+      if (interestingPixel) {
+        for (int i = 0; i < mat.channels(); i++)
+          matData[i + j] +=
+              delta1[i] + delta2[i] * (matData[i + j] - backgroundColor) +
+              delta3[i] * (x + xOffset) + delta4[i] * (y + yOffset);
+      }
+    }
+  }
 }
 void OpenCVPicture::randomCrop(RNG &rng, int subsetSize) {
   assert(subsetSize <= std::min(mat.rows, mat.cols));
@@ -184,12 +212,11 @@ void OpenCVPicture::codifyInputData(SparseGrid &grid,
   float *matData = ((float *)(mat.data));
   for (int x = x0; x < x1; x++) {
     for (int y = y0; y < y1; y++) {
+      int j = x * mat.channels() + y * mat.channels() * mat.cols;
       bool interestingPixel =
           false; // Check pixel differs from the background color
       for (int i = 0; i < mat.channels(); i++)
-        if (std::abs(scaleUCharColor(matData[i + x * mat.channels() +
-                                             y * mat.channels() * mat.cols])) >
-            0.02)
+        if (std::abs(matData[i + j] - backgroundColor) > 2)
           interestingPixel = true;
       if (interestingPixel) {
         int n = (x + xOffset + spatialSize / 2) * spatialSize +
@@ -197,8 +224,7 @@ void OpenCVPicture::codifyInputData(SparseGrid &grid,
                  spatialSize / 2); // Determine location in the input field.
         grid.mp[n] = nSpatialSites++;
         for (int i = 0; i < mat.channels(); i++) {
-          features.push_back(scaleUCharColor(
-              matData[i + x * mat.channels() + y * mat.channels() * mat.cols]));
+          features.push_back(scaleUCharColor(matData[i + j]));
         }
       }
     }
