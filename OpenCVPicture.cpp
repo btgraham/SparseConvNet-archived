@@ -41,8 +41,8 @@ void OpenCVPicture::colorDistortion(RNG &rng, int sigma1, int sigma2,
     delta4[j] = rng.normal(0, sigma4);
   }
   float *matData = ((float *)(mat.data));
-  for (int x = 0; x < mat.cols; x++) {
-    for (int y = 0; y < mat.rows; y++) {
+  for (int y = 0; y < mat.rows; y++) {
+    for (int x = 0; x < mat.cols; x++) {
       int j = x * mat.channels() + y * mat.channels() * mat.cols;
       bool interestingPixel = false;
       for (int i = 0; i < mat.channels(); i++)
