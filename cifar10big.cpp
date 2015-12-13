@@ -48,9 +48,9 @@ int main() {
   for (epoch++; epoch <= 810; epoch++) {
     std::cout << "epoch: " << epoch << " " << std::flush;
     cnn.processDataset(trainSet, batchSize, 0.003 * exp(-0.005 * epoch), 0.99);
-    if (epoch % 1 == 0)
+    if (epoch % 10 == 0)
       cnn.saveWeights(baseName, epoch);
-    if (epoch % 1 == 0)
+    if (epoch % 100 == 0)
       cnn.processDatasetRepeatTest(testSet, batchSize / 2, 1);
   }
   cnn.processDatasetRepeatTest(testSet, batchSize / 2, 100);
