@@ -73,16 +73,17 @@ void BatchProducer::preprocessBatch(int c, int cc, RNG &rng) {
     cnn.layers[i]->preprocess(cnn.batchPool[cc],
                               cnn.batchPool[cc].interfaces[i],
                               cnn.batchPool[cc].interfaces[i + 1]);
-
-  cnn.batchPool[cc].interfaces[0].sub->features.copyToGPUAsync(
-      cnn.batchMemStreams[cc]);
-  cnn.batchPool[cc].labels.copyToGPUAsync(cnn.batchMemStreams[cc]);
-  for (int i = 0; i <= cnn.layers.size(); ++i) {
-    cnn.batchPool[cc].interfaces[i].featuresPresent.copyToGPUAsync(
-        cnn.batchMemStreams[cc]);
-    cnn.batchPool[cc].interfaces[i].rules.copyToGPUAsync(
-        cnn.batchMemStreams[cc]);
-  }
+  // Shifted to line 124 !!!!!!
+  // // // // cnn.batchPool[cc].interfaces[0].sub->features.copyToGPUAsync(
+  // // // //     cnn.batchMemStreams[cc]);
+  // // // // cnn.batchPool[cc].labels.copyToGPUAsync(cnn.batchMemStreams[cc]);
+  // // // // for (int i = 0; i <= cnn.layers.size(); ++i) {
+  // // // //   cnn.batchPool[cc].interfaces[i].featuresPresent.copyToGPUAsync(
+  // // // //       cnn.batchMemStreams[cc]);
+  // // // //   cnn.batchPool[cc].interfaces[i].rules.copyToGPUAsync(
+  // // // //       cnn.batchMemStreams[cc]);
+  // // // // }
+  // // // // cudaStreamSynchronize(cnn.batchMemStreams[cc].stream);
 }
 
 #ifdef MULTITHREAD_BATCH_PRODUCTION
@@ -120,6 +121,15 @@ SpatiallySparseBatch *BatchProducer::nextBatch() {
         else
           ready = true;
     }
+    /////////////////////////////////////////////////////////
+    cnn.batchPool[cc].interfaces[0].sub->features.copyToGPUAsync(cnn.memStream);
+    cnn.batchPool[cc].labels.copyToGPUAsync(cnn.batchMemStreams[cc]);
+    for (int i = 0; i <= cnn.layers.size(); ++i) {
+      cnn.batchPool[cc].interfaces[i].featuresPresent.copyToGPUAsync(
+          cnn.memStream);
+      cnn.batchPool[cc].interfaces[i].rules.copyToGPUAsync(cnn.memStream);
+    }
+    ////////////////////////////////////////////////////////////////
     return &cnn.batchPool[cc];
   } else {
     for (int i = 0; i < cnn.nBatchProducerThreads; i++)

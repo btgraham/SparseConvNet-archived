@@ -27,7 +27,35 @@ void OpenCVPicture::jiggle(RNG &rng, int offlineJiggle) {
 }
 void OpenCVPicture::colorDistortion(RNG &rng, int sigma1, int sigma2,
                                     int sigma3, int sigma4) {
-  distortImageColor(mat, rng, sigma1, sigma2, sigma3, sigma4);
+  // Call as a final preprocessing step, after any affine transforms and
+  // jiggling.
+  assert(mat.type() % 8 == 5); // float
+  std::vector<float> delta1(mat.channels());
+  std::vector<float> delta2(mat.channels());
+  std::vector<float> delta3(mat.channels());
+  std::vector<float> delta4(mat.channels());
+  for (int j = 0; j < mat.channels(); j++) {
+    delta1[j] = rng.normal(0, sigma1);
+    delta2[j] = rng.normal(0, sigma2);
+    delta3[j] = rng.normal(0, sigma3);
+    delta4[j] = rng.normal(0, sigma4);
+  }
+  float *matData = ((float *)(mat.data));
+  for (int y = 0; y < mat.rows; y++) {
+    for (int x = 0; x < mat.cols; x++) {
+      int j = x * mat.channels() + y * mat.channels() * mat.cols;
+      bool interestingPixel = false;
+      for (int i = 0; i < mat.channels(); i++)
+        if (std::abs(matData[i + j] - backgroundColor) > 2)
+          interestingPixel = true;
+      if (interestingPixel) {
+        for (int i = 0; i < mat.channels(); i++)
+          matData[i + j] +=
+              delta1[i] + delta2[i] * (matData[i + j] - backgroundColor) +
+              delta3[i] * (x - mat.cols / 2) + delta4[i] * (y - mat.rows / 2);
+      }
+    }
+  }
 }
 void OpenCVPicture::randomCrop(RNG &rng, int subsetSize) {
   assert(subsetSize <= std::min(mat.rows, mat.cols));

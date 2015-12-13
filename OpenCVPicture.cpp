@@ -52,7 +52,7 @@ void OpenCVPicture::colorDistortion(RNG &rng, int sigma1, int sigma2,
         for (int i = 0; i < mat.channels(); i++)
           matData[i + j] +=
               delta1[i] + delta2[i] * (matData[i + j] - backgroundColor) +
-              delta3[i] * (x + xOffset) + delta4[i] * (y + yOffset);
+              delta3[i] * (x - mat.cols / 2) + delta4[i] * (y - mat.rows / 2);
       }
     }
   }
