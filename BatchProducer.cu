@@ -73,7 +73,7 @@ void BatchProducer::preprocessBatch(int c, int cc, RNG &rng) {
     cnn.layers[i]->preprocess(cnn.batchPool[cc],
                               cnn.batchPool[cc].interfaces[i],
                               cnn.batchPool[cc].interfaces[i + 1]);
-  // Shifted to line 124 !!!!!!
+  // Shifted to line 126 !!!!!!
   // cnn.batchPool[cc].interfaces[0].sub->features.copyToGPUAsync(
   //     cnn.batchMemStreams[cc]);
   // cnn.batchPool[cc].labels.copyToGPUAsync(cnn.batchMemStreams[cc]);
