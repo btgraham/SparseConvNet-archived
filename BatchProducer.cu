@@ -74,32 +74,34 @@ void BatchProducer::preprocessBatch(int c, int cc, RNG &rng) {
                               cnn.batchPool[cc].interfaces[i],
                               cnn.batchPool[cc].interfaces[i + 1]);
   // Shifted to line 124 !!!!!!
-  // // // // cnn.batchPool[cc].interfaces[0].sub->features.copyToGPUAsync(
-  // // // //     cnn.batchMemStreams[cc]);
-  // // // // cnn.batchPool[cc].labels.copyToGPUAsync(cnn.batchMemStreams[cc]);
-  // // // // for (int i = 0; i <= cnn.layers.size(); ++i) {
-  // // // //   cnn.batchPool[cc].interfaces[i].featuresPresent.copyToGPUAsync(
-  // // // //       cnn.batchMemStreams[cc]);
-  // // // //   cnn.batchPool[cc].interfaces[i].rules.copyToGPUAsync(
-  // // // //       cnn.batchMemStreams[cc]);
-  // // // // }
-  // // // // cudaStreamSynchronize(cnn.batchMemStreams[cc].stream);
+  // cnn.batchPool[cc].interfaces[0].sub->features.copyToGPUAsync(
+  //     cnn.batchMemStreams[cc]);
+  // cnn.batchPool[cc].labels.copyToGPUAsync(cnn.batchMemStreams[cc]);
+  // for (int i = 0; i <= cnn.layers.size(); ++i) {
+  //   cnn.batchPool[cc].interfaces[i].featuresPresent.copyToGPUAsync(
+  //       cnn.batchMemStreams[cc]);
+  //   cnn.batchPool[cc].interfaces[i].rules.copyToGPUAsync(
+  //       cnn.batchMemStreams[cc]);
+  // }
+  // cudaStreamSynchronize(cnn.batchMemStreams[cc].stream);
 }
 
 #ifdef MULTITHREAD_BATCH_PRODUCTION
 void BatchProducer::batchProducerThread(int nThread) {
   cudaSetDevice(cnn.deviceID);
+  // cudaSafeCall(cudaStreamDestroy(cnn.batchMemStreams[nThread].stream));
+  // cudaSafeCall(cudaStreamCreate(&cnn.batchMemStreams[nThread].stream));
   RNG rng;
   for (int c = nThread; c < nBatches; c += cnn.nBatchProducerThreads) {
-    int cc = c % cnn.nBatchProducerThreads;
-    cnn.batchLock[cc].lock();
-    while (cnn.batchPool[cc].batchSize > 0) { // Don't overwrite unused batches
-      cnn.batchLock[cc].unlock();
+    cnn.batchLock[nThread].lock();
+    while (cnn.batchPool[nThread].batchSize >
+           0) { // Don't overwrite unused batches
+      cnn.batchLock[nThread].unlock();
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      cnn.batchLock[cc].lock();
+      cnn.batchLock[nThread].lock();
     }
-    preprocessBatch(c, cc, rng);
-    cnn.batchLock[cc].unlock();
+    preprocessBatch(c, nThread, rng);
+    cnn.batchLock[nThread].unlock();
   }
 }
 
@@ -123,10 +125,11 @@ SpatiallySparseBatch *BatchProducer::nextBatch() {
     }
     /////////////////////////////////////////////////////////
     cnn.batchPool[cc].interfaces[0].sub->features.copyToGPUAsync(cnn.memStream);
-    cnn.batchPool[cc].labels.copyToGPUAsync(cnn.batchMemStreams[cc]);
+    cnn.batchPool[cc].labels.copyToGPUAsync(cnn.memStream);
     for (int i = 0; i <= cnn.layers.size(); ++i) {
       cnn.batchPool[cc].interfaces[i].featuresPresent.copyToGPUAsync(
           cnn.memStream);
+
       cnn.batchPool[cc].interfaces[i].rules.copyToGPUAsync(cnn.memStream);
     }
     ////////////////////////////////////////////////////////////////
