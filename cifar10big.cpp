@@ -7,7 +7,7 @@ int batchSize = 50;
 
 Picture *OpenCVPicture::distort(RNG &rng, batchType type) {
   OpenCVPicture *pic = new OpenCVPicture(*this);
-  if (epoch <= 400 and type == TRAINBATCH) {
+  if (epoch <= 800 and type == TRAINBATCH) {
     // 2x2 identity matrix:
     // Generate an affine distortion matrix
     float c00 = 1, c01 = 0, c10 = 0, c11 = 1;
@@ -32,26 +32,26 @@ Picture *OpenCVPicture::distort(RNG &rng, batchType type) {
 }
 
 int main() {
-  std::string baseName = "weights/cifar10";
+  std::string baseName = "weights/cifar10big";
 
   SpatiallySparseDataset trainSet = Cifar10TrainSet();
   SpatiallySparseDataset testSet = Cifar10TestSet();
 
   trainSet.summary();
   testSet.summary();
-  ROFMPSparseConvNet cnn(
-      2, 12, 32 /* 32n units in the n-th hidden layer*/, powf(2, 0.3333),
+  POFMPSparseConvNet cnn(
+      2, 12, 160 /* 160n units in the n-th hidden layer*/, powf(2, 0.3333),
       VLEAKYRELU, trainSet.nFeatures, trainSet.nClasses,
-      0.1f /*dropout multiplier in the range [0,0.5] */, cudaDevice);
+      0.5f /*dropout multiplier in the range [0,0.5] */, cudaDevice);
   if (epoch > 0)
     cnn.loadWeights(baseName, epoch);
-  for (epoch++; epoch <= 410; epoch++) {
+  for (epoch++; epoch <= 810; epoch++) {
     std::cout << "epoch: " << epoch << " " << std::flush;
-    cnn.processDataset(trainSet, batchSize, 0.003 * exp(-0.01 * epoch), 0.99);
-    if (epoch % 10 == 0)
+    cnn.processDataset(trainSet, batchSize, 0.003 * exp(-0.005 * epoch), 0.99);
+    if (epoch % 1 == 0)
       cnn.saveWeights(baseName, epoch);
-    if (epoch % 100 == 0)
+    if (epoch % 1 == 0)
       cnn.processDatasetRepeatTest(testSet, batchSize / 2, 1);
   }
-  cnn.processDatasetRepeatTest(testSet, batchSize / 2, 1);
+  cnn.processDatasetRepeatTest(testSet, batchSize / 2, 100);
 }
