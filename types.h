@@ -11,6 +11,7 @@ extern const char *batchTypeNames[];
 
 enum ActivationFunction {
   NOSIGMOID,
+  SIGMOID,
   RELU,
   VLEAKYRELU,
   LEAKYRELU,
@@ -19,8 +20,9 @@ enum ActivationFunction {
   PRELU
 };
 #ifdef TYPES_CPP
-const char *sigmoidNames[] = {"", "ReLU", "VeryLeakyReLU", "LeakyReLU", "tanh",
-                              "Softmax Classification", "PReLU"};
+const char *sigmoidNames[] = {"", "Sigmoid", "ReLU", "VeryLeakyReLU",
+                              "LeakyReLU", "tanh", "Softmax Classification",
+                              "PReLU"};
 #else
 extern const char *sigmoidNames[];
 #endif

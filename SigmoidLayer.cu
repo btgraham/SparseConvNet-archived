@@ -2,13 +2,13 @@
 #include "SigmoidLayer.h"
 #include "utilities.h"
 
+////////////////////////////////////////////////////////////////////////////////
 __global__ void dSigmoidReLu(float *a, float *b, int nOut) {
   int i = blockIdx.x * nOut;
   for (int j = i + threadIdx.x; j < i + nOut; j += KERNELBLOCKSIZE) {
     b[j] = (a[j] > 0) ? a[j] : 0;
   }
 }
-
 void sigmoidReLU(float *a, float *b, int count, int nOut,
                  cudaMemStream &memStream) {
   int processed = 0;
@@ -20,7 +20,6 @@ void sigmoidReLU(float *a, float *b, int count, int nOut,
   }
   cudaCheckError();
 }
-
 __global__ void dSigmoidBackpropReLu(float *a, float *b, float *da, float *db,
                                      int nOut) {
   int i = blockIdx.x * nOut;
@@ -40,7 +39,44 @@ void sigmoidBackpropReLU(float *a, float *b, float *da, float *db, int count,
   }
   cudaCheckError();
 }
-
+////////////////////////////////////////////////////////////////////////////////
+__global__ void dSigmoidLogistic(float *a, float *b, int nOut) {
+  int i = blockIdx.x * nOut;
+  for (int j = i + threadIdx.x; j < i + nOut; j += KERNELBLOCKSIZE) {
+    b[j] = 1.0f / (1.0f + exp(-a[j]));
+  }
+}
+void sigmoidLogistic(float *a, float *b, int count, int nOut,
+                     cudaMemStream &memStream) {
+  int processed = 0;
+  while (processed < count) {
+    int batch = min(32768 / 4, count - processed);
+    dSigmoidLogistic << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
+        (a + processed * nOut, b + processed * nOut, nOut);
+    processed += batch;
+  }
+  cudaCheckError();
+}
+__global__ void dSigmoidBackpropLogistic(float *a, float *b, float *da,
+                                         float *db, int nOut) {
+  int i = blockIdx.x * nOut;
+  for (int j = i + threadIdx.x; j < i + nOut; j += KERNELBLOCKSIZE) {
+    da[j] = db[j] * b[j] * (1 - b[j]);
+  }
+}
+void sigmoidBackpropLogistic(float *a, float *b, float *da, float *db,
+                             int count, int nOut, cudaMemStream &memStream) {
+  int processed = 0;
+  while (processed < count) {
+    int batch = min(32768 / 4, count - processed);
+    dSigmoidBackpropLogistic << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
+        (a + processed * nOut, b + processed * nOut, da + processed * nOut,
+         db + processed * nOut, nOut);
+    processed += batch;
+  }
+  cudaCheckError();
+}
+////////////////////////////////////////////////////////////////////////////////
 __global__ void dSigmoidTanh(float *a, float *b, int nOut) {
   int i = blockIdx.x * nOut;
   for (int j = i + threadIdx.x; j < i + nOut; j += KERNELBLOCKSIZE) {
@@ -78,14 +114,13 @@ void sigmoidBackpropTanh(float *a, float *b, float *da, float *db, int count,
   }
   cudaCheckError();
 }
-
+////////////////////////////////////////////////////////////////////////////////
 __global__ void dSigmoidLeakyReLu(float *a, float *b, int nOut, float alpha) {
   int i = blockIdx.x * nOut;
   for (int j = i + threadIdx.x; j < i + nOut; j += KERNELBLOCKSIZE) {
     b[j] = (a[j] > 0) ? a[j] : (a[j] * alpha);
   }
 }
-
 void sigmoidLeakyReLU(float *a, float *b, int count, int nOut,
                       float alpha, // 0.01 or 0.3 say
                       cudaMemStream &memStream) {
@@ -98,7 +133,6 @@ void sigmoidLeakyReLU(float *a, float *b, int count, int nOut,
   }
   cudaCheckError();
 }
-
 __global__ void dSigmoidBackpropLeakyReLu(float *a, float *b, float *da,
                                           float *db, int nOut, float alpha) {
   int i = blockIdx.x * nOut;
@@ -107,7 +141,6 @@ __global__ void dSigmoidBackpropLeakyReLu(float *a, float *b, float *da,
     __syncthreads();
   }
 }
-
 void sigmoidBackpropLeakyReLU(float *a, float *b, float *da, float *db,
                               int count, int nOut, float alpha,
                               cudaMemStream &memStream) {
@@ -121,7 +154,7 @@ void sigmoidBackpropLeakyReLU(float *a, float *b, float *da, float *db,
   }
   cudaCheckError();
 }
-
+////////////////////////////////////////////////////////////////////////////////
 // SOFTMAX should only be used in the top layer;
 // derivative contained in calculation of initial d_delta.
 __global__ void dSigmoidSoftmax(float *a, float *b, int count, int nOut) {
@@ -150,11 +183,16 @@ __global__ void dSigmoidBackpropSoftmax(float *a, float *b, float *da,
     }
   }
 }
-
+////////////////////////////////////////////////////////////////////////////////
 void applySigmoid(SpatiallySparseBatchInterface &input,
                   SpatiallySparseBatchInterface &output, ActivationFunction fn,
                   cudaMemStream &memStream) {
   switch (fn) {
+  case SIGMOID:
+    sigmoidLogistic(input.sub->features.dPtr(), output.sub->features.dPtr(),
+                    output.nSpatialSites, output.featuresPresent.size(),
+                    memStream);
+    break;
   case TANH:
     sigmoidTanh(input.sub->features.dPtr(), output.sub->features.dPtr(),
                 output.nSpatialSites, output.featuresPresent.size(), memStream);
@@ -187,6 +225,12 @@ void applySigmoidBackProp(SpatiallySparseBatchInterface &input,
                           SpatiallySparseBatchInterface &output,
                           ActivationFunction fn, cudaMemStream &memStream) {
   switch (fn) {
+  case SIGMOID:
+    sigmoidBackpropLogistic(
+        input.sub->features.dPtr(), output.sub->features.dPtr(),
+        input.sub->dfeatures.dPtr(), output.sub->dfeatures.dPtr(),
+        output.nSpatialSites, output.featuresPresent.size(), memStream);
+    break;
   case TANH:
     sigmoidBackpropTanh(input.sub->features.dPtr(), output.sub->features.dPtr(),
                         input.sub->dfeatures.dPtr(),

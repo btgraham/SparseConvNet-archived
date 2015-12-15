@@ -8,9 +8,9 @@
 void loadDataThread(std::vector<Picture *> *pictures, int flags, int k, int n) {
   for (; k < pictures->size(); k += n) {
     OpenCVPicture *pic = dynamic_cast<OpenCVPicture *>(pictures->at(k));
-    // pic->loadDataWithoutScaling(flags);
-    pic->loadDataWithoutScalingRemoveModalColor();
-    std::cout << "!" << std::flush;
+    pic->loadDataWithoutScaling(flags);
+    // pic->loadDataWithoutScalingRemoveModalColor();
+    // std::cout << "!" << std::flush;
   }
 }
 
