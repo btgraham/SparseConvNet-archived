@@ -51,7 +51,7 @@ int main() {
     if (epoch % 10 == 0)
       cnn.saveWeights(baseName, epoch);
     if (epoch % 100 == 0)
-      cnn.processDatasetRepeatTest(testSet, batchSize / 2, 1);
+      cnn.processDatasetRepeatTest(testSet, batchSize / 2, 3);
   }
   cnn.processDatasetRepeatTest(testSet, batchSize / 2, 100);
 }
