@@ -5,7 +5,7 @@ DeepCNet::DeepCNet(int dimension, int l, int k, ActivationFunction fn,
                    int nTop)
     : SparseConvNet(dimension, nInputFeatures, nClasses, cudaDevice, nTop) {
   for (int i = 0; i <= l; i++)
-    addLeNetLayerMP((i + 1) * k, (i == 0) ? 3 : 2, 1, (i < l) ? /**3**/ 2 : 1,
+    addLeNetLayerMP((i + 1) * k, (i == 0) ? 3 : 2, 1, (i < l) ? 3 : 1,
                     (i < l) ? 2 : 1, fn, p * i * 1.0f / l);
   addSoftmaxLayer();
 }

@@ -135,13 +135,10 @@ NetworkInNetworkLayer::NetworkInNetworkLayer(
   float scale = pow(6.0f / (nFeaturesIn + nFeaturesOut * alpha), 0.5f);
   W.copyToCPUAsync(memStream);
   W.setUniform(-scale, scale);
+  W.copyToGPUAsync(memStream);
   MW.setZero();
   B.setZero();
   MB.setZero();
-  W.copyToGPUAsync(memStream);
-  MW.copyToGPUAsync(memStream);
-  B.copyToGPUAsync(memStream);
-  MB.copyToGPUAsync(memStream);
   std::cout << "Learn " << nFeaturesIn << "->" << nFeaturesOut
             << " dropout=" << dropout << " " << sigmoidNames[fn] << std::endl;
 }
@@ -206,8 +203,7 @@ void NetworkInNetworkLayer::scaleWeights(SpatiallySparseBatchInterface &input,
                                          SpatiallySparseBatchInterface &output,
                                          float &scalingUnderneath,
                                          bool topLayer) {
-  assert(input.sub->features.size() > 0);
-  assert(output.sub->features.size() > 0); // call after forwards(...)
+  assert(output.sub->features.size() > 0 && "call after forwards(...)");
   float scale = output.sub->features.meanAbs();
   std::cout << "featureScale:" << scale << std::endl;
   if (topLayer) {

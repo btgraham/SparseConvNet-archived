@@ -11,6 +11,7 @@ vectorCUDA<t>::vectorCUDA(bool onGPU, int dsize)
   if (onGPU && dsize > 0) {
     dAllocated = dsize;
     cudaSafeCall(cudaMalloc((void **)&d_vec, sizeof(t) * dsize));
+    cudaCheckError();
   } else {
     vec.resize(dsize);
   }
@@ -43,6 +44,7 @@ template <typename t> void vectorCUDA<t>::copyToGPU() {
       }
       dAllocated = dsize;
       cudaSafeCall(cudaMalloc((void **)&d_vec, sizeof(t) * dAllocated));
+      cudaCheckError();
     }
     if (dsize > 0) {
       std::cout << "blocking copyToGPU " << dsize << " " << dAllocated << "\n";
@@ -64,12 +66,14 @@ void vectorCUDA<t>::copyToGPUAsync(cudaMemStream &memStream) {
       }
       dAllocated = dsize;
       cudaSafeCall(cudaMalloc((void **)&d_vec, sizeof(t) * dAllocated));
+      cudaCheckError();
     }
     if (memStream.pinnedMemorySize < sizeof(t) * dsize) {
       memStream.pinnedMemorySize = 2 * sizeof(t) * dsize;
       cudaSafeCall(cudaFreeHost(memStream.pinnedMemory));
       cudaSafeCall(
           cudaMallocHost(&memStream.pinnedMemory, memStream.pinnedMemorySize));
+      cudaCheckError();
     }
     if (dsize > 0) {
       std::memcpy(memStream.pinnedMemory, &vec[0], sizeof(t) * dsize);
@@ -90,6 +94,7 @@ void vectorCUDA<t>::copyToCPUAsync(cudaMemStream &memStream) {
       cudaSafeCall(cudaFreeHost(memStream.pinnedMemory));
       cudaSafeCall(
           cudaMallocHost(&memStream.pinnedMemory, memStream.pinnedMemorySize));
+      cudaCheckError();
     }
     if (dsize > 0) {
       cudaSafeCall(cudaMemcpyAsync(memStream.pinnedMemory, d_vec,
@@ -211,6 +216,7 @@ template <typename t> void vectorCUDA<t>::resize(int n) {
         }
         dAllocated = dsize;
         cudaSafeCall(cudaMalloc((void **)&d_vec, sizeof(t) * dsize));
+        cudaCheckError();
       }
     }
   } else {

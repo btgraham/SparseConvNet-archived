@@ -132,6 +132,7 @@ SpatiallySparseBatch *BatchProducer::nextBatch() {
 
       cnn.batchPool[cc].interfaces[i].rules.copyToGPUAsync(cnn.memStream);
     }
+    cudaStreamSynchronize(cnn.memStream.stream);
     ////////////////////////////////////////////////////////////////
     return &cnn.batchPool[cc];
   } else {
@@ -158,6 +159,17 @@ SpatiallySparseBatch *BatchProducer::nextBatch() {
     int cc = batchCounter % cnn.nBatchProducerThreads;
     ;
     preprocessBatch(batchCounter, cc, rng);
+    /////////////////////////////////////////////////////////
+    cnn.batchPool[cc].interfaces[0].sub->features.copyToGPUAsync(cnn.memStream);
+    cnn.batchPool[cc].labels.copyToGPUAsync(cnn.memStream);
+    for (int i = 0; i <= cnn.layers.size(); ++i) {
+      cnn.batchPool[cc].interfaces[i].featuresPresent.copyToGPUAsync(
+          cnn.memStream);
+
+      cnn.batchPool[cc].interfaces[i].rules.copyToGPUAsync(cnn.memStream);
+    }
+    cudaStreamSynchronize(cnn.memStream.stream);
+    ////////////////////////////////////////////////////////////////
     return &cnn.batchPool[cc];
   }
 }

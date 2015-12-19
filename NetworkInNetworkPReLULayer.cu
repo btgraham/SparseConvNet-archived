@@ -56,7 +56,6 @@ __global__ void dGradientDescentShrunkVectorKeepPositive(
     float w = d_weights[ii];
     float m = d_momentum[ii];
     float d = d_delta[i];
-    d = isfinite(d) ? d : 0;
     w -= m * momentum;
     m = momentum * m - learningRate * (1 - momentum) * d;
     w += m * (1 + momentum);
@@ -75,7 +74,6 @@ __global__ void dGradientDescentKeepPositive(float *d_delta, float *d_momentum,
     float w = d_weights[j];
     float m = d_momentum[j];
     float d = d_delta[j];
-    d = isfinite(d) ? d : 0;
     w -= m * momentum;
     m = momentum * m - learningRate * (1 - momentum) * d;
     w += m * (1 + momentum);
@@ -92,25 +90,20 @@ NetworkInNetworkPReLULayer::NetworkInNetworkPReLULayer(
     )
     : SpatiallySparseLayer(memStream), cublasHandle(cublasHandle),
       nFeaturesIn(nFeaturesIn), nFeaturesOut(nFeaturesOut), dropout(dropout),
-      W(false, nFeaturesIn * nFeaturesOut),
-      MW(false, nFeaturesIn * nFeaturesOut), B(false, nFeaturesOut),
-      MB(false, nFeaturesOut), PReLU(false, nFeaturesOut),
-      MPReLU(false, nFeaturesOut) {
+      W(true, nFeaturesIn * nFeaturesOut), MW(true, nFeaturesIn * nFeaturesOut),
+      B(true, nFeaturesOut), MB(true, nFeaturesOut), PReLU(true, nFeaturesOut),
+      MPReLU(true, nFeaturesOut) {
   float scale = pow(6.0f / (nFeaturesIn + nFeaturesOut * alpha), 0.5f);
   W.copyToCPUAsync(memStream);
-  PReLU.copyToCPUAsync(memStream);
   W.setUniform(-scale, scale);
+  W.copyToGPUAsync(memStream);
+  PReLU.copyToCPUAsync(memStream);
+  PReLU.setConstant(initialAlpha);
+  PReLU.copyToGPUAsync(memStream);
   MW.setZero();
   B.setZero();
   MB.setZero();
-  PReLU.setConstant(initialAlpha);
   MPReLU.setZero();
-  W.copyToGPUAsync(memStream);
-  MW.copyToGPUAsync(memStream);
-  B.copyToGPUAsync(memStream);
-  MB.copyToGPUAsync(memStream);
-  PReLU.copyToGPUAsync(memStream);
-  MPReLU.copyToGPUAsync(memStream);
   std::cout << "Learn " << nFeaturesIn << "->" << nFeaturesOut
             << " dropout=" << dropout << " " << sigmoidNames[PRELU]
             << std::endl;
@@ -130,7 +123,7 @@ void NetworkInNetworkPReLULayer::preprocess(
 void NetworkInNetworkPReLULayer::forwards(
     SpatiallySparseBatch &batch, SpatiallySparseBatchInterface &input,
     SpatiallySparseBatchInterface &output) {
-  //  std::cerr << output.nFeatures << " " << PReLU.meanAbs() << "\n";
+  // std::cerr << output.nFeatures << " " << PReLU.meanAbs() << "\n";
   output.sub->features.resize(output.nSpatialSites *
                               output.featuresPresent.size());
   if (batch.type == TRAINBATCH and
