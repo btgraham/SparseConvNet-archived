@@ -76,7 +76,6 @@ RandomOverlappingFmpTicks::RandomOverlappingFmpTicks(int nIn, int nOut,
                                                      int poolSize, RNG &rng) {
   assert(nIn > nOut);
   int alpha = nIn * 1.0 / nOut;
-  assert(alpha + 1 == poolSize);
   std::vector<int> inc;
   inc.resize(nOut * (alpha + 1) - nIn, alpha);
   inc.resize(nOut - 1, alpha + 1);
@@ -103,7 +102,6 @@ RandomNonOverlappingFmpTicks::RandomNonOverlappingFmpTicks(int nIn, int nOut,
                                                            RNG &rng) {
   assert(nIn > nOut);
   int alpha = nIn * 1.0 / nOut;
-  assert(alpha + 1 == poolSize);
   std::vector<int> inc;
   inc.resize(nOut * (alpha + 1) - nIn, alpha);
   inc.resize(nOut, alpha + 1);
