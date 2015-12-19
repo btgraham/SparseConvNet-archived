@@ -2,7 +2,7 @@
 // We can either use
 
 // a) Google's sparsehash dense_hash_map, or
-// #define USE_GOOGLE_SPARSEHASH
+#define USE_GOOGLE_SPARSEHASH
 
 // b) the C++11 std::unordered_map
 // #define USE_UNORDERED_MAP
@@ -13,7 +13,7 @@
 // #define USE_UNORDERED_MAP
 
 // d) vectors disguised as a hash map (ok in 2 dimensions)
-#define USE_VECTOR_HASH
+// #define USE_VECTOR_HASH
 
 #pragma once
 #include <stdint.h>
