@@ -7,11 +7,11 @@ int batchSize = 50;  // Increase/decrease according to GPU memory
 
 Picture *OpenCVPicture::distort(RNG &rng, batchType type) {
   OpenCVPicture *pic = new OpenCVPicture(*this);
-  // pic->loadDataWithoutScaling(-1);
+  pic->loadDataWithoutScaling(0);
   float c00 = 1, c01 = 0, // 2x2 identity matrix---starting point for
                           // calculating affine distortion matrix
       c10 = 0, c11 = 1;
-  float r, alpha, beta;
+  float r, alpha, beta, s = 1;
   if (type == TRAINBATCH) {
     r = rng.uniform(-0.1, 0.1);
     alpha = rng.uniform(0, 2 * 3.1415926535);
@@ -92,10 +92,9 @@ int main() {
     cnn.processDatasetRepeatTest(valSet, batchSize, 1);
   }
 
-  // For unlabelled data (but there is overlap between this "test" data and our
-  // expanded training set!!!)
+  // For unlabelled data
   // OpenCVUnlabeledDataSet
-  // testSet("Data/kagglePlankton/classList","Data/kagglePlankton/test","*.jpg",255,true,-1);
+  // testSet("Data/kagglePlankton/classList"," ... ","*.jpg",255,true,-1);
   // testSet.summary();
   // cnn.processDatasetRepeatTest(testSet, batchSize/2,
   // 24,"plankton.predictions",testSet.header);
