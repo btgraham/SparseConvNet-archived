@@ -1,6 +1,5 @@
 // Average everything that makes it to the final layer
 
-#define TERMINAL_POOLING_MAX_ACTIVE_SITES 1024
 #include <iostream>
 #include <cassert>
 #include "utilities.h"
@@ -9,9 +8,6 @@
 void terminalGridPoolingRules(SparseGrid &inputGrid, SparseGrid &outputGrid,
                               int S, int &nOutputSpatialSites,
                               std::vector<int> &rules) {
-  assert(inputGrid.mp.size() <=
-         TERMINAL_POOLING_MAX_ACTIVE_SITES); // Upper bound for ease of kernel
-                                             // memory management
   // std::cout << inputGrid.mp.size() << std::endl;
   if (inputGrid.mp.size() == 0) { // Danger, total loss of information
     rules.push_back(inputGrid.backgroundCol);
@@ -24,68 +20,53 @@ void terminalGridPoolingRules(SparseGrid &inputGrid, SparseGrid &outputGrid,
 }
 
 __global__ void dTerminalPool(float *g1, float *g2, int *rules, int nOut,
-                              int ps2) {
-  __shared__ int r[TERMINAL_POOLING_MAX_ACTIVE_SITES];
+                              int S) {
   int i = blockIdx.x * nOut; // for output g2
-  for (int p = threadIdx.x; p < ps2; p += KERNELBLOCKSIZE)
-    r[p] = rules[blockIdx.x * ps2 + p] * nOut; // for input g1
-  __syncthreads();
   for (int j = threadIdx.x; j < nOut;
        j += KERNELBLOCKSIZE) { // nOut is a multiple of KERNELBLOCKSIZE!!!
     float t = 0;
     int p = 0;
-    for (; p < ps2 and r[p] >= 0; p++) {
-      t += g1[r[p] + j];
+    for (; p < S and rules[blockIdx.x * S + p] >= 0; p++) {
+      t += g1[rules[blockIdx.x * S + p] * nOut + j];
     }
     g2[i + j] = t / p;
   }
 }
 
-void terminalPool(float *g1, float *g2, int *rules, int count, int ps2,
-                  int nOut, cudaMemStream &memStream) {
+void terminalPool(float *g1, float *g2, int *rules, int count, int S, int nOut,
+                  cudaMemStream &memStream) {
   int processed = 0;
-  assert(ps2 <= TERMINAL_POOLING_MAX_ACTIVE_SITES); // if ps2>KERNELBLOCKSIZE,
-                                                    // i.e. if poolSize>32,
-                                                    // allocate more memory in
-                                                    // dTerminalPool and
-                                                    // dTerminalPoolBackProp
   while (processed < count) {
     int batch = min(32768, count - processed);
     dTerminalPool << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-        (g1, g2 + processed * nOut, rules + processed * ps2, nOut, ps2);
+        (g1, g2 + processed * nOut, rules + processed * S, nOut, S);
     processed += batch;
   }
   cudaCheckError();
 }
 
 __global__ void dTerminalPoolBackProp(float *d1, float *d2, int *rules,
-                                      int nOut, int ps2) {
-  __shared__ int r[TERMINAL_POOLING_MAX_ACTIVE_SITES]; // Allocate at least size
-                                                       // ps2 !!!!!!!!!!!
-  int i = blockIdx.x * nOut;                           // for input d2
-  for (int p = threadIdx.x; p < ps2; p += KERNELBLOCKSIZE) {
-    r[p] = rules[blockIdx.x * ps2 + p] * nOut; // for output d1
-  }
-  __syncthreads();
+                                      int nOut, int S) {
+  int i = blockIdx.x * nOut; // for input d2
   int maxP = 0;
-  while (maxP < ps2 and r[maxP] >= 0)
+  while (maxP < S and rules[blockIdx.x * S + maxP] >= 0)
     ++maxP;
   __syncthreads(); // delete line??
   for (int j = threadIdx.x; j < nOut; j += KERNELBLOCKSIZE) {
     float t = d2[i + j] / maxP;
     for (int p = 0; p < maxP; p++) {
-      d1[r[p] + j] = t;
+      d1[rules[blockIdx.x * S + p] * nOut + j] = t;
     }
   }
 }
 
 void terminalPoolBackProp(float *d1, float *d2, int *rules, int count, int nOut,
-                          int ps2, cudaMemStream &memStream) {
+                          int S, cudaMemStream &memStream) {
   int processed = 0;
   while (processed < count) {
     int batch = min(32768, count - processed);
     dTerminalPoolBackProp << <batch, KERNELBLOCKSIZE, 0, memStream.stream>>>
-        (d1, d2 + processed * nOut, rules + processed * ps2, nOut, ps2);
+        (d1, d2 + processed * nOut, rules + processed * S, nOut, S);
     processed += batch;
   }
   cudaCheckError();
@@ -106,9 +87,12 @@ void TerminalPoolingLayer::preprocess(SpatiallySparseBatch &batch,
   output.spatialSize = outSpatialSize;
   output.nSpatialSites = 0;
   output.grids.resize(batch.batchSize);
+  size_t s = 1;
+  for (int i = 0; i < batch.batchSize; ++i)
+    s = std::max(s, input.grids[i].mp.size());
   output.backpropErrors = input.backpropErrors;
   for (int item = 0; item < batch.batchSize; item++)
-    terminalGridPoolingRules(input.grids[item], output.grids[item], S,
+    terminalGridPoolingRules(input.grids[item], output.grids[item], s,
                              output.nSpatialSites, output.rules.hVector());
 }
 void TerminalPoolingLayer::forwards(SpatiallySparseBatch &batch,
@@ -120,7 +104,8 @@ void TerminalPoolingLayer::forwards(SpatiallySparseBatch &batch,
                               output.featuresPresent.size());
   cudaCheckError();
   terminalPool(input.sub->features.dPtr(), output.sub->features.dPtr(),
-               output.rules.dPtr(), output.nSpatialSites, S,
+               output.rules.dPtr(), output.nSpatialSites,
+               output.rules.size() / batch.batchSize,
                output.featuresPresent.size(), memStream);
   cudaCheckError();
 }
@@ -134,11 +119,8 @@ void TerminalPoolingLayer::backwards(SpatiallySparseBatch &batch,
     input.sub->dfeatures.setZero();
     terminalPoolBackProp(input.sub->dfeatures.dPtr(),
                          output.sub->dfeatures.dPtr(), output.rules.dPtr(),
-                         output.nSpatialSites, output.featuresPresent.size(), S,
-                         memStream);
-    // output.sub->features.resize(0);
-    // output.sub->dfeatures.resize(0);
-    // cudaCheckError();
+                         output.nSpatialSites, output.featuresPresent.size(),
+                         output.rules.size() / batch.batchSize, memStream);
   }
 }
 int TerminalPoolingLayer::calculateInputSpatialSize(int outputSpatialSize) {

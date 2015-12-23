@@ -71,7 +71,6 @@ void OpenCVPicture::affineTransform(float c00, float c01, float c10,
   yOffset = -mat.rows / 2;
 }
 void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize, float minFill) {
-  bool goodFit = false;
   for (int fitCtr = 100; // Give up after 100 failed attempts to find a good fit
        fitCtr > 0; fitCtr--) {
     {
@@ -96,12 +95,12 @@ void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize, float minFill) {
       int y0 = std::max(0, -yOffset - subsetSize / 2);
       int y1 = std::min(mat.rows, subsetSize - yOffset - subsetSize / 2);
       float *matData = ((float *)(mat.data));
-      for (int x = x0 + 3; x < x1; x += 6) {
-        for (int y = y0 + 3; y < y1; y += 6) {
+      assert(subsetSize > 20);
+      int subsample = subsetSize / 20;
+      for (int x = x0 + subsample / 2; x < x1; x += subsample) {
+        for (int y = y0 + subsample / 2; y < y1; y += subsample) {
           pointsCtr++;
           int j = x * mat.channels() + y * mat.channels() * mat.cols;
-          bool interestingPixel =
-              false; // Check pixel differs from the background color
           for (int i = 0; i < mat.channels(); i++)
             if (std::abs(matData[i + j] - backgroundColor) > 2) {
               interestingPointsCtr++;
@@ -109,7 +108,6 @@ void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize, float minFill) {
             }
         }
       }
-      assert(pointsCtr >= 5);
       if (interestingPointsCtr > pointsCtr * minFill)
         fitCtr == -1;
       if (fitCtr == 0) {

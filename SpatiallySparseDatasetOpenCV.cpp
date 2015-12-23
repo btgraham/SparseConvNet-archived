@@ -4,13 +4,16 @@
 #include <string>
 #include <cassert>
 #include <thread>
+#include <fstream>
+#include <iterator>
 
 void loadDataThread(std::vector<Picture *> *pictures, int flags, int k, int n) {
   for (; k < pictures->size(); k += n) {
     OpenCVPicture *pic = dynamic_cast<OpenCVPicture *>(pictures->at(k));
-    pic->loadDataWithoutScaling(flags);
-    // pic->loadDataWithoutScalingRemoveModalColor();
-    // std::cout << "!" << std::flush;
+    // pic->loadDataWithoutScaling(flags);
+    std::ifstream testFile(pic->filename.c_str(), std::ios::binary);
+    pic->rawData = std::vector<char>((std::istreambuf_iterator<char>(testFile)),
+                                     std::istreambuf_iterator<char>());
   }
 }
 

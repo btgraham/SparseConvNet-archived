@@ -129,11 +129,10 @@ SpatiallySparseBatch *BatchProducer::nextBatch() {
     for (int i = 0; i <= cnn.layers.size(); ++i) {
       cnn.batchPool[cc].interfaces[i].featuresPresent.copyToGPUAsync(
           cnn.memStream);
-
       cnn.batchPool[cc].interfaces[i].rules.copyToGPUAsync(cnn.memStream);
     }
     cudaStreamSynchronize(cnn.memStream.stream);
-    ////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////
     return &cnn.batchPool[cc];
   } else {
     for (int i = 0; i < cnn.nBatchProducerThreads; i++)
@@ -165,11 +164,10 @@ SpatiallySparseBatch *BatchProducer::nextBatch() {
     for (int i = 0; i <= cnn.layers.size(); ++i) {
       cnn.batchPool[cc].interfaces[i].featuresPresent.copyToGPUAsync(
           cnn.memStream);
-
       cnn.batchPool[cc].interfaces[i].rules.copyToGPUAsync(cnn.memStream);
     }
     cudaStreamSynchronize(cnn.memStream.stream);
-    ////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////
     return &cnn.batchPool[cc];
   }
 }

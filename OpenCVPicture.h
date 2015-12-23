@@ -1,6 +1,7 @@
 #pragma once
 #include "readImageToMat.h"
 #include "Picture.h"
+#include <vector>
 
 // If filename contain an image filename, then it gets loaded as needed;
 // otherwise mat is used to stores the image
@@ -16,6 +17,7 @@ public:
   float scale2xx, scale2xy, scale2yy;
   cv::Mat mat;
   std::string filename;
+  std::vector<char> rawData; // to hold image file in memory
 
   OpenCVPicture(int xSize, int ySize, int nInputFeatures,
                 unsigned char backgroundColor, int label_ = -1);
@@ -34,6 +36,7 @@ public:
   void loadData(int scale, int flags = 1);
   void loadDataWithoutScaling(int flags = 1);
   void loadDataWithoutScalingRemoveModalColor(int flags = 1);
+  void loadDataWithoutScalingRemoveMeanColor(int flags = 1);
   void randomCrop(RNG &rng, int subsetSize);
   std::string identify();
 };

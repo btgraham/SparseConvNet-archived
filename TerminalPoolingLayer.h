@@ -8,8 +8,7 @@ public:
   int inSpatialSize;  //==poolSize.
   int outSpatialSize; // 1
   int poolSize;
-  int S; // Maximum number of active sites, smaller than
-         // TERMINAL_POOLING_MAX_ACTIVE_SITES==1024
+  int S; // Maximum number of active sites
   TerminalPoolingLayer(cudaMemStream &memStream, int poolSize, int S);
   void preprocess(SpatiallySparseBatch &batch,
                   SpatiallySparseBatchInterface &input,
