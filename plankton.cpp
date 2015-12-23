@@ -85,13 +85,12 @@ int main() {
   for (epoch++;; epoch++) {
     std::cout << "epoch: " << epoch << std::endl;
     float lr = 0.003 * exp(-0.1 * epoch);
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 10; ++i) {
       cnn.processDataset(trainSet, batchSize, lr, 0.999);
-      cnn.saveWeights(baseName, epoch);
       cnn.processDataset(cheekyExtraTrainSet, batchSize, lr, 0.999);
-      cnn.saveWeights(baseName, epoch);
     }
-    cnn.processDatasetRepeatTest(valSet, batchSize, 12);
+    cnn.saveWeights(baseName, epoch);
+    cnn.processDatasetRepeatTest(valSet, batchSize, 6);
   }
 
   // For unlabelled data
