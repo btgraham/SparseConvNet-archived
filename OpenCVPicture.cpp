@@ -71,45 +71,52 @@ void OpenCVPicture::affineTransform(float c00, float c01, float c10,
   yOffset = -mat.rows / 2;
 }
 void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize, float minFill) {
-  if (minFill < 0) { // Just pick a random subsetSize x subsetSquare that
-                     // overlaps the picture as much as possible.
-    if (mat.cols >= subsetSize)
-      xOffset = -rng.randint(mat.cols - subsetSize + 1) - subsetSize / 2;
-    else
-      xOffset = rng.randint(subsetSize - mat.cols + 1) - subsetSize / 2;
-    if (mat.rows >= subsetSize)
-      yOffset = -rng.randint(mat.rows - subsetSize + 1) - subsetSize / 2;
-    else
-      yOffset = rng.randint(subsetSize - mat.rows + 1) - subsetSize / 2;
-  } else {
-    int fitCtr = 100; // Give up after 100 failed attempts to find a good fit
-    bool goodFit = false;
-    while (!goodFit and fitCtr-- > 0) {
-      xOffset = -subsetSize / 2 -
-                rng.randint(mat.cols - subsetSize); //-rng.randint(mat.cols);
-      yOffset = -subsetSize / 2 -
-                rng.randint(mat.rows - subsetSize); //-rng.randint(mat.rows);
+  bool goodFit = false;
+  for (int fitCtr = 100; // Give up after 100 failed attempts to find a good fit
+       fitCtr > 0; fitCtr--) {
+    {
+      if (mat.cols >= subsetSize)
+        xOffset = -rng.randint(mat.cols - subsetSize + 1) - subsetSize / 2;
+      else
+        xOffset = rng.randint(subsetSize - mat.cols + 1) - subsetSize / 2;
+      if (mat.rows >= subsetSize)
+        yOffset = -rng.randint(mat.rows - subsetSize + 1) - subsetSize / 2;
+      else
+        yOffset = rng.randint(subsetSize - mat.rows + 1) - subsetSize / 2;
+    }
+    if (minFill < 0) {
+      fitCtr = -1; // Just take any old crop
+    } else {
       int pointsCtr = 0;
       int interestingPointsCtr = 0;
-      for (int X = 5; X < subsetSize; X += 10) {
-        for (int Y = 5; Y < subsetSize; Y += 10) {
-          int x = X - xOffset - subsetSize / 2;
-          int y = Y - yOffset - subsetSize / 2;
+      // If x0<=x<x1 and y0<=y<y1 then the (x,y)-th pixel is in the CNN's visual
+      // field.
+      int x0 = std::max(0, -xOffset - subsetSize / 2);
+      int x1 = std::min(mat.cols, subsetSize - xOffset - subsetSize / 2);
+      int y0 = std::max(0, -yOffset - subsetSize / 2);
+      int y1 = std::min(mat.rows, subsetSize - yOffset - subsetSize / 2);
+      float *matData = ((float *)(mat.data));
+      for (int x = x0 + 3; x < x1; x += 6) {
+        for (int y = y0 + 3; y < y1; y += 6) {
           pointsCtr++;
-          if (0 <= x and x < mat.cols and 0 <= y and y < mat.rows)
-            interestingPointsCtr +=
-                (mat.ptr()[(pointsCtr % mat.channels()) + x * mat.channels() +
-                           y * mat.channels() * mat.cols] != backgroundColor);
+          int j = x * mat.channels() + y * mat.channels() * mat.cols;
+          bool interestingPixel =
+              false; // Check pixel differs from the background color
+          for (int i = 0; i < mat.channels(); i++)
+            if (std::abs(matData[i + j] - backgroundColor) > 2) {
+              interestingPointsCtr++;
+              break;
+            }
         }
       }
-      assert(pointsCtr >= 10);
+      assert(pointsCtr >= 5);
       if (interestingPointsCtr > pointsCtr * minFill)
-        goodFit = true;
-    }
-    if (!goodFit) {
-      std::cout << filename << " " << std::flush;
-      xOffset = -mat.cols / 2 - 16 + rng.randint(32);
-      yOffset = -mat.rows / 2 - 16 + rng.randint(32);
+        fitCtr == -1;
+      if (fitCtr == 0) {
+        std::cout << filename << " " << std::flush;
+        xOffset = -mat.cols / 2 - 16 + rng.randint(32);
+        yOffset = -mat.rows / 2 - 16 + rng.randint(32);
+      }
     }
   }
 }
@@ -144,14 +151,25 @@ void OpenCVPicture::centerMass() {
   scale2 = powf(scale2xx + scale2yy, 0.5);
 }
 void OpenCVPicture::loadData(int scale, int flags) {
-  readImage(filename, mat, flags);
+  loadDataWithoutScaling(flags);
   float s = scale * 1.0f / std::min(mat.rows, mat.cols);
   transformImage(mat, backgroundColor, s, 0, 0, s);
   xOffset = -mat.cols / 2;
   yOffset = -mat.rows / 2;
 }
 void OpenCVPicture::loadDataWithoutScaling(int flags) {
-  readImage(filename, mat, flags);
+  if (!rawData.empty()) {
+    cv::Mat temp = cv::imdecode(rawData, flags);
+    temp.convertTo(mat, CV_32FC(temp.channels()));
+  } else {
+    cv::Mat temp = cv::imread(filename, flags);
+    if (temp.empty()) {
+      std::cout << "Error : Image " << filename << " cannot be loaded..."
+                << std::endl;
+      exit(EXIT_FAILURE);
+    }
+    temp.convertTo(mat, CV_32FC(temp.channels()));
+  }
   xOffset = -mat.cols / 2;
   yOffset = -mat.rows / 2;
 }
@@ -169,8 +187,8 @@ void OpenCVPicture::loadDataWithoutScalingRemoveModalColor(int flags) {
     std::vector<int> counts(256, 0);
     for (int y = 0; y < temp.rows; y++) {
       for (int x = 0; x < temp.cols; x++) {
-        int c =
-            temp.ptr()[i + x * temp.channels() + y * mat.channels() * mat.cols];
+        int c = temp.ptr()[i + x * temp.channels() +
+                           y * temp.channels() * temp.cols];
         counts[c]++;
         if (counts[c] > m) {
           m = counts[c];
@@ -191,6 +209,36 @@ void OpenCVPicture::loadDataWithoutScalingRemoveModalColor(int flags) {
   xOffset = -mat.cols / 2;
   yOffset = -mat.rows / 2;
 }
+void OpenCVPicture::loadDataWithoutScalingRemoveMeanColor(int flags) {
+  cv::Mat temp = cv::imread(filename, flags);
+  if (temp.empty()) {
+    std::cout << "Error : Image " << filename << " cannot be loaded..."
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  std::vector<float> meanColor(temp.channels());
+  for (int i = 0; i < temp.channels(); ++i) {
+    for (int y = 0; y < temp.rows; y++) {
+      for (int x = 0; x < temp.cols; x++) {
+        int c = temp.ptr()[i + x * temp.channels() +
+                           y * temp.channels() * temp.cols];
+        meanColor[i] += c;
+      }
+    }
+  }
+  for (int i = 0; i < temp.channels(); ++i)
+    meanColor[i] /= temp.rows * temp.cols;
+  temp.convertTo(mat, CV_32FC(temp.channels()));
+  float *matData = ((float *)(mat.data));
+  for (int i = 0; i < mat.channels(); ++i)
+    for (int y = 0; y < temp.rows; y++)
+      for (int x = 0; x < temp.cols; x++)
+        matData[i + x * mat.channels() + y * mat.channels() * mat.cols] -=
+            meanColor[i];
+  backgroundColor = 0;
+  xOffset = -mat.cols / 2;
+  yOffset = -mat.rows / 2;
+}
 
 std::string OpenCVPicture::identify() { return filename; }
 
@@ -202,10 +250,9 @@ void OpenCVPicture::codifyInputData(SparseGrid &grid,
   for (int i = 0; i < mat.channels(); i++)
     features.push_back(0); // Background feature
   grid.backgroundCol = nSpatialSites++;
-  int x0 = std::max(0, -xOffset - spatialSize / 2); // If x0<=x<x1 and y0<=y<y1
-                                                    // then the (x,y)-th pixel
-                                                    // is in the CNN's visual
-                                                    // field.
+  // If x0<=x<x1 and y0<=y<y1 then the (x,y)-th pixel is in the CNN's visual
+  // field.
+  int x0 = std::max(0, -xOffset - spatialSize / 2);
   int x1 = std::min(mat.cols, spatialSize - xOffset - spatialSize / 2);
   int y0 = std::max(0, -yOffset - spatialSize / 2);
   int y1 = std::min(mat.rows, spatialSize - yOffset - spatialSize / 2);
