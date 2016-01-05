@@ -15,11 +15,13 @@ void writeImage(cv::Mat &mat, int n) {
   mat.convertTo(temp, CV_8UC(mat.channels()));
   std::string filename = std::string("OpenCVwriteImage-") + std::to_string(n) +
                          std::string(".png");
+  std::cout << "Writing " << filename << "\n";
   cv::imwrite(filename.c_str(), temp);
 }
 void writeImage(cv::Mat &mat, std::string filename) {
   cv::Mat temp;
   mat.convertTo(temp, CV_8UC(mat.channels()));
+  std::cout << "Writing " << filename << "\n";
   cv::imwrite(filename.c_str(), temp);
 }
 
@@ -58,7 +60,7 @@ void transformImage(cv::Mat &src, int backgroundColor, float c00, float c01,
                     dstTri[1].x + dstTri[2].x)),
       src.type());
   warp = cv::getAffineTransform(srcTri, dstTri);
-  cv::warpAffine(src, dst, warp, dst.size(), cv::INTER_LINEAR,
+  cv::warpAffine(src, dst, warp, dst.size(), cv::INTER_AREA,
                  cv::BORDER_CONSTANT,
                  cv::Scalar(backgroundColor, backgroundColor, backgroundColor));
   src = dst;

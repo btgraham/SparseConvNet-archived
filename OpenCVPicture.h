@@ -17,7 +17,8 @@ public:
   float scale2xx, scale2xy, scale2yy;
   cv::Mat mat;
   std::string filename;
-  std::vector<char> rawData; // to hold image file in memory
+  // to hold "filename" image file in memory if RAM allows
+  std::vector<char> rawData;
 
   OpenCVPicture(int xSize, int ySize, int nInputFeatures,
                 unsigned char backgroundColor, int label_ = -1);
@@ -31,6 +32,7 @@ public:
                        int &nSpatialSites, int spatialSize);
   void jiggle(RNG &rng, int offlineJiggle);
   void jiggleFit(RNG &rng, int subsetSize, float minFill = -1);
+  void elasticDistortion(RNG &rng, float amplitude = 30, float radius = 30);
   void colorDistortion(RNG &rng, int sigma1, int sigma2, int sigma3,
                        int sigma4);
   void loadData(int scale, int flags = 1);
@@ -38,6 +40,9 @@ public:
   void loadDataWithoutScalingRemoveModalColor(int flags = 1);
   void loadDataWithoutScalingRemoveMeanColor(int flags = 1);
   void randomCrop(RNG &rng, int subsetSize);
+  void blur(float radius);
+  void addSpatiallyCoherentNoise(RNG &rng, float amplitude, float radius);
+  void multiplySpatiallyCoherentNoise(RNG &rng, float amplitude, float radius);
   std::string identify();
 };
 

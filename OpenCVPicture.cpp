@@ -25,6 +25,67 @@ void OpenCVPicture::jiggle(RNG &rng, int offlineJiggle) {
   xOffset += rng.randint(offlineJiggle * 2 + 1) - offlineJiggle;
   yOffset += rng.randint(offlineJiggle * 2 + 1) - offlineJiggle;
 }
+void OpenCVPicture::elasticDistortion(RNG &rng, float amplitude, float radius) {
+  // http://research.microsoft.com/pubs/68920/icdar03.pdf
+  // Best Practices for Convolutional Neural Networks Applied to Visual Document
+  // Analysis; Patrice Y. Simard, Dave Steinkraus, John C. Platt
+
+  // faster version??
+  // cv::Mat t0 = cv::Mat::zeros(cv::Size(mat.cols / 10, mat.rows / 10),
+  // CV_32FC1),
+  //         map_x =
+  //             cv::Mat::zeros(cv::Size(mat.cols / 10, mat.rows / 10),
+  //             CV_32FC1),
+  //         map_y =
+  //             cv::Mat::zeros(cv::Size(mat.cols / 10, mat.rows / 10),
+  //             CV_32FC1);
+  // cv::theRNG().state = rng.gen();
+  // cv::randn(t0, 0, amplitude * radius);
+  // cv::GaussianBlur(t0, map_x, cv::Size(0, 0), radius / 10);
+  // cv::randn(t0, 0, amplitude * radius);
+  // cv::GaussianBlur(t0, map_y, cv::Size(0, 0), radius / 10);
+  // for (int j = 0; j < map_x.rows; j++) {
+  //   for (int i = 0; i < map_x.cols; i++) {
+  //     map_x.at<float>(j, i) += 4.5 + i * mat.cols * 1.0 / map_x.cols;
+  //     map_y.at<float>(j, i) += 4.5 + j * mat.rows * 1.0 / map_x.rows;
+  //   }
+  // }
+  // cv::Mat map_X, map_Y;
+  // cv::resize(map_x, map_X, mat.size());
+  // cv::resize(map_y, map_Y, mat.size());
+  // {
+  //   cv::Mat temp;
+  //   cv::remap(mat, temp, map_X, map_Y, CV_INTER_LINEAR, IPL_BORDER_CONSTANT,
+  //             cv::Scalar(backgroundColor, backgroundColor, backgroundColor));
+  //   mat = temp;
+  // }
+
+  // naive method(not much slower?)
+  cv::Mat t0 = cv::Mat::zeros(cv::Size(mat.cols / 1, mat.rows / 1), CV_32FC1),
+          map_x =
+              cv::Mat::zeros(cv::Size(mat.cols / 1, mat.rows / 1), CV_32FC1),
+          map_y =
+              cv::Mat::zeros(cv::Size(mat.cols / 1, mat.rows / 1), CV_32FC1);
+  cv::theRNG().state = rng.gen();
+  cv::randn(t0, 0, amplitude * radius);
+  cv::GaussianBlur(t0, map_x, cv::Size(0, 0), radius);
+  cv::randn(t0, 0, amplitude * radius);
+  cv::GaussianBlur(t0, map_y, cv::Size(0, 0), radius);
+
+  for (int j = 0; j < map_x.rows; j++) {
+    for (int i = 0; i < map_x.cols; i++) {
+      map_x.at<float>(j, i) += i;
+      map_y.at<float>(j, i) += j;
+    }
+  }
+  {
+    cv::Mat temp;
+    cv::remap(mat, temp, map_x, map_y, CV_INTER_LINEAR, IPL_BORDER_CONSTANT,
+              cv::Scalar(128, 128, 128));
+    mat = temp;
+  }
+}
+
 void OpenCVPicture::colorDistortion(RNG &rng, int sigma1, int sigma2,
                                     int sigma3, int sigma4) {
   // Call as a final preprocessing step, after any affine transforms and
@@ -148,6 +209,50 @@ void OpenCVPicture::centerMass() {
   scale2yy = ayy - ay * ay;
   scale2 = powf(scale2xx + scale2yy, 0.5);
 }
+void OpenCVPicture::blur(float radius) {
+  cv::Mat temp = mat;
+  cv::GaussianBlur(temp, mat, cv::Size(0, 0), radius);
+}
+void OpenCVPicture::addSpatiallyCoherentNoise(RNG &rng, float amplitude,
+                                              float radius) {
+  cv::Mat t0 = mat.clone(), t1 = mat.clone();
+  cv::theRNG().state = rng.gen();
+  cv::randn(t0, 0, 1);
+  cv::GaussianBlur(t0, t1, cv::Size(0, 0), radius);
+  mat += (amplitude * radius) * t1;
+  //  t0 = mat;
+  // cv::addWeighted(t0, 1, t1, amplitude / radius, 0, mat);
+}
+void OpenCVPicture::multiplySpatiallyCoherentNoise(RNG &rng, float amplitude,
+                                                   float radius) {
+  // cv::Mat s0 = cv::Mat::zeros(cv::Size(mat.cols, mat.rows), CV_32FC3),
+  //         t0 = cv::Mat::zeros(cv::Size(mat.cols, mat.rows), CV_32FC3),
+  //         s1 = cv::Mat::zeros(cv::Size(mat.cols, mat.rows), CV_32FC3),
+  //         t1 = cv::Mat::zeros(cv::Size(mat.cols, mat.rows), CV_32FC3);
+  // cv::theRNG().state = rng.gen();
+  // cv::randn(s0, 0, amplitude * radius);
+  // cv::randn(s1, 0, amplitude * radius);
+  // cv::GaussianBlur(s0, t0, cv::Size(0, 0), radius);
+  // cv::GaussianBlur(s1, t1, cv::Size(0, 0), radius);
+  // s0 = cv::max(t0, 0);
+  // s1 = cv::max(t1, 0);
+  // mat = mat - mat.mul(s0) + (cv::Scalar(255, 255, 255) - mat).mul(s1);
+
+  cv::Mat s0 = cv::Mat::zeros(cv::Size(mat.cols, mat.rows), CV_32FC1),
+          t0 = cv::Mat::zeros(cv::Size(mat.cols, mat.rows), CV_32FC1),
+          s1 = cv::Mat::zeros(cv::Size(mat.cols, mat.rows), CV_32FC1),
+          t1 = cv::Mat::zeros(cv::Size(mat.cols, mat.rows), CV_32FC1);
+  cv::theRNG().state = rng.gen();
+  cv::randn(s0, 0, amplitude * radius);
+  cv::randn(s1, 0, amplitude * radius);
+  cv::GaussianBlur(s0, t0, cv::Size(0, 0), radius);
+  cv::GaussianBlur(s1, t1, cv::Size(0, 0), radius);
+  s0 = cv::max(t0, 0);
+  s1 = cv::max(t1, 0);
+  cv::cvtColor(s0, t0, CV_GRAY2RGB);
+  cv::cvtColor(s1, t1, CV_GRAY2RGB);
+  mat = mat - mat.mul(t0) + (cv::Scalar(255, 255, 255) - mat).mul(t1);
+}
 void OpenCVPicture::loadData(int scale, int flags) {
   loadDataWithoutScaling(flags);
   float s = scale * 1.0f / std::min(mat.rows, mat.cols);
@@ -231,9 +336,14 @@ void OpenCVPicture::loadDataWithoutScalingRemoveMeanColor(int flags) {
   for (int i = 0; i < mat.channels(); ++i)
     for (int y = 0; y < temp.rows; y++)
       for (int x = 0; x < temp.cols; x++)
-        matData[i + x * mat.channels() + y * mat.channels() * mat.cols] -=
-            meanColor[i];
-  backgroundColor = 0;
+        // matData[i + x * mat.channels() + y * mat.channels() * mat.cols] -=
+        //     meanColor[i];
+        matData[i + x * mat.channels() + y * mat.channels() * mat.cols] =
+            128 +
+            (matData[i + x * mat.channels() + y * mat.channels() * mat.cols] -
+             meanColor[i]) /
+                2;
+  backgroundColor = 128;
   xOffset = -mat.cols / 2;
   yOffset = -mat.rows / 2;
 }
