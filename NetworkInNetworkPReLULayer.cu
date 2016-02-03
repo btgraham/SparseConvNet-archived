@@ -157,12 +157,13 @@ void NetworkInNetworkPReLULayer::forwards(
     PreLU(output.sub->features.dPtr(), prelu.dPtr(), output.nSpatialSites,
           output.featuresPresent.size(), memStream);
   } else {
+    float p = 1.0f - (batch.type != RESCALEBATCH ? dropout : 0);
     replicateArray(B.dPtr(), output.sub->features.dPtr(), output.nSpatialSites,
                    output.featuresPresent.size(), memStream);
-    d_rowMajorSGEMM_alphaAB_betaC(
-        cublasHandle, input.sub->features.dPtr(), W.dPtr(),
-        output.sub->features.dPtr(), output.nSpatialSites, input.nFeatures,
-        output.nFeatures, 1.0f - dropout, 1.0f - dropout, __FILE__, __LINE__);
+    d_rowMajorSGEMM_alphaAB_betaC(cublasHandle, input.sub->features.dPtr(),
+                                  W.dPtr(), output.sub->features.dPtr(),
+                                  output.nSpatialSites, input.nFeatures,
+                                  output.nFeatures, p, p, __FILE__, __LINE__);
     cudaCheckError();
     PreLU(output.sub->features.dPtr(), PReLU.dPtr(), output.nSpatialSites,
           output.nFeatures, memStream);

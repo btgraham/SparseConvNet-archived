@@ -185,12 +185,13 @@ void NetworkInNetworkLayer::forwards(SpatiallySparseBatch &batch,
     cudaCheckError();
 
   } else {
+    float p = 1.0f - (batch.type != RESCALEBATCH ? dropout : 0.0f);
     replicateArray(B.dPtr(), output.sub->features.dPtr(), output.nSpatialSites,
                    output.featuresPresent.size(), memStream);
-    d_rowMajorSGEMM_alphaAB_betaC(
-        cublasHandle, input.sub->features.dPtr(), W.dPtr(),
-        output.sub->features.dPtr(), output.nSpatialSites, input.nFeatures,
-        output.nFeatures, 1.0f - dropout, 1.0f - dropout, __FILE__, __LINE__);
+    d_rowMajorSGEMM_alphaAB_betaC(cublasHandle, input.sub->features.dPtr(),
+                                  W.dPtr(), output.sub->features.dPtr(),
+                                  output.nSpatialSites, input.nFeatures,
+                                  output.nFeatures, p, p, __FILE__, __LINE__);
     cudaCheckError();
   }
   multiplyAddCount += (__int128_t)output.nSpatialSites *

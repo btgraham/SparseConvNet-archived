@@ -2,13 +2,22 @@
 #include <algorithm>
 #include <iostream>
 #include <chrono>
+#include <vector>
 
 void SpatiallySparseDataset::summary() {
-  std::cout << "Name:           " << name << std::endl;
-  std::cout << "nPictures:      " << pictures.size() << std::endl;
-  std::cout << "nClasses:       " << nClasses << std::endl;
-  std::cout << "nFeatures:      " << nFeatures << std::endl;
-  std::cout << "Type:           " << batchTypeNames[type] << std::endl;
+  std::cout << "Name:            " << name << std::endl;
+  std::cout << "Type:            " << batchTypeNames[type] << std::endl;
+  std::cout << "nFeatures:       " << nFeatures << std::endl;
+  std::cout << "nPictures:       " << pictures.size() << std::endl;
+  std::cout << "nClasses:        " << nClasses << std::endl;
+  std::vector<int> count(nClasses);
+  for (auto pic : pictures) {
+    count[pic->label]++;
+  }
+  std::cout << "nPictures/class: ";
+  for (auto i : count)
+    std::cout << i << " ";
+  std::cout << std::endl;
 }
 SpatiallySparseDataset SpatiallySparseDataset::extractValidationSet(float p) {
   SpatiallySparseDataset val;
