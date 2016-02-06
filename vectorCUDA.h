@@ -7,12 +7,12 @@
 template <typename t> class vectorCUDA {
 private:
   t *d_vec;
-  int dsize;      // Current size when on the GPU
-  int dAllocated; // Allocated space on the GPU (>=dsize)
+  unsigned int dsize; // Current size when on the GPU
+  int dAllocated;     // Allocated space on the GPU (>=dsize)
   std::vector<t> vec;
 
 public:
-  vectorCUDA(bool onGPU = true, int dsize = 0);
+  vectorCUDA(bool onGPU = true, unsigned int dsize = 0);
   ~vectorCUDA();
   bool onGPU;
   void copyToCPU();
@@ -21,7 +21,7 @@ public:
   void copyToGPUAsync(cudaMemStream &memStream);
   t *&dPtr();
   std::vector<t> &hVector();
-  int size();
+  unsigned int size();
   float meanAbs();
   void multiplicativeRescale(float multiplier);
   void setZero();

@@ -20,7 +20,8 @@ vectorHashIterator vectorHash::find(std::size_t idx) {
     return vectorHashIterator(this, idx);
   }
 }
-std::pair<vectorHashIterator, bool> vectorHash::insert(std::pair<int, int> p) {
+std::pair<vectorHashIterator, bool>
+vectorHash::insert(std::pair<unsigned int, int> p) {
   if (p.first >= vec.size())
     vec.resize(p.first + 1, -99);
   if (vec[p.first] == -99) {

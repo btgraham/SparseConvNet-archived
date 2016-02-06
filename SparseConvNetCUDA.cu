@@ -545,6 +545,7 @@ void SparseConvNetCUDA::calculateInputRegularizingConstants(
   BatchProducer bp(*this, dataset, inputSpatialSize, 100);
   std::vector<float> c(nInputFeatures, 0);
   while (SpatiallySparseBatch *batch = bp.nextBatch()) {
+    batch->interfaces[0].sub->features.copyToCPUAsync(memStream);
     std::vector<float> &features = batch->interfaces[0].sub->features.hVector();
     for (int i = 0; i < features.size(); ++i)
       c[i % nInputFeatures] =

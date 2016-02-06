@@ -170,7 +170,7 @@ void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize, float minFill) {
         }
       }
       if (interestingPointsCtr > pointsCtr * minFill)
-        fitCtr == -1;
+        fitCtr = -1;
       if (fitCtr == 0) {
         std::cout << filename << " " << std::flush;
         xOffset = -mat.cols / 2 - 16 + rng.randint(32);
@@ -180,7 +180,7 @@ void OpenCVPicture::jiggleFit(RNG &rng, int subsetSize, float minFill) {
   }
 }
 void OpenCVPicture::centerMass() {
-  float ax = 0, ay = 0, axx = 0, ayy = 0, axy, d = 0.001;
+  float ax = 0, ay = 0, axx = 0, ayy = 0, axy = 0, d = 0.001;
   for (int i = 0; i < mat.channels(); i++) {
     for (int x = 0; x < mat.cols; ++x) {
       for (int y = 0; y < mat.rows; ++y) {

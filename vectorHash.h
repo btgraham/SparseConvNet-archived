@@ -13,7 +13,7 @@ public:
   vectorHashIterator begin();
   vectorHashIterator end();
   vectorHashIterator find(std::size_t idx);
-  std::pair<vectorHashIterator, bool> insert(std::pair<int, int> p);
+  std::pair<vectorHashIterator, bool> insert(std::pair<unsigned int, int> p);
   void erase(vectorHashIterator iter);
   std::size_t size();
 };
@@ -23,7 +23,7 @@ private:
   vectorHash *vh;
 
 public:
-  int first;
+  unsigned int first;
   int second;
   void seek();
   vectorHashIterator(vectorHash *vh, int x);

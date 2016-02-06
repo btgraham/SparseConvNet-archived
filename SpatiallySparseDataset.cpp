@@ -39,7 +39,7 @@ void SpatiallySparseDataset::subsetOfClasses(std::vector<int> activeClasses) {
   nClasses = activeClasses.size();
   std::vector<Picture *> p = pictures;
   pictures.clear();
-  for (int i = 0; i < p.size(); ++i) {
+  for (unsigned int i = 0; i < p.size(); ++i) {
     std::vector<int>::iterator it;
     it = find(activeClasses.begin(), activeClasses.end(), p[i]->label);
     if (it != activeClasses.end()) {
@@ -61,7 +61,8 @@ SpatiallySparseDataset SpatiallySparseDataset::balancedSubset(int n) {
   auto permutation = rng.permutation(pictures.size());
   std::vector<int> count(nClasses);
   int classesDone = 0;
-  for (int i = 0; i < pictures.size() and classesDone < nClasses; i++) {
+  for (unsigned int i = 0; i < pictures.size() and classesDone < nClasses;
+       i++) {
     auto pic = pictures[permutation[i]];
     if (count[pic->label]++ < n)
       bs.pictures.push_back(pic);

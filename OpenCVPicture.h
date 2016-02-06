@@ -10,13 +10,13 @@ class OpenCVPicture : public Picture {
   float scaleUCharColor(float col);
 
 public:
+  std::string filename;
   int xOffset; // Shift to the right
   int yOffset; // Shift down
   int backgroundColor;
   float scale2;
   float scale2xx, scale2xy, scale2yy;
   cv::Mat mat;
-  std::string filename;
   // to hold "filename" image file in memory if RAM allows
   std::vector<char> rawData;
 

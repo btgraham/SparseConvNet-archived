@@ -7,7 +7,6 @@
 
 ConvolutionalTriangularLayer::ConvolutionalTriangularLayer(
     cudaMemStream &memStream,
-
     int filterSize, int filterStride, int dimension, int nFeaturesIn,
     int minActiveInputs)
     : SpatiallySparseLayer(memStream), filterSize(filterSize),

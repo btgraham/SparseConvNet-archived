@@ -3,14 +3,14 @@
 
 OnlineHandwritingPicture::OnlineHandwritingPicture(
     int renderSize, OnlineHandwritingEncoding enc, int label, float penSpeed3d)
-    : enc(enc), renderSize(renderSize), Picture(label), offset3d(0),
-      penSpeed3d(penSpeed3d) {}
+    : Picture(label), penSpeed3d(penSpeed3d), offset3d(0),
+      renderSize(renderSize), enc(enc) {}
 OnlineHandwritingPicture::~OnlineHandwritingPicture() {}
 void OnlineHandwritingPicture::normalize() { // Fit centrally in the cube
                                              // [-renderSize/2,renderSize/2]^2
   arma::mat pointsm(ops.size(), 2);
   arma::mat pointsM(ops.size(), 2);
-  for (int i = 0; i < ops.size(); ++i) {
+  for (unsigned int i = 0; i < ops.size(); ++i) {
     pointsm.row(i) = arma::min(ops[i], 0);
     pointsM.row(i) = arma::max(ops[i], 0);
   }
@@ -18,7 +18,7 @@ void OnlineHandwritingPicture::normalize() { // Fit centrally in the cube
   pointsM = arma::max(pointsM, 0);
   float scale = arma::mat(pointsM - pointsm).max();
   assert(scale > 0);
-  for (int i = 0; i < ops.size(); ++i) {
+  for (unsigned int i = 0; i < ops.size(); ++i) {
     ops[i] = ops[i] - arma::repmat(0.5 * (pointsm + pointsM), ops[i].n_rows, 1);
     ops[i] *= renderSize / scale;
   }
@@ -27,7 +27,7 @@ void OnlineHandwritingPicture::normalize() { // Fit centrally in the cube
 arma::mat constantSpeed(arma::mat &stroke, float density, int multiplier = 1) {
   std::vector<float> lengths(stroke.n_rows);
   lengths[0] = 0;
-  for (int i = 1; i < stroke.n_rows; i++) {
+  for (unsigned int i = 1; i < stroke.n_rows; i++) {
     lengths[i] =
         lengths[i - 1] + pow(pow(stroke(i, 0) - stroke(i - 1, 0), 2) +
                                  pow(stroke(i, 1) - stroke(i - 1, 1), 2),
@@ -55,15 +55,15 @@ std::vector<std::vector<float>>
 signatureWindows(arma::mat &path, int logSigDepth, int windowSize) {
   std::vector<std::vector<float>> sW(path.n_rows);
   std::vector<float> repPath;
-  for (int i = 0; i < path.n_rows; ++i) {
+  for (unsigned int i = 0; i < path.n_rows; ++i) {
     repPath.push_back(i);
     repPath.push_back(path(i, 0));
     repPath.push_back(path(i, 1));
   }
-  for (int i = 0; i < path.size(); ++i) {
+  for (unsigned int i = 0; i < path.size(); ++i) {
     sW[i].resize(logsigdim(3, logSigDepth));
-    int first = std::max(0, i - windowSize);
-    int last = std::min((int)path.size() - 1, i + windowSize);
+    int first = std::max(0, (int)i - windowSize);
+    int last = std::min(path.size() - 1, i + windowSize);
     logSignature(&repPath[3 * first], last - first + 1, 3, logSigDepth,
                  &sW[i][0]);
   }
@@ -86,9 +86,9 @@ void OnlineHandwritingPicture::codifyInputData(SparseGrid &grid,
   // Render character
   switch (enc) {
   case Simple:
-    for (int i = 0; i < ops.size(); i++) {
+    for (unsigned int i = 0; i < ops.size(); i++) {
       arma::mat csp = constantSpeed(ops[i], 0.1);
-      for (int j = 0; j < csp.n_rows; ++j) {
+      for (unsigned int j = 0; j < csp.n_rows; ++j) {
         int a0 = csp(j, 0) + spatialSize / 2.0,
             a1 = csp(j, 1) + spatialSize / 2.0;
         if (a0 >= 0 and a1 >= 0 and a0 < spatialSize and a1 < spatialSize) {
@@ -105,9 +105,9 @@ void OnlineHandwritingPicture::codifyInputData(SparseGrid &grid,
     break;
   case Octogram: {
     float piBy4 = 3.1415926536 / 4;
-    for (int i = 0; i < ops.size(); i++) {
+    for (unsigned int i = 0; i < ops.size(); i++) {
       arma::mat csp = constantSpeed(ops[i], 0.1);
-      for (int j = 0; j < csp.n_rows - 1; ++j) {
+      for (unsigned int j = 0; j < csp.n_rows - 1; ++j) {
         int a0 = csp(j, 0) + spatialSize / 2.0,
             a1 = csp(j, 1) + spatialSize / 2.0;
         if (a0 >= 0 and a1 >= 0 and a0 < spatialSize and a1 < spatialSize) {
@@ -134,9 +134,9 @@ void OnlineHandwritingPicture::codifyInputData(SparseGrid &grid,
   } break;
   case UndirectedOctogram: {
     float piBy4 = 3.1415926536 / 4;
-    for (int i = 0; i < ops.size(); i++) {
+    for (unsigned int i = 0; i < ops.size(); i++) {
       arma::mat csp = constantSpeed(ops[i], 0.1);
-      for (int j = 0; j < csp.n_rows - 1; ++j) {
+      for (unsigned int j = 0; j < csp.n_rows - 1; ++j) {
         int a0 = csp(j, 0) + spatialSize / 2.0,
             a1 = csp(j, 1) + spatialSize / 2.0;
         if (a0 >= 0 and a1 >= 0 and a0 < spatialSize and a1 < spatialSize) {
@@ -176,12 +176,12 @@ void OnlineHandwritingPicture::codifyInputData(SparseGrid &grid,
       float scale = renderSize / 5;
       int multiplier = std::max((int)(2 * scale + 0.5), 1);
       // Todo
-      for (int i = 0; i < ops.size(); i++) {
+      for (unsigned int i = 0; i < ops.size(); i++) {
         arma::mat CSP = constantSpeed(ops[i], scale, 1);
         arma::mat csp = constantSpeed(ops[i], scale, multiplier);
         std::vector<std::vector<float>> sW =
             signatureWindows(CSP, logSigDepth, windowSize);
-        for (int j = 0; j < csp.n_rows; ++j) {
+        for (unsigned int j = 0; j < csp.n_rows; ++j) {
           int J = j / multiplier;
           int a0 = csp(j, 0) + spatialSize / 2.0,
               a1 = csp(j, 1) + spatialSize / 2.0;
@@ -200,7 +200,7 @@ void OnlineHandwritingPicture::codifyInputData(SparseGrid &grid,
   case SpaceTime3d: {
     std::vector<arma::mat> csp;
     int cspLengths = 0;
-    for (int i = 0; i < ops.size(); i++) {
+    for (unsigned int i = 0; i < ops.size(); i++) {
       csp.push_back(constantSpeed(ops[i], 0.1));
       cspLengths += csp[i].n_rows;
     }
@@ -209,8 +209,8 @@ void OnlineHandwritingPicture::codifyInputData(SparseGrid &grid,
     //   maxLength=cspLengths;
     // }
     int z = 0;
-    for (int i = 0; i < ops.size(); i++) {
-      for (int j = 0; j < csp[i].n_rows; ++j) {
+    for (unsigned int i = 0; i < ops.size(); i++) {
+      for (unsigned int j = 0; j < csp[i].n_rows; ++j) {
         int a0 = csp[i](j, 0) + spatialSize / 2.0,
             a1 = csp[i](j, 1) + spatialSize / 2.0,
             a2 = renderSize * ((z - cspLengths / 2) * penSpeed3d + offset3d) +
@@ -231,7 +231,7 @@ void OnlineHandwritingPicture::codifyInputData(SparseGrid &grid,
   case VectorSpaceTime3d: {
     std::vector<arma::mat> csp;
     int cspLengths = 0;
-    for (int i = 0; i < ops.size(); i++) {
+    for (unsigned int i = 0; i < ops.size(); i++) {
       csp.push_back(constantSpeed(ops[i], 0.1));
       cspLengths += csp[i].n_rows;
     }
@@ -240,8 +240,8 @@ void OnlineHandwritingPicture::codifyInputData(SparseGrid &grid,
     //   maxLength=cspLengths;
     // }
     int z = 0;
-    for (int i = 0; i < ops.size(); i++) {
-      for (int j = 0; j < csp[i].n_rows - 1; ++j) {
+    for (unsigned int i = 0; i < ops.size(); i++) {
+      for (unsigned int j = 0; j < csp[i].n_rows - 1; ++j) {
         int a0 = csp[i](j, 0) + spatialSize / 2.0,
             a1 = csp[i](j, 1) + spatialSize / 2.0,
             a2 = renderSize * ((z - cspLengths / 2) * penSpeed3d + offset3d) +
@@ -272,9 +272,9 @@ void OnlineHandwritingPicture::codifyInputData(SparseGrid &grid,
 
 void OnlineHandwritingPicture::draw(int spatialSize) {
   std::vector<char> grid(spatialSize * spatialSize, ' ');
-  for (int i = 0; i < ops.size(); i++) {
+  for (unsigned int i = 0; i < ops.size(); i++) {
     arma::mat csp = constantSpeed(ops[i], 0.1);
-    for (int j = 0; j < csp.n_rows; ++j) {
+    for (unsigned int j = 0; j < csp.n_rows; ++j) {
       int a0 = csp(j, 0) + spatialSize / 2.0,
           a1 = csp(j, 1) + spatialSize / 2.0;
       if (a0 >= 0 and a1 >= 0 and a0 < spatialSize and a1 < spatialSize) {

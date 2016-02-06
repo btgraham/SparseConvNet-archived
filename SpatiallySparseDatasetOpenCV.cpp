@@ -7,7 +7,8 @@
 #include <fstream>
 #include <iterator>
 
-void loadDataThread(std::vector<Picture *> *pictures, int flags, int k, int n) {
+void loadDataThread(std::vector<Picture *> *pictures, int flags, unsigned int k,
+                    int n) {
   for (; k < pictures->size(); k += n) {
     OpenCVPicture *pic = dynamic_cast<OpenCVPicture *>(pictures->at(k));
     // pic->loadDataWithoutScaling(flags);

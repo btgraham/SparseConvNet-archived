@@ -6,7 +6,7 @@
 #include <cassert>
 
 template <typename t>
-vectorCUDA<t>::vectorCUDA(bool onGPU, int dsize)
+vectorCUDA<t>::vectorCUDA(bool onGPU, unsigned int dsize)
     : onGPU(onGPU), dsize(dsize), dAllocated(0) {
   if (onGPU && dsize > 0) {
     dAllocated = dsize;
@@ -115,7 +115,7 @@ template <typename t> std::vector<t> &vectorCUDA<t>::hVector() {
   copyToCPU();
   return vec;
 }
-template <typename t> int vectorCUDA<t>::size() {
+template <typename t> unsigned int vectorCUDA<t>::size() {
   if (onGPU)
     return dsize;
   return vec.size();

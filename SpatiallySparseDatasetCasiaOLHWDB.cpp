@@ -46,7 +46,7 @@ int readPotFile(std::vector<Picture *> &characters, const char *filename,
         file.read((char *)&iP, sizeof(iPoint));
       }
       character->ops.push_back(arma::mat(stroke.size(), 2));
-      for (int i = 0; i < stroke.size(); ++i) {
+      for (unsigned int i = 0; i < stroke.size(); ++i) {
         character->ops.back()(i, 0) = stroke[i].x;
         character->ops.back()(i, 1) = stroke[i].y;
       }
