@@ -17,6 +17,9 @@ clean:
 casia: $(OBJ) OnlineHandwritingPicture.o SpatiallySparseDatasetCasiaOLHWDB.o casia.o
 	$(NVCC) -o casia $(OBJ) OnlineHandwritingPicture.o SpatiallySparseDatasetCasiaOLHWDB.o casia.o $(LIBS) $(NVCCFLAGS)
 
+pendigits: $(OBJ) OnlineHandwritingPicture.o SpatiallySparseDatasetPenDigits.o pendigits.o
+	$(NVCC) -o pendigits $(OBJ) OnlineHandwritingPicture.o SpatiallySparseDatasetPenDigits.o pendigits.o $(LIBS) $(NVCCFLAGS)
+
 cifar10: $(OBJCV) SpatiallySparseDatasetCIFAR10.o cifar10.o
 	$(NVCC) -o cifar10 $(OBJCV) SpatiallySparseDatasetCIFAR10.o cifar10.o $(LIBS) $(NVCCFLAGS)
 
@@ -61,4 +64,3 @@ plankton: $(OBJCV) plankton.o
 
 cifar10indexLearning: $(OBJCV) SpatiallySparseDatasetCIFAR10.o cifar10indexLearning.o
 	$(NVCC) -o cifar10indexLearning $(OBJCV) SpatiallySparseDatasetCIFAR10.o cifar10indexLearning.o $(LIBS) $(NVCCFLAGS)
-

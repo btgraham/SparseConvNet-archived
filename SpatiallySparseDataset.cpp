@@ -89,6 +89,8 @@ void SpatiallySparseDataset::shuffle() {
   std::shuffle(pictures.begin(), pictures.end(), rng.gen);
 }
 void SpatiallySparseDataset::repeatSamples(int reps) {
+  std::cout << "Repeating each sample in " << name << " " << reps << " times"
+            << std::endl;
   int s = pictures.size();
   for (int i = 1; i < reps; ++i)
     for (int j = 0; j < s; ++j)

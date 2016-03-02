@@ -539,7 +539,8 @@ void SparseConvNetCUDA::calculateInputRegularizingConstants(
             << " out of " << dataset.pictures.size()
             << " training samples to calculate regularizing constants."
             << std::endl;
-  dataset.pictures.resize(10000);
+  if (dataset.pictures.size() > 10000)
+    dataset.pictures.resize(10000);
   dataset.type = TESTBATCH; // pretend it is a test batch to turn off dropout
                             // and training data augmentation
   BatchProducer bp(*this, dataset, inputSpatialSize, 100);
