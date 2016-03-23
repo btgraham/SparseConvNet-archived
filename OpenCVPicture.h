@@ -43,6 +43,8 @@ public:
   void blur(float radius);
   void addSpatiallyCoherentNoise(RNG &rng, float amplitude, float radius);
   void multiplySpatiallyCoherentNoise(RNG &rng, float amplitude, float radius);
+  int area(); // Function to compute number of non-background pixel = area of
+              // object
   std::string identify();
 };
 

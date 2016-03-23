@@ -348,6 +348,23 @@ void OpenCVPicture::loadDataWithoutScalingRemoveMeanColor(int flags) {
   yOffset = -mat.rows / 2;
 }
 
+int OpenCVPicture::area() {
+  assert(mat.type() % 8 == 5); // float
+  int area = 0;
+  float *matData = ((float *)(mat.data));
+  for (int y = 0; y < mat.rows; y++) {
+    for (int x = 0; x < mat.cols; x++) {
+      int j = x * mat.channels() + y * mat.channels() * mat.cols;
+      bool interestingPixel = false;
+      for (int i = 0; i < mat.channels(); i++)
+        if (std::abs(matData[i + j] - backgroundColor) > 2)
+          interestingPixel = true;
+      if (interestingPixel)
+        ++area;
+    }
+  }
+  return area;
+}
 std::string OpenCVPicture::identify() { return filename; }
 
 void OpenCVPicture::codifyInputData(SparseGrid &grid,
