@@ -14,10 +14,8 @@ OpenCVPicture::OpenCVPicture(int xSize, int ySize, int nInputFeatures,
   mat.create(xSize, ySize, CV_32FC(nInputFeatures));
 }
 OpenCVPicture::OpenCVPicture(std::string filename,
-                             unsigned char backgroundColor, int label_)
-    : filename(filename), backgroundColor(backgroundColor) {
-  label = label_;
-}
+                             unsigned char backgroundColor, int label)
+    : Picture(label), filename(filename), backgroundColor(backgroundColor) {}
 
 OpenCVPicture::~OpenCVPicture() {}
 

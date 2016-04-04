@@ -51,23 +51,25 @@ void SpatiallySparseDataset::subsetOfClasses(std::vector<int> activeClasses) {
   }
 }
 
-// Assume there are at least n of each class in the dataset
-SpatiallySparseDataset SpatiallySparseDataset::balancedSubset(int n) {
+// Pick n samples from each class
+SpatiallySparseDataset SpatiallySparseDataset::balancedSample(int n) {
   SpatiallySparseDataset bs;
   bs.name = name + std::string(" subset");
   bs.nFeatures = nFeatures;
   bs.nClasses = nClasses;
   bs.type = type;
-  auto permutation = rng.permutation(pictures.size());
   std::vector<int> count(nClasses);
   int classesDone = 0;
-  for (unsigned int i = 0; i < pictures.size() and classesDone < nClasses;
-       i++) {
-    auto pic = pictures[permutation[i]];
-    if (count[pic->label]++ < n)
-      bs.pictures.push_back(pic);
-    if (count[pic->label] == n)
-      classesDone++;
+  while (classesDone < nClasses) {
+    auto permutation = rng.permutation(pictures.size());
+    for (unsigned int i = 0; i < pictures.size() and classesDone < nClasses;
+         i++) {
+      auto pic = pictures[permutation[i]];
+      if (count[pic->label]++ < n)
+        bs.pictures.push_back(pic);
+      if (count[pic->label] == n)
+        classesDone++;
+    }
   }
   return bs;
 }
