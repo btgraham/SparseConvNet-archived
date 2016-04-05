@@ -14,10 +14,12 @@ void SpatiallySparseDataset::summary() {
   for (auto pic : pictures) {
     count[pic->label]++;
   }
-  std::cout << "nPictures/class: ";
-  for (auto i : count)
-    std::cout << i << " ";
-  std::cout << std::endl;
+  if (type != UNLABELEDBATCH) {
+    std::cout << "nPictures/class:";
+    for (auto i : count)
+      std::cout << " " << i;
+    std::cout << std::endl;
+  }
 }
 SpatiallySparseDataset SpatiallySparseDataset::extractValidationSet(float p) {
   SpatiallySparseDataset val;
