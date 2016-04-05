@@ -6,9 +6,8 @@
 #include "Regions.h"
 
 ConvolutionalTriangularLayer::ConvolutionalTriangularLayer(
-    cudaMemStream &memStream,
-    int filterSize, int filterStride, int dimension, int nFeaturesIn,
-    int minActiveInputs)
+    cudaMemStream &memStream, int filterSize, int filterStride, int dimension,
+    int nFeaturesIn, int minActiveInputs)
     : SpatiallySparseLayer(memStream), filterSize(filterSize),
       filterStride(filterStride), dimension(dimension),
       nFeaturesIn(nFeaturesIn), minActiveInputs(minActiveInputs) {
@@ -69,6 +68,9 @@ int ConvolutionalTriangularLayer::calculateInputSpatialSize(
     int outputSpatialSize) {
   outSpatialSize = outputSpatialSize;
   inSpatialSize = filterSize + (outputSpatialSize - 1) * filterStride;
-  std::cout << "(" << outSpatialSize << "C" << inSpatialSize << ") ";
+  std::cout << "-(C" << filterSize;
+  if (filterStride != 1)
+    std::cout << "/" << filterStride;
+  std::cout << ")-" << inSpatialSize;
   return inSpatialSize;
 }

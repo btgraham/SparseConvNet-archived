@@ -198,10 +198,12 @@ void SparseConvNetCUDA::addTerminalPoolingLayer(int poolSize, int S) {
 void SparseConvNetCUDA::addSoftmaxLayer() {
   addLearntLayer(nClasses, SOFTMAX, 0.0f, 1);
   inputSpatialSize = 1;
+  std::cout << "Spatially sparse CNN with layer sizes: " << inputSpatialSize;
   for (int i = layers.size() - 1; i >= 0; i--) {
     inputSpatialSize = layers[i]->calculateInputSpatialSize(inputSpatialSize);
   }
-  std::cout << "Spatially sparse CNN: input size " << inputSpatialSize;
+  std::cout << std::endl;
+  std::cout << "Input-field dimensions = " << inputSpatialSize;
   for (int i = 1; i < dimension; ++i)
     std::cout << "x" << inputSpatialSize;
   std::cout << std::endl;

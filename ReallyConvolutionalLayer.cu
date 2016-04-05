@@ -387,5 +387,9 @@ void ReallyConvolutionalLayer::backwards(SpatiallySparseBatch &batch,
 int ReallyConvolutionalLayer::calculateInputSpatialSize(int outputSpatialSize) {
   outSpatialSize = outputSpatialSize;
   inSpatialSize = filterSize + (outputSpatialSize - 1) * filterStride;
+  std::cout << "-(C" << filterSize;
+  if (filterStride != 1)
+    std::cout << "/" << filterStride;
+  std::cout << ")-" << inSpatialSize;
   return inSpatialSize;
 }
