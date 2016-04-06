@@ -56,7 +56,7 @@ void SpatiallySparseDataset::subsetOfClasses(std::vector<int> activeClasses) {
 // Pick n samples from each class if possible
 SpatiallySparseDataset SpatiallySparseDataset::balancedSample(int n) {
   SpatiallySparseDataset bs;
-  bs.name = name + std::string(" subset");
+  bs.name = name + std::string(" sample");
   bs.nFeatures = nFeatures;
   bs.nClasses = nClasses;
   bs.type = type;
