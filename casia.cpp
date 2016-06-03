@@ -4,7 +4,7 @@
 #include "OnlineHandwritingPicture.h"
 
 int epoch = 0;
-int cudaDevice = -1; // PCI bus ID, -1 for default GPU
+int cudaDevice = -1 + 4; // PCI bus ID, -1 for default GPU
 int batchSize = 100;
 
 Picture *OnlineHandwritingPicture::distort(RNG &rng, batchType type) {
@@ -40,13 +40,16 @@ Picture *OnlineHandwritingPicture::distort(RNG &rng, batchType type) {
 int main() {
   std::string baseName = "weights/casia";
 
-  SpatiallySparseDataset trainSet = CasiaOLHWDB11TrainSet(64, Simple);
-  SpatiallySparseDataset testSet = CasiaOLHWDB11TestSet(64, Simple);
+  SpatiallySparseDataset trainSet = CasiaOLHWDB11TrainSet(64, Octogram);
+  SpatiallySparseDataset testSet = CasiaOLHWDB11TestSet(64, Octogram);
 
   trainSet.summary();
   testSet.summary();
-  DeepCNet cnn(2, 6, 96, VLEAKYRELU, trainSet.nFeatures, trainSet.nClasses, 0.0f,
-               cudaDevice);
+  // DeepCNet cnn(2, 6, 96, VLEAKYRELU, trainSet.nFeatures, trainSet.nClasses,
+  // 0.0f,
+  //              cudaDevice);
+  DeepC3C3Valid cnn(2, 6, 96, VLEAKYRELU, trainSet.nFeatures, trainSet.nClasses,
+                    0.0f, cudaDevice);
   cnn.calculateInputRegularizingConstants(trainSet);
 
   if (epoch > 0)
