@@ -45,10 +45,9 @@ int main() {
 
   trainSet.summary();
   testSet.summary();
-  // DeepCNet cnn(2, 6, 96, VLEAKYRELU, trainSet.nFeatures, trainSet.nClasses,
-  // 0.0f,
-  //              cudaDevice);
-  DeepC3C3Valid cnn(2, 6, 96, VLEAKYRELU, trainSet.nFeatures, trainSet.nClasses,
+  // DeepCNet cnn(2, 4, 96, VLEAKYRELU, trainSet.nFeatures, trainSet.nClasses,
+  //              0.0f, cudaDevice);
+  DeepC3C3Valid cnn(2, 5, 96, VLEAKYRELU, trainSet.nFeatures, trainSet.nClasses,
                     0.0f, cudaDevice);
   cnn.calculateInputRegularizingConstants(trainSet);
 
@@ -57,7 +56,7 @@ int main() {
   for (epoch++;; epoch++) {
     std::cout << "mini-epoch:" << epoch << ": " << std::flush;
     auto trainSubset = trainSet.subset(50000);
-    cnn.processDataset(trainSubset, batchSize, 0.003 * exp(-epoch * 0.0025));
+    cnn.processDataset(trainSubset, batchSize, 0.002 * exp(-epoch * 0.0025));
     if (epoch % 18 == 0) {
       cnn.processDataset(testSet, batchSize);
       cnn.saveWeights(baseName, epoch / 100);
