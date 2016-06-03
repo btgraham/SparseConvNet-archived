@@ -652,6 +652,133 @@ void gridRulesOverlappingNoMin(
   }
 }
 
+// For use with 3x3 convolutions:
+// You get outputGrid == inputGrid like doing a convolution with 'valid'
+// boundary conditions.
+void gridRulesValid(
+    SparseGrid &inputGrid,  // Keys 0,1,...,powf(regions.nIn,dimension)-1
+                            // represent grid points
+    SparseGrid &outputGrid, // Keys 0,1,...,powf(regions.nOut,dimension)-1
+                            // represent grid points
+    RectangularRegions &regions, int &nOutputSpatialSites,
+    std::vector<int> &rules) {
+  assert(regions.s == 3); // For 3x3 convolutions
+#ifdef USE_VECTOR_HASH
+  outputGrid.mp.vec.resize(ipow(regions.nOut, regions.dimension), -99);
+#endif
+  switch (regions.dimension) {
+  case 1:
+    assert(0); // adapt case 2
+    for (auto iter = inputGrid.mp.begin(); iter != inputGrid.mp.end(); ++iter) {
+      int i0 = (iter->first);
+      int64_t outKey = iter->first;
+      outputGrid.mp[outKey] = nOutputSpatialSites++;
+      for (int ii0 = regions.inputL(0, i0); ii0 < regions.inputR(0, i0);
+           ++ii0) {
+        int64_t inKey = (int64_t)ii0;
+        auto iter2 = inputGrid.mp.find(inKey);
+        if (iter2 == inputGrid.mp.end()) {
+          rules.push_back(inputGrid.backgroundCol);
+        } else {
+          rules.push_back(iter2->second);
+        }
+      }
+    }
+    break;
+  case 2:
+    for (auto iter = inputGrid.mp.begin(); iter != inputGrid.mp.end(); ++iter) {
+      int i0 = ((iter->first) / regions.nIn) % regions.nIn;
+      int i1 = (iter->first) % regions.nIn;
+      if (i0 >= 1 and i1 >= 1 and i0 <= regions.nOut and i1 <= regions.nOut) {
+        int j0 = i0 - 1;
+        int j1 = i1 - 1;
+        int64_t outKey = (int64_t)j0 * regions.nOut + (int64_t)j1;
+        outputGrid.mp[outKey] = nOutputSpatialSites++;
+        for (int ii0 = regions.inputL(0, j0); ii0 < regions.inputR(0, j0);
+             ++ii0) {
+          for (int ii1 = regions.inputL(1, j1); ii1 < regions.inputR(1, j1);
+               ++ii1) {
+            int64_t inKey = (int64_t)ii0 * regions.nIn + (int64_t)ii1;
+            auto iter2 = inputGrid.mp.find(inKey);
+            if (iter2 == inputGrid.mp.end()) {
+              rules.push_back(inputGrid.backgroundCol);
+            } else {
+              rules.push_back(iter2->second);
+            }
+          }
+        }
+      }
+    }
+    break;
+  case 3:
+    assert(0); // adapt case 2
+    for (auto iter = inputGrid.mp.begin(); iter != inputGrid.mp.end(); ++iter) {
+      int i0 = ((iter->first) / regions.nIn / regions.nIn) % regions.nIn;
+      int i1 = ((iter->first) / regions.nIn) % regions.nIn;
+      int i2 = (iter->first) % regions.nIn;
+      int64_t outKey = iter->first;
+      outputGrid.mp[outKey] = nOutputSpatialSites++;
+      for (int ii0 = regions.inputL(0, i0); ii0 < regions.inputR(0, i0);
+           ++ii0) {
+        for (int ii1 = regions.inputL(1, i1); ii1 < regions.inputR(1, i1);
+             ++ii1) {
+          for (int ii2 = regions.inputL(2, i2); ii2 < regions.inputR(2, i2);
+               ++ii2) {
+            int64_t inKey = (int64_t)ii0 * regions.nIn * regions.nIn +
+                            (int64_t)ii1 * regions.nIn + (int64_t)ii2;
+            auto iter2 = inputGrid.mp.find(inKey);
+            if (iter2 == inputGrid.mp.end()) {
+              rules.push_back(inputGrid.backgroundCol);
+            } else {
+              rules.push_back(iter2->second);
+            }
+          }
+        }
+      }
+    }
+    break;
+  case 4:
+    assert(0); // adapt case 2
+    for (auto iter = inputGrid.mp.begin(); iter != inputGrid.mp.end(); ++iter) {
+      int i0 = iter->first / regions.nIn / regions.nIn / regions.nIn;
+      int i1 = ((iter->first) / regions.nIn / regions.nIn) % regions.nIn;
+      int i2 = ((iter->first) / regions.nIn) % regions.nIn;
+      int i3 = (iter->first) % regions.nIn;
+      int64_t outKey = iter->first;
+      outputGrid.mp[outKey] = nOutputSpatialSites++;
+      for (int ii0 = regions.inputL(0, i0); ii0 < regions.inputR(0, i0);
+           ++ii0) {
+        for (int ii1 = regions.inputL(1, i1); ii1 < regions.inputR(1, i1);
+             ++ii1) {
+          for (int ii2 = regions.inputL(2, i2); ii2 < regions.inputR(2, i2);
+               ++ii2) {
+            for (int ii3 = regions.inputL(3, i3); ii3 < regions.inputR(3, i3);
+                 ++ii3) {
+              int64_t inKey =
+                  (int64_t)ii0 * regions.nIn * regions.nIn * regions.nIn +
+                  (int64_t)ii1 * regions.nIn * regions.nIn +
+                  (int64_t)ii2 * regions.nIn + (int64_t)ii3;
+              auto iter2 = inputGrid.mp.find(inKey);
+              if (iter2 == inputGrid.mp.end()) {
+                rules.push_back(inputGrid.backgroundCol);
+              } else {
+                rules.push_back(iter2->second);
+              }
+            }
+          }
+        }
+      }
+    }
+    break;
+  }
+  if (outputGrid.mp.size() <
+      ipow(regions.nOut, regions.dimension)) { // Null vector/background needed
+    for (int i = 0; i < regions.sd; ++i)
+      rules.push_back(inputGrid.backgroundCol);
+    outputGrid.backgroundCol = nOutputSpatialSites++;
+  }
+}
+
 void gridRules(SparseGrid &inputGrid,  // Keys
                                        // 0,1,...,powf(regions.nIn,dimension)-1
                                        // represent grid points
@@ -661,6 +788,8 @@ void gridRules(SparseGrid &inputGrid,  // Keys
                RectangularRegions &regions, int &nOutputSpatialSites,
                std::vector<int> &rules, bool uniformSizeRegions,
                int minActiveInputs) {
+  if (minActiveInputs == -1)
+    gridRulesValid(inputGrid, outputGrid, regions, nOutputSpatialSites, rules);
   if (uniformSizeRegions and minActiveInputs == 1)
     gridRulesOverlappingNoMin(inputGrid, outputGrid, regions,
                               nOutputSpatialSites, rules);

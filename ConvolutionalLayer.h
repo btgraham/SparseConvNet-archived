@@ -18,6 +18,7 @@ public:
       cudaMemStream &memStream, int filterSize, int filterStride, int dimension,
       int nFeaturesIn,
       int minActiveInputs = 1); // normally 1, <=ipow(filterSize,dimension)
+  // -1 is a special case -- 'valid' mode
   void preprocess(SpatiallySparseBatch &batch,
                   SpatiallySparseBatchInterface &input,
                   SpatiallySparseBatchInterface &output);

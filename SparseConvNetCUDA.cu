@@ -310,15 +310,18 @@ float SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset,
   //               << "\n";
   //   }
   // }
-  if (dataset.type != RESCALEBATCH)
-    std::cout << dataset.name << " Mistakes:" << 100.0 * errorRate
-              << "% NLL:" << nll << " MegaMultiplyAdds/sample:"
+  if (dataset.type != RESCALEBATCH) {
+    std::cout << dataset.name;
+    if (dataset.type != UNLABELEDBATCH)
+      std::cout << " Mistakes:" << 100.0 * errorRate << "% NLL:" << nll;
+    std::cout << " MegaMultiplyAdds/sample:"
               << roundf(multiplyAddCount / dataset.pictures.size() / 1000000)
               << " time:" << diff / 1000000000L
               << "s GigaMultiplyAdds/s:" << roundf(multiplyAddCount / diff)
               << " rate:"
               << roundf(dataset.pictures.size() * 1000000000.0f / diff) << "/s"
               << std::endl;
+  }
   return nll;
 }
 void SparseConvNetCUDA::processDatasetRepeatTest(
@@ -387,10 +390,11 @@ void SparseConvNetCUDA::processDatasetRepeatTest(
     auto end = std::chrono::system_clock::now();
     auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(
                     end - start).count();
-    std::cout << dataset.name << " rep " << rep << "/" << nReps
-              << " Mistakes: " << 100.0 * errors / dataset.pictures.size()
-              << "% NLL " << nll / dataset.pictures.size()
-              << " MegaMultiplyAdds/sample:"
+    std::cout << dataset.name << " rep " << rep << "/" << nReps;
+    if (dataset.type != UNLABELEDBATCH)
+      std::cout << " Mistakes: " << 100.0 * errors / dataset.pictures.size()
+                << "% NLL " << nll / dataset.pictures.size();
+    std::cout << " MegaMultiplyAdds/sample:"
               << roundf(multiplyAddCount / dataset.pictures.size() / 1000000)
               << " time:" << diff / 1000000000L
               << "s GigaMultiplyAdds/s:" << roundf(multiplyAddCount / diff)

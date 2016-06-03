@@ -68,7 +68,7 @@ public:
 
 class SparseConvTriangLeNet {
 private:
-  std::auto_ptr<SparseConvNetCUDA> cnn;
+  std::unique_ptr<SparseConvNetCUDA> cnn;
 
 public:
   SparseConvTriangLeNet(int dimension, int nInputFeatures, int nClasses,

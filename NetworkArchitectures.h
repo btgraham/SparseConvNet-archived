@@ -27,6 +27,12 @@ public:
            int nInputFeatures, int nClasses, float p = 0.0f,
            int cudaDevice = -1, int nTop = 1);
 };
+class DeepC3C3Valid : public SparseConvNet {
+public:
+  DeepC3C3Valid(int dimension, int l, int k, ActivationFunction fn,
+                int nInputFeatures, int nClasses, float p = 0.0f,
+                int cudaDevice = -1, int nTop = 1);
+};
 
 class POFMPSparseConvNet : public SparseConvNet {
 public:
