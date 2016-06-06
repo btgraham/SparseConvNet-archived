@@ -4,8 +4,8 @@
 #include "OnlineHandwritingPicture.h"
 
 int epoch = 0;
-int cudaDevice = -1 + 4; // PCI bus ID, -1 for default GPU
-int batchSize = 100 / 2;
+int cudaDevice = -1; // PCI bus ID, -1 for default GPU
+int batchSize = 100;
 
 Picture *OnlineHandwritingPicture::distort(RNG &rng, batchType type) {
   OnlineHandwritingPicture *pic = new OnlineHandwritingPicture(*this);
