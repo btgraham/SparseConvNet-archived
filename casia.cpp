@@ -5,7 +5,7 @@
 
 int epoch = 0;
 int cudaDevice = -1 + 4; // PCI bus ID, -1 for default GPU
-int batchSize = 100;
+int batchSize = 100 / 2;
 
 Picture *OnlineHandwritingPicture::distort(RNG &rng, batchType type) {
   OnlineHandwritingPicture *pic = new OnlineHandwritingPicture(*this);
@@ -39,20 +39,19 @@ Picture *OnlineHandwritingPicture::distort(RNG &rng, batchType type) {
 
 int main() {
   std::string baseName = "weights/casia";
-
   SpatiallySparseDataset trainSet = CasiaOLHWDB11TrainSet(64, Octogram);
   SpatiallySparseDataset testSet = CasiaOLHWDB11TestSet(64, Octogram);
 
   trainSet.summary();
   testSet.summary();
-  // DeepCNet cnn(2, 4, 96, VLEAKYRELU, trainSet.nFeatures, trainSet.nClasses,
-  //              0.0f, cudaDevice);
+
   DeepC3C3Valid cnn(2, 5, 96, VLEAKYRELU, trainSet.nFeatures, trainSet.nClasses,
                     0.0f, cudaDevice);
+
   cnn.calculateInputRegularizingConstants(trainSet);
 
   if (epoch > 0)
-    cnn.loadWeights(baseName, epoch);
+    cnn.loadWeights(baseName, epoch / 100);
   for (epoch++;; epoch++) {
     std::cout << "mini-epoch:" << epoch << ": " << std::flush;
     auto trainSubset = trainSet.subset(50000);
