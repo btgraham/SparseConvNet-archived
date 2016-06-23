@@ -65,7 +65,7 @@ void oneStepSignature(float *sig, float *delta, int d, int depth) {
 }
 
 void signature(float *path, int length, int d, int depth, float *sig) {
-  std::vector<float> delta(depth);
+  std::vector<float> delta(d);
   std::vector<float> sigIncrement(sigdim(d, depth));
   sig[0] = 1;
   for (int i = 1; i < sigdim(d, depth); ++i)
