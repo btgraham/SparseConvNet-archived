@@ -92,9 +92,9 @@ ConvolutionalLayer::ConvolutionalLayer(cudaMemStream &memStream, int filterSize,
   nFeaturesOut = fs * nFeaturesIn;
   std::cout << "Convolution " << filterSize << "^" << dimension << "x"
             << nFeaturesIn << "->" << nFeaturesOut;
-  if (filterStride > 1)
+  if (filterStride != 1)
     std::cout << " stride:" << filterStride;
-  if (minActiveInputs > 1)
+  if (minActiveInputs != 1)
     std::cout << " minActiveInputs:" << minActiveInputs;
   std::cout << std::endl;
 }
