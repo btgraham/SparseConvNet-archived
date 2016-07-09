@@ -56,6 +56,18 @@ DeepC3C3Valid::DeepC3C3Valid(int dimension, int l, int k, ActivationFunction fn,
   addLeNetLayerMP((l + 1) * k, 1, 1, 1, 1, fn, p);
   addSoftmaxLayer();
 }
+DeepC3C3::DeepC3C3(int dimension, int l, int k, ActivationFunction fn,
+                   int nInputFeatures, int nClasses, float p, int cudaDevice,
+                   int nTop)
+    : SparseConvNet(dimension, nInputFeatures, nClasses, cudaDevice, nTop) {
+  for (int i = 0; i < l; i++) {
+    addLeNetLayerMP((i + 1) * k, 3, 1, 1, 1, fn, p * i * 1.0f / l);
+    addLeNetLayerMP((i + 1) * k, 3, 1, 3, 2, fn, p * i * 1.0f / l);
+  }
+  addLeNetLayerMP((l + 1) * k, 3, 1, 1, 1, fn, p);
+  addLeNetLayerMP((l + 1) * k, 1, 1, 1, 1, fn, p);
+  addSoftmaxLayer();
+}
 
 POFMPSparseConvNet::POFMPSparseConvNet(int dimension, int l, int k,
                                        float fmpShrink, ActivationFunction fn,
