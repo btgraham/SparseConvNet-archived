@@ -15,7 +15,7 @@ for scale in [300, 500, 1000]:
             a=scaleRadius(a,scale)
             b=numpy.zeros(a.shape)
             cv2.circle(b,(a.shape[1]/2,a.shape[0]/2),int(scale*0.9),(1,1,1),-1,8,0)
-            aa=cv2.addWeighted(a,4,cv2.GaussianBlur(a,(0,0),scale/30),-4,128)*b+128*(1-b)
+            aa=cv2.addWeighted(a,4,cv2.GaussianBlur(a,(0,0),scale/30),-4,128)
             cv2.imwrite(str(scale)+"_"+f,aa)
         except:
             print(f)
